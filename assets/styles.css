@@ -1,0 +1,120 @@
+/* =============================================
+   PATHFINDER — GLOBAL STYLES
+   ============================================= */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --navy:       #0D1B3E;
+  --blue:       #2563EB;
+  --blue-light: #EEF2FF;
+  --blue-mid:   #3B82F6;
+  --white:      #FFFFFF;
+  --surface:    #F8FAFC;
+  --border:     #E2E8F0;
+  --text-main:  #0D1B3E;
+  --text-muted: #64748B;
+  --success:    #059669;
+  --warning:    #D97706;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text-main);
+  background: var(--white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; line-height: 1.2; }
+
+.screen { display: none; opacity: 0; transition: opacity 0.3s ease; min-height: 100vh; }
+.screen.active { display: block; opacity: 1; }
+
+/* NAVBAR */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; height: 64px;
+}
+.navbar-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--navy); letter-spacing: 1px; text-decoration: none; }
+.navbar-links { display: flex; gap: 32px; }
+.navbar-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+.navbar-links a:hover { color: var(--navy); }
+.navbar-right { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue); color: white; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; text-decoration: none; }
+.btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+.btn-primary:hover { background: var(--blue-mid); border-color: var(--blue-mid); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+.btn-outline { background: transparent; color: var(--blue); border-color: var(--blue); }
+.btn-outline:hover { background: var(--blue-light); transform: translateY(-1px); }
+.btn-outline-white { background: transparent; color: white; border-color: rgba(255,255,255,0.7); }
+.btn-outline-white:hover { background: rgba(255,255,255,0.1); }
+.btn-outline-navy { background: transparent; color: var(--navy); border-color: var(--navy); }
+.btn-outline-navy:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+.btn-disabled { background: var(--border); color: var(--text-muted); border-color: var(--border); cursor: not-allowed; }
+.btn-sm { padding: 7px 16px; font-size: 13px; }
+.btn-lg { padding: 14px 32px; font-size: 16px; }
+
+/* PROGRESS INDICATOR */
+.progress-indicator { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 48px; }
+.progress-steps { display: flex; align-items: center; gap: 0; max-width: 640px; margin: 0 auto; }
+.progress-step { display: flex; align-items: center; gap: 8px; flex: 1; }
+.progress-step:not(:last-child)::after { content: ''; flex: 1; height: 2px; background: var(--border); margin: 0 8px; }
+.step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; border: 2px solid var(--border); color: var(--text-muted); background: white; }
+.step-circle.active { background: var(--blue); border-color: var(--blue); color: white; }
+.step-circle.done { background: var(--success); border-color: var(--success); color: white; }
+.step-label { font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+.step-label.active { color: var(--navy); font-weight: 600; }
+
+/* CARDS */
+.card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: box-shadow 0.2s, transform 0.2s; }
+.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.card-surface { background: var(--surface); }
+
+/* PROGRESS BAR */
+.progress-bar-wrap { background: var(--border); border-radius: 99px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 99px; background: var(--blue); transition: width 0.6s ease; }
+.progress-bar-fill.success { background: var(--success); }
+
+/* CHIPS & BADGES */
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 500; }
+.chip-blue { background: var(--blue-light); color: var(--blue); }
+.chip-green { background: #ECFDF5; color: var(--success); }
+.chip-navy { background: var(--navy); color: white; }
+.chip-muted { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
+.badge-blue { background: var(--blue); color: white; }
+.badge-green { background: var(--success); color: white; }
+.badge-warning { background: var(--warning); color: white; }
+.badge-surface { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* DIVIDER */
+.divider { display: flex; align-items: center; gap: 16px; color: var(--text-muted); font-size: 13px; margin: 24px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* LAYOUT HELPERS */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+.section { padding: 64px 0; }
+.row { display: flex; align-items: flex-start; gap: 24px; }
+.row-center { align-items: center; }
+.col { flex: 1; }
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .navbar { padding: 0 20px; }
+  .navbar-links { display: none; }
+  .container { padding: 0 20px; }
+  .section { padding: 40px 0; }
+  .row { flex-direction: column; }
+  .progress-indicator { padding: 12px 20px; }
+  .step-label { display: none; }
+}
