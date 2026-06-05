@@ -26,10 +26,10 @@ function initSlider() {
   if (!slider) return;
   function update() {
     const h = parseInt(slider.value);
-    display.textContent = h + ' jam / hari';
-    document.getElementById('fast-days').textContent = Math.ceil(68 / h) + ' hari';
-    document.getElementById('mid-days').textContent = Math.ceil(102 / h) + ' hari';
-    document.getElementById('full-days').textContent = Math.ceil(156 / h) + ' hari';
+    display.textContent = h + ' hrs / day';
+    document.getElementById('fast-days').textContent = Math.ceil(68 / h) + ' days';
+    document.getElementById('mid-days').textContent = Math.ceil(102 / h) + ' days';
+    document.getElementById('full-days').textContent = Math.ceil(156 / h) + ' days';
     localStorage.setItem('pathfinder_hours', h);
   }
   slider.addEventListener('input', update);
