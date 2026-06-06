@@ -98,22 +98,36 @@ HTML = f"""<!DOCTYPE html>
 .upload-section {{ padding:64px 48px; max-width:960px; margin:0 auto; }}
 .upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Inter',sans-serif; font-size:36px; font-weight:800; color:var(--navy); }}
 .upload-sub {{ text-align:center; color:var(--text-muted); margin-bottom:48px; font-size:16px; }}
-.upload-cards {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px; }}
-.upload-card {{ border:1px solid var(--border); border-radius:12px; padding:36px 28px; background:white; transition:border-color .2s,box-shadow .2s; }}
-.upload-card:hover {{ border-color:var(--blue); box-shadow:0 4px 16px rgba(156,122,74,0.14); }}
-.upload-card.selected {{ border-color:var(--blue); background:var(--blue-light); }}
-.upload-icon {{ font-size:40px; margin-bottom:16px; }}
-.upload-card h3 {{ font-family:'Inter',sans-serif; font-size:20px; font-weight:700; color:var(--navy); margin-bottom:10px; }}
-.upload-card p {{ font-size:14px; color:var(--text-muted); margin-bottom:20px; line-height:1.5; }}
+.upload-card-single {{
+  max-width:620px; margin:0 auto; background:var(--white);
+  border:1px solid var(--border); border-radius:14px; overflow:hidden;
+  box-shadow:0px 4px 24px rgba(15,23,42,0.06);
+}}
+.upload-tabs {{ display:flex; border-bottom:1px solid var(--border); }}
+.upload-tab {{
+  flex:1; padding:18px; text-align:center; cursor:pointer; user-select:none;
+  font-family:'Inter',sans-serif; font-size:15px; font-weight:600; color:var(--text-muted);
+  background:transparent; border:none; border-bottom:2px solid transparent; transition:color .2s,border-color .2s,background .2s;
+}}
+.upload-tab.active {{ color:var(--navy); border-bottom-color:var(--gold); background:var(--surface); }}
+.upload-panel {{ padding:36px; }}
 .drop-zone {{
-  border:2px dashed var(--border); border-radius:8px; padding:32px;
-  text-align:center; color:var(--text-muted); font-size:13px; margin-bottom:20px;
+  border:1.5px dashed var(--border); border-radius:10px; padding:44px 28px;
+  text-align:center; color:var(--text-muted); font-size:14px;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
   transition:border-color .2s,background .2s; cursor:pointer; user-select:none;
 }}
-.drop-zone:hover {{ border-color:var(--blue); color:var(--blue); }}
-.drop-zone.drag-over {{ border-color:var(--blue); background:var(--blue-light); color:var(--blue); }}
-.drop-zone.file-ready {{ border-color:var(--success); background:#f0fdf4; color:var(--success); }}
-#file-name-display {{ margin-top:8px; font-size:13px; font-weight:600; min-height:18px; }}
+.drop-zone:hover {{ border-color:var(--gold); }}
+.drop-zone.drag-over {{ border-color:var(--gold); background:var(--blue-light); }}
+.drop-zone.file-ready {{ border-color:var(--success); background:#f0fdf4; }}
+.drop-icon {{ color:var(--text-muted); margin-bottom:6px; }}
+.drop-icon svg {{ width:40px; height:40px; display:block; }}
+.drop-zone.file-ready .drop-icon {{ color:var(--success); }}
+#drop-text {{ font-family:'Inter',sans-serif; font-size:15px; font-weight:500; color:var(--navy); }}
+.drop-hint {{ font-size:13px; color:var(--text-muted); }}
+#file-name-display {{ margin-top:14px; text-align:center; font-size:13px; font-weight:600; min-height:18px; }}
+.upload-action {{ padding:0 36px 36px; text-align:center; }}
+.upload-action .security-note {{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:14px; }}
 .form-field {{ margin-bottom:14px; }}
 .form-field label {{ display:block; font-size:13px; font-weight:600; color:var(--navy); margin-bottom:5px; }}
 .form-field input,.form-field select,.form-field textarea {{
@@ -291,7 +305,8 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   .step-connector {{ display:none; }}
   .stats-section {{ flex-direction:column; gap:32px; padding:48px 24px; text-align:center; }}
   .upload-section {{ padding:40px 20px; }}
-  .upload-cards {{ grid-template-columns:1fr; }}
+  .upload-panel {{ padding:24px; }}
+  .upload-action {{ padding:0 24px 24px; }}
   .results-section,.gap-section,.packages-section,.roadmap-section,.dashboard-section {{ padding:40px 20px; }}
   .packages-grid {{ grid-template-columns:1fr; }}
   .skill-cols {{ grid-template-columns:1fr; }}
@@ -424,31 +439,25 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
     <h2 class="upload-heading">Start with your profile</h2>
     <p class="upload-sub">Pathfinder will automatically read your skills, experience, and education</p>
 
-    <div class="upload-cards">
-      <!-- Upload CV Card -->
-      <div class="upload-card" id="card-upload">
-        <div class="upload-icon">📄</div>
-        <h3>Upload CV</h3>
-        <p>PDF or DOCX format. AI will automatically extract your skills and experience.</p>
-
-        <!-- Hidden file input -->
-        <input type="file" id="cv-file-input" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
-
-        <!-- Drop zone -->
-        <div class="drop-zone" id="drop-zone">
-          <div style="font-size:28px;margin-bottom:8px" id="drop-icon">☁️</div>
-          <div id="drop-text">Drag & drop your CV here, or click to browse</div>
-          <small style="color:var(--text-muted)">PDF, DOCX · Max 5MB</small>
-        </div>
-        <div id="file-name-display"></div>
-        <button class="btn btn-primary" style="width:100%;margin-top:12px" id="browse-btn">Choose CV File</button>
+    <div class="upload-card-single">
+      <div class="upload-tabs">
+        <button class="upload-tab active" id="tab-upload" type="button" onclick="selectTab('upload')">Upload Document</button>
+        <button class="upload-tab" id="tab-manual" type="button" onclick="selectTab('manual')">Enter Manually</button>
       </div>
 
-      <!-- Manual Form Card -->
-      <div class="upload-card" id="card-manual">
-        <div class="upload-icon">✏️</div>
-        <h3>Fill Manually</h3>
-        <p>Don't have a CV yet? Fill in a short form that mirrors a CV structure.</p>
+      <!-- Upload Document panel -->
+      <div class="upload-panel" id="panel-upload">
+        <input type="file" id="cv-file-input" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon" id="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg></div>
+          <div id="drop-text">Click to browse or drag and drop your file here</div>
+          <div class="drop-hint">PDF or DOCX. Max 5MB</div>
+        </div>
+        <div id="file-name-display"></div>
+      </div>
+
+      <!-- Enter Manually panel -->
+      <div class="upload-panel" id="panel-manual" style="display:none">
         <div class="form-field">
           <label>Full Name</label>
           <input type="text" placeholder="Enter your full name">
@@ -470,19 +479,21 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
           <label>Skills You Have</label>
           <input type="text" placeholder="e.g. Excel, SAP, Financial Modeling, Data Analysis...">
         </div>
-        <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="selectCard('manual');enableAnalyze()">Continue with Form</button>
       </div>
-    </div>
 
-    <div style="text-align:center">
-      <div class="scan-bar-wrap" id="scan-wrap" style="max-width:400px;margin:0 auto 16px;visibility:hidden">
-        <div id="scan-progress"></div>
+      <div class="upload-action">
+        <div class="scan-bar-wrap" id="scan-wrap" style="max-width:400px;margin:0 auto 16px;visibility:hidden">
+          <div id="scan-progress"></div>
+        </div>
+        <button id="analyze-btn" class="btn btn-primary btn-lg btn-disabled" disabled onclick="startAnalysis()">
+          Analyze Now
+        </button>
+        <p class="security-note">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          Your data is secure and never shared with third parties.
+        </p>
       </div>
-      <button id="analyze-btn" class="btn btn-primary btn-lg btn-disabled" disabled onclick="startAnalysis()">
-        Analyze Now
-      </button>
     </div>
-    <p class="security-note">🔒 Your data is secure and never shared with third parties</p>
   </div>
 </div>
 
@@ -1080,15 +1091,30 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 <script>
 {JS}
 
-function selectCard(type) {{
-  document.querySelectorAll('.upload-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('card-' + type).classList.add('selected');
+function selectTab(tab) {{
+  document.querySelectorAll('.upload-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-upload').style.display = (tab === 'upload') ? '' : 'none';
+  document.getElementById('panel-manual').style.display = (tab === 'manual') ? '' : 'none';
+
+  const dropZone = document.getElementById('drop-zone');
+  if (tab === 'manual') {{
+    enableAnalyze();
+  }} else if (!dropZone.classList.contains('file-ready')) {{
+    disableAnalyze();
+  }}
 }}
 
 function enableAnalyze() {{
   const btn = document.getElementById('analyze-btn');
   btn.classList.remove('btn-disabled');
   btn.disabled = false;
+}}
+
+function disableAnalyze() {{
+  const btn = document.getElementById('analyze-btn');
+  btn.classList.add('btn-disabled');
+  btn.disabled = true;
 }}
 
 function startAnalysis() {{
@@ -1101,17 +1127,14 @@ function startAnalysis() {{
 function initDropZone() {{
   const dropZone  = document.getElementById('drop-zone');
   const fileInput = document.getElementById('cv-file-input');
-  const browseBtn = document.getElementById('browse-btn');
   const dropText  = document.getElementById('drop-text');
   const dropIcon  = document.getElementById('drop-icon');
   const nameDisp  = document.getElementById('file-name-display');
-  const card      = document.getElementById('card-upload');
 
   if (!dropZone || !fileInput) return;
 
-  // Click on drop zone or button → open file picker
+  // Click on drop zone → open file picker
   dropZone.addEventListener('click', () => fileInput.click());
-  browseBtn.addEventListener('click', (e) => {{ e.stopPropagation(); fileInput.click(); }});
 
   // Drag events
   dropZone.addEventListener('dragover',  (e) => {{ e.preventDefault(); dropZone.classList.add('drag-over'); }});
@@ -1143,12 +1166,10 @@ function initDropZone() {{
       return;
     }}
     dropZone.classList.add('file-ready');
-    dropIcon.textContent = '✅';
+    dropIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
     dropText.textContent  = file.name;
     nameDisp.textContent  = 'File ready · ' + (file.size / 1024).toFixed(0) + ' KB';
     nameDisp.style.color  = 'var(--success)';
-    card.classList.add('selected');
-    document.getElementById('card-manual').classList.remove('selected');
     enableAnalyze();
     localStorage.setItem('pathfinder_cv_file', file.name);
   }}
