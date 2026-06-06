@@ -99,7 +99,7 @@ HTML = f"""<!DOCTYPE html>
 .upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Inter',sans-serif; font-size:36px; font-weight:800; color:var(--navy); }}
 .upload-sub {{ text-align:center; color:var(--text-muted); margin-bottom:48px; font-size:16px; }}
 .upload-card-single {{
-  max-width:860px; margin:0 auto; background:var(--white);
+  max-width:900px; margin:0 auto; background:var(--white);
   border:1px solid var(--border); border-radius:14px; overflow:hidden;
   box-shadow:0px 4px 24px rgba(15,23,42,0.06);
 }}
@@ -137,8 +137,38 @@ HTML = f"""<!DOCTYPE html>
 }}
 .form-field input:focus,.form-field select:focus,.form-field textarea:focus {{ border-color:var(--blue); background:white; }}
 .form-field textarea {{ resize:vertical; min-height:80px; }}
-.form-grid-2col {{ display:grid; grid-template-columns:1fr 1fr; gap:0 36px; }}
-.form-grid-2col .form-field textarea {{ min-height:160px; }}
+.form-grid-2col {{ display:grid; grid-template-columns:1fr 1fr; gap:0 36px; align-items:start; }}
+.form-grid-2col .form-field textarea {{ min-height:90px; }}
+.form-section-label {{ display:block; font-family:'Inter',sans-serif; font-size:12px; font-weight:700; color:var(--navy); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px; }}
+.optional-tag {{ font-weight:400; text-transform:none; letter-spacing:normal; color:var(--text-muted); font-size:12px; }}
+.exp-block,.cert-block {{ position:relative; border:1px solid var(--border); border-radius:10px; padding:18px 18px 6px; margin-bottom:14px; background:var(--surface); }}
+.block-remove-btn {{ position:absolute; top:10px; right:10px; width:22px; height:22px; border:none; border-radius:50%; background:transparent; color:var(--text-muted); font-size:16px; line-height:1; cursor:pointer; transition:background .2s,color .2s; }}
+.block-remove-btn:hover {{ background:var(--border); color:var(--navy); }}
+.text-link-btn {{ display:inline-block; background:none; border:none; padding:0; margin:0 0 28px; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:var(--gold); cursor:pointer; }}
+.text-link-btn:hover {{ color:var(--gold-deep); text-decoration:underline; }}
+.combobox-field {{ position:relative; }}
+.combobox-list {{
+  display:none; position:absolute; top:100%; left:0; right:0; margin-top:4px; z-index:20;
+  background:var(--white); border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto;
+  box-shadow:0 8px 24px rgba(15,23,42,0.12);
+}}
+.combobox-option {{ padding:9px 12px; font-family:'Inter',sans-serif; font-size:13px; color:var(--text-main); cursor:pointer; }}
+.combobox-option:hover {{ background:var(--blue-light); color:var(--gold-deep); }}
+.combobox-option-other {{ border-top:1px solid var(--border); color:var(--text-muted); font-style:italic; }}
+.chip-input {{
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px; width:100%;
+  padding:8px 10px; border:1px solid var(--border); border-radius:8px;
+  background:var(--surface); cursor:text; transition:border-color .2s;
+}}
+.chip-input:focus-within {{ border-color:var(--blue); background:var(--white); }}
+.chip-token {{
+  display:inline-flex; align-items:center; gap:6px; padding:4px 8px 4px 12px;
+  border-radius:99px; background:var(--blue-light); color:var(--gold-deep);
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600; white-space:nowrap;
+}}
+.chip-token i {{ font-style:normal; cursor:pointer; opacity:0.6; }}
+.chip-token i:hover {{ opacity:1; }}
+.chip-input input {{ flex:1; min-width:120px; border:none; outline:none; background:transparent; font-family:'Inter',sans-serif; font-size:14px; padding:4px; }}
 .scan-bar-wrap {{ background:var(--border); border-radius:99px; height:4px; overflow:hidden; margin-top:8px; }}
 #scan-progress {{ height:100%; background:var(--blue); border-radius:99px; width:0%; transition:width .1s linear; }}
 .security-note {{ text-align:center; color:var(--text-muted); font-size:13px; margin-top:16px; }}
@@ -462,45 +492,75 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
       <!-- Enter Manually panel -->
       <div class="upload-panel" id="panel-manual" style="display:none">
         <div class="form-grid-2col">
+          <!-- LEFT COLUMN — Personal & Education -->
           <div>
             <div class="form-field">
               <label>Full Name</label>
-              <input type="text" placeholder="Enter your full name">
+              <input type="text" id="m-full-name" placeholder="Enter your full name">
             </div>
             <div class="form-field">
               <label>Education Level</label>
-              <select>
+              <select id="m-edu-level">
+                <option>Middle School / Junior High</option>
                 <option>High School</option>
-                <option>Associate Degree</option>
-                <option selected>Bachelor's</option>
-                <option>Master's</option>
-                <option>Doctorate</option>
+                <option>Vocational High School</option>
+                <option>Associate Degree (D1/D2/D3)</option>
+                <option>Applied Bachelor's Degree (D4)</option>
+                <option selected>Bachelor's Degree (S1)</option>
+                <option>Master's Degree (S2)</option>
+                <option>Doctorate / Ph.D. (S3)</option>
+                <option>Professional Degree</option>
+                <option>Other / Non-Degree</option>
               </select>
             </div>
-            <div class="form-field">
+            <div class="form-field combobox-field">
               <label>Major / Field of Study</label>
-              <select>
-                <option>Accounting</option>
-                <option>Finance &amp; Banking</option>
-                <option>Management</option>
-                <option>Economics</option>
-                <option>Information Systems</option>
-              </select>
+              <input type="text" id="m-major-input" placeholder="Type to search, e.g. Accounting, Computer Science..." autocomplete="off"
+                     oninput="filterMajorOptions(this.value)" onfocus="filterMajorOptions(this.value)" onblur="setTimeout(closeMajorList,150)">
+              <div class="combobox-list" id="m-major-list"></div>
             </div>
             <div class="form-field">
               <label>Institution Name</label>
-              <input type="text" placeholder="e.g. Universitas Padjadjaran">
+              <input type="text" id="m-institution" placeholder="e.g. Universitas Padjadjaran">
             </div>
           </div>
+
+          <!-- RIGHT COLUMN — Professional Data -->
           <div>
-            <div class="form-field">
-              <label>Work Experience</label>
-              <textarea placeholder="e.g. 2 years as Finance Staff at PT ABC, managing financial reports and account reconciliation..."></textarea>
+            <label class="form-section-label">Work Experience</label>
+            <div id="work-exp-list">
+              <div class="exp-block" data-exp-block>
+                <div class="form-field"><label>Job Title</label><input type="text" class="exp-title" placeholder="e.g. Finance Staff"></div>
+                <div class="form-field"><label>Company Name</label><input type="text" class="exp-company" placeholder="e.g. PT ABC Indonesia"></div>
+                <div class="form-field">
+                  <label>Duration</label>
+                  <select class="exp-duration">
+                    <option>Less than 1 year</option>
+                    <option>1-3 years</option>
+                    <option>3-5 years</option>
+                    <option>5+ years</option>
+                  </select>
+                </div>
+                <div class="form-field"><label>Key Responsibilities</label><textarea class="exp-desc" placeholder="Describe your main responsibilities and achievements..."></textarea></div>
+              </div>
             </div>
+            <button type="button" class="text-link-btn" onclick="addExperienceBlock()">+ Add Another Experience</button>
+
             <div class="form-field">
               <label>Skills You Have</label>
-              <textarea placeholder="e.g. Excel, SAP, Financial Modeling, Data Analysis..."></textarea>
+              <div class="chip-input" id="skills-chip-input" onclick="document.getElementById('skills-input').focus()">
+                <input type="text" id="skills-input" placeholder="Type a skill and press Enter or comma..." onkeydown="handleSkillInput(event)">
+              </div>
             </div>
+
+            <label class="form-section-label">Certifications &amp; Licenses <span class="optional-tag">(Optional)</span></label>
+            <div id="cert-list">
+              <div class="cert-block" data-cert-block>
+                <div class="form-field"><label>Certification Name</label><input type="text" class="cert-name" placeholder="e.g. Certified Public Accountant (CPA)"></div>
+                <div class="form-field"><label>Issuer / Organization</label><input type="text" class="cert-issuer" placeholder="e.g. IAPI"></div>
+              </div>
+            </div>
+            <button type="button" class="text-link-btn" onclick="addCertBlock()">+ Add Another Certification</button>
           </div>
         </div>
       </div>
@@ -1141,7 +1201,138 @@ function disableAnalyze() {{
   btn.disabled = true;
 }}
 
+// ── MAJOR / FIELD OF STUDY — searchable combobox ───────────
+const MAJOR_OPTIONS = [
+  'Accounting', 'Finance & Banking', 'Management', 'Economics', 'Information Systems',
+  'Computer Science', 'Marketing', 'Industrial Engineering', 'Psychology', 'Law',
+  'Communication Science', 'International Relations', 'Mechanical Engineering',
+  'Civil Engineering', 'Electrical Engineering', 'Architecture', 'Medicine',
+  'Nursing', 'Pharmacy', 'Public Health'
+];
+
+function filterMajorOptions(query) {{
+  const list = document.getElementById('m-major-list');
+  const q = query.trim().toLowerCase();
+  const matches = q ? MAJOR_OPTIONS.filter(m => m.toLowerCase().includes(q)) : MAJOR_OPTIONS.slice(0, 8);
+  list.innerHTML = '';
+  matches.forEach(m => {{
+    const opt = document.createElement('div');
+    opt.className = 'combobox-option';
+    opt.textContent = m;
+    opt.onmousedown = () => selectMajor(m);
+    list.appendChild(opt);
+  }});
+  if (q && !MAJOR_OPTIONS.some(m => m.toLowerCase() === q)) {{
+    const other = document.createElement('div');
+    other.className = 'combobox-option combobox-option-other';
+    other.textContent = 'Other: Type your major — use "' + query.trim() + '"';
+    other.onmousedown = () => selectMajor(document.getElementById('m-major-input').value);
+    list.appendChild(other);
+  }}
+  list.style.display = list.children.length ? 'block' : 'none';
+}}
+function selectMajor(value) {{
+  document.getElementById('m-major-input').value = value;
+  closeMajorList();
+}}
+function closeMajorList() {{
+  const list = document.getElementById('m-major-list');
+  if (list) list.style.display = 'none';
+}}
+
+// ── WORK EXPERIENCE — dynamic blocks ────────────────────────
+function addExperienceBlock() {{
+  const list = document.getElementById('work-exp-list');
+  const block = document.createElement('div');
+  block.className = 'exp-block';
+  block.setAttribute('data-exp-block', '');
+  block.innerHTML =
+    '<button type="button" class="block-remove-btn" onclick="this.parentElement.remove()">&times;</button>' +
+    '<div class="form-field"><label>Job Title</label><input type="text" class="exp-title" placeholder="e.g. Finance Staff"></div>' +
+    '<div class="form-field"><label>Company Name</label><input type="text" class="exp-company" placeholder="e.g. PT ABC Indonesia"></div>' +
+    '<div class="form-field"><label>Duration</label><select class="exp-duration">' +
+      '<option>Less than 1 year</option><option>1-3 years</option><option>3-5 years</option><option>5+ years</option>' +
+    '</select></div>' +
+    '<div class="form-field"><label>Key Responsibilities</label><textarea class="exp-desc" placeholder="Describe your main responsibilities and achievements..."></textarea></div>';
+  list.appendChild(block);
+}}
+
+// ── CERTIFICATIONS — dynamic blocks ─────────────────────────
+function addCertBlock() {{
+  const list = document.getElementById('cert-list');
+  const block = document.createElement('div');
+  block.className = 'cert-block';
+  block.setAttribute('data-cert-block', '');
+  block.innerHTML =
+    '<button type="button" class="block-remove-btn" onclick="this.parentElement.remove()">&times;</button>' +
+    '<div class="form-field"><label>Certification Name</label><input type="text" class="cert-name" placeholder="e.g. Certified Public Accountant (CPA)"></div>' +
+    '<div class="form-field"><label>Issuer / Organization</label><input type="text" class="cert-issuer" placeholder="e.g. IAPI"></div>';
+  list.appendChild(block);
+}}
+
+// ── SKILLS — chip / token input ──────────────────────────────
+function handleSkillInput(e) {{
+  if (e.key === 'Enter' || e.key === ',') {{
+    e.preventDefault();
+    const input = e.target;
+    const val = input.value.trim().replace(/,$/, '');
+    if (val) addSkillChip(val);
+    input.value = '';
+  }} else if (e.key === 'Backspace' && !e.target.value) {{
+    const chips = document.querySelectorAll('#skills-chip-input .chip-token');
+    if (chips.length) chips[chips.length - 1].remove();
+  }}
+}}
+function addSkillChip(value) {{
+  const input = document.getElementById('skills-input');
+  const chip = document.createElement('span');
+  chip.className = 'chip-token';
+  chip.setAttribute('data-skill', value);
+  chip.appendChild(document.createTextNode(value + ' '));
+  const remove = document.createElement('i');
+  remove.textContent = '×';
+  remove.onclick = (e) => {{ e.stopPropagation(); chip.remove(); }};
+  chip.appendChild(remove);
+  input.parentElement.insertBefore(chip, input);
+}}
+
+// ── BUILD JSON PAYLOAD — matches the user_profile contract ──
+function buildProfilePayload() {{
+  const workExperience = Array.from(document.querySelectorAll('#work-exp-list [data-exp-block]')).map(block => ({{
+    job_title:    block.querySelector('.exp-title').value.trim(),
+    company_name: block.querySelector('.exp-company').value.trim(),
+    duration:     block.querySelector('.exp-duration').value,
+    description:  block.querySelector('.exp-desc').value.trim()
+  }}));
+
+  const skills = Array.from(document.querySelectorAll('#skills-chip-input .chip-token')).map(c => c.getAttribute('data-skill'));
+
+  const certifications = Array.from(document.querySelectorAll('#cert-list [data-cert-block]')).map(block => ({{
+    name:   block.querySelector('.cert-name').value.trim(),
+    issuer: block.querySelector('.cert-issuer').value.trim()
+  }})).filter(c => c.name || c.issuer);
+
+  return {{
+    user_profile: {{
+      full_name: document.getElementById('m-full-name').value.trim(),
+      education: {{
+        level:       document.getElementById('m-edu-level').value,
+        major:       document.getElementById('m-major-input').value.trim(),
+        institution: document.getElementById('m-institution').value.trim()
+      }},
+      work_experience: workExperience,
+      skills: skills,
+      certifications: certifications
+    }}
+  }};
+}}
+
 function startAnalysis() {{
+  if (document.getElementById('tab-manual').classList.contains('active')) {{
+    const payload = buildProfilePayload();
+    console.log('PATHFINDER user_profile payload:', JSON.stringify(payload, null, 2));
+    localStorage.setItem('pathfinder_profile_payload', JSON.stringify(payload));
+  }}
   const wrap = document.getElementById('scan-wrap');
   if (wrap) wrap.style.visibility = 'visible';
   runAIScanning();
@@ -1198,6 +1389,11 @@ function initDropZone() {{
     localStorage.setItem('pathfinder_cv_file', file.name);
   }}
 }}
+
+// ── NAVBAR SHADOW ON SCROLL ─────────────────────────────────
+window.addEventListener('scroll', () => {{
+  document.querySelectorAll('.navbar').forEach(n => n.classList.toggle('scrolled', window.scrollY > 4));
+}});
 
 // ── INIT ────────────────────────────────────────────────────
 showScreen('screen-1');

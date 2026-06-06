@@ -56,7 +56,9 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Inter', sans-serif; font-weight: 600; line-hei
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 48px; height: 64px;
+  transition: box-shadow 0.2s ease;
 }
+.navbar.scrolled { box-shadow: 0 2px 14px rgba(15, 23, 42, 0.08); }
 .navbar-logo { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 19px; color: var(--navy); letter-spacing: 1px; text-decoration: none; }
 .navbar-links { display: flex; gap: 32px; }
 .navbar-links a { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: var(--text-main); text-decoration: none; transition: color 0.2s; cursor: pointer; }
