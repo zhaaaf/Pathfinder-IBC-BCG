@@ -95,11 +95,11 @@ HTML = f"""<!DOCTYPE html>
 .cta-section p {{ font-family:'Inter',sans-serif; color:var(--text-muted); font-size:15px; font-weight:400; margin-bottom:32px; }}
 
 /* ── SCREEN 2 ── */
-.upload-section {{ padding:64px 48px; max-width:960px; margin:0 auto; }}
+.upload-section {{ padding:64px 48px; max-width:1400px; margin:0 auto; }}
 .upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Inter',sans-serif; font-size:36px; font-weight:800; color:var(--navy); }}
 .upload-sub {{ text-align:center; color:var(--text-muted); margin-bottom:48px; font-size:16px; }}
 .upload-card-single {{
-  max-width:1100px; margin:0 auto; background:var(--white);
+  max-width:1200px; margin:0 auto; background:var(--white);
   border:1px solid var(--border); border-radius:14px; overflow:hidden;
   box-shadow:0px 4px 24px rgba(15,23,42,0.06);
 }}
@@ -143,6 +143,9 @@ HTML = f"""<!DOCTYPE html>
 .work-exp-head .form-section-label {{ margin-bottom:0; }}
 .work-exp-head .text-link-btn {{ margin:0; white-space:nowrap; }}
 .upload-divider {{ margin-top:28px; }}
+.upload-doc-grid {{ display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }}
+.cert-upload-zone.compact {{ padding:16px 14px; }}
+.cert-upload-zone.compact svg {{ width:22px; height:22px; margin-bottom:2px; }}
 .form-section-label {{ display:block; font-family:'Inter',sans-serif; font-size:12px; font-weight:700; color:var(--navy); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px; }}
 .optional-tag {{ font-weight:400; text-transform:none; letter-spacing:normal; color:var(--text-muted); font-size:12px; }}
 .exp-block,.cert-block {{ position:relative; border:1px solid var(--border); border-radius:10px; padding:18px 18px 6px; margin-bottom:14px; background:var(--surface); }}
@@ -363,6 +366,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   .stats-section {{ flex-direction:column; gap:32px; padding:48px 24px; text-align:center; }}
   .upload-section {{ padding:40px 20px; }}
   .form-grid-3col {{ grid-template-columns:1fr; }}
+  .upload-doc-grid {{ grid-template-columns:1fr; }}
   .upload-panel {{ padding:24px; }}
   .upload-action {{ padding:0 24px 24px; }}
   .results-section,.gap-section,.packages-section,.roadmap-section,.dashboard-section {{ padding:40px 20px; }}
@@ -505,22 +509,31 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 
       <!-- Upload Document panel -->
       <div class="upload-panel" id="panel-upload">
-        <input type="file" id="cv-file-input" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
-        <div class="drop-zone" id="drop-zone">
-          <div class="drop-icon" id="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg></div>
-          <div id="drop-text">Click to browse or drag and drop your file here</div>
-          <div class="drop-hint">PDF or DOCX. Max 5MB</div>
-        </div>
-        <div id="file-name-display"></div>
+        <div class="upload-doc-grid">
+          <!-- LEFT — CV / Resume -->
+          <div>
+            <label class="form-section-label">Upload CV / Resume</label>
+            <input type="file" id="cv-file-input" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
+            <div class="drop-zone" id="drop-zone">
+              <div class="drop-icon" id="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg></div>
+              <div id="drop-text">Click to browse or drag and drop your CV here</div>
+              <div class="drop-hint">PDF or DOCX. Max 5MB</div>
+            </div>
+            <div id="file-name-display"></div>
+          </div>
 
-        <label class="form-section-label upload-divider">Upload Certificate <span class="optional-tag">(Optional)</span></label>
-        <input type="file" id="cert-file-input-doc" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="display:none">
-        <div class="cert-upload-zone" id="cert-drop-zone-doc">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-          <div class="cert-zone-text">Drag &amp; drop certificate files here, or click to browse</div>
-          <div class="cert-zone-hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+          <!-- RIGHT — Certificates -->
+          <div>
+            <label class="form-section-label">Upload Certificates <span class="optional-tag">(Optional)</span></label>
+            <input type="file" id="cert-file-input-doc" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="display:none">
+            <div class="cert-upload-zone" id="cert-drop-zone-doc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+              <div class="cert-zone-text">Drag &amp; drop certificate files here, or click to browse</div>
+              <div class="cert-zone-hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+            </div>
+            <div class="cert-file-list" id="cert-file-list-doc"></div>
+          </div>
         </div>
-        <div class="cert-file-list" id="cert-file-list-doc"></div>
       </div>
 
       <!-- Enter Manually panel -->
@@ -592,22 +605,14 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
               </div>
             </div>
 
-            <label class="form-section-label">Certifications &amp; Licenses <span class="optional-tag">(Optional)</span></label>
+            <label class="form-section-label">Upload Certificates <span class="optional-tag">(Optional)</span></label>
             <input type="file" id="cert-file-input-manual" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="display:none">
-            <div class="cert-upload-zone" id="cert-drop-zone-manual">
+            <div class="cert-upload-zone compact" id="cert-drop-zone-manual">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-              <div class="cert-zone-text">Drag &amp; drop certificate files here, or click to browse</div>
+              <div class="cert-zone-text">Drop certificate files here to verify your credentials.</div>
               <div class="cert-zone-hint">PDF, JPG or PNG &middot; multiple files allowed</div>
             </div>
             <div class="cert-file-list" id="cert-file-list-manual"></div>
-
-            <div id="cert-list" style="margin-top:14px">
-              <div class="cert-block" data-cert-block>
-                <div class="form-field"><label>Certification Name</label><input type="text" class="cert-name" placeholder="e.g. Certified Public Accountant (CPA)"></div>
-                <div class="form-field"><label>Issuer / Organization</label><input type="text" class="cert-issuer" placeholder="e.g. IAPI"></div>
-              </div>
-            </div>
-            <button type="button" class="text-link-btn" onclick="addCertBlock()">+ Add Another Certification</button>
           </div>
         </div>
       </div>
@@ -1304,19 +1309,6 @@ function addExperienceBlock() {{
   list.appendChild(block);
 }}
 
-// ── CERTIFICATIONS — dynamic blocks ─────────────────────────
-function addCertBlock() {{
-  const list = document.getElementById('cert-list');
-  const block = document.createElement('div');
-  block.className = 'cert-block';
-  block.setAttribute('data-cert-block', '');
-  block.innerHTML =
-    '<button type="button" class="block-remove-btn" onclick="this.parentElement.remove()">&times;</button>' +
-    '<div class="form-field"><label>Certification Name</label><input type="text" class="cert-name" placeholder="e.g. Certified Public Accountant (CPA)"></div>' +
-    '<div class="form-field"><label>Issuer / Organization</label><input type="text" class="cert-issuer" placeholder="e.g. IAPI"></div>';
-  list.appendChild(block);
-}}
-
 // ── SKILLS — chip / token input ──────────────────────────────
 function handleSkillInput(e) {{
   if (e.key === 'Enter' || e.key === ',') {{
@@ -1354,11 +1346,6 @@ function buildProfilePayload() {{
 
   const skills = Array.from(document.querySelectorAll('#skills-chip-input .chip-token')).map(c => c.getAttribute('data-skill'));
 
-  const certifications = Array.from(document.querySelectorAll('#cert-list [data-cert-block]')).map(block => ({{
-    name:   block.querySelector('.cert-name').value.trim(),
-    issuer: block.querySelector('.cert-issuer').value.trim()
-  }})).filter(c => c.name || c.issuer);
-
   return {{
     user_profile: {{
       full_name: document.getElementById('m-full-name').value.trim(),
@@ -1369,16 +1356,28 @@ function buildProfilePayload() {{
       }},
       work_experience: workExperience,
       skills: skills,
-      certifications: certifications
+      certifications: []
     }}
   }};
+}}
+
+// Certificates are verified via uploaded files rather than typed-in text,
+// so they travel alongside the JSON payload as a multipart file array.
+function collectCertificateFiles() {{
+  return ['cert-file-list-doc', 'cert-file-list-manual'].flatMap(listId => {{
+    const list = document.getElementById(listId);
+    return list ? Array.from(list.children).map(item => item._file).filter(Boolean) : [];
+  }});
 }}
 
 function startAnalysis() {{
   if (document.getElementById('tab-manual').classList.contains('active')) {{
     const payload = buildProfilePayload();
+    const certificateFiles = collectCertificateFiles();
     console.log('PATHFINDER user_profile payload:', JSON.stringify(payload, null, 2));
+    console.log('PATHFINDER certificate files:', certificateFiles.map(f => f.name));
     localStorage.setItem('pathfinder_profile_payload', JSON.stringify(payload));
+    localStorage.setItem('pathfinder_certificate_files', JSON.stringify(certificateFiles.map(f => f.name)));
   }}
   const wrap = document.getElementById('scan-wrap');
   if (wrap) wrap.style.visibility = 'visible';
@@ -1477,6 +1476,7 @@ function addCertFiles(fileList, listEl) {{
 
     const item = document.createElement('div');
     item.className = 'cert-file-item';
+    item._file = file;
 
     const icon = document.createElement('span');
     icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
