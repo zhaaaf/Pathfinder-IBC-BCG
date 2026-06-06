@@ -4,29 +4,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Aliases retained so every existing var(--x) reference cascades to the new look.
-     --navy was the title color in the old design -> remapped to deep copper since
-     nearly all of its usages in app.py are card/section title text. */
-  --navy:       #A17F3E;
-  --navy-bg:    #2C2C2C;
-  --blue:       #A17F3E;
-  --blue-light: #F4ECDC;
-  --blue-mid:   #C09A51;
-  --white:      #FFFFFF;
-  --surface:    #FAF8F4;
-  --border:     #E7E1D6;
-  --text-main:  #2C2C2C;
-  --text-muted: #6B6B6B;
-  --success:    #6B8E6B;
-  --warning:    #C09A51;
+  /* Standardized palette (Slate + muted-gold accent) — every legacy var(--x)
+     name below is aliased onto it so existing references cascade correctly. */
+  --navy:        #0F172A;   /* Slate 900 — heading color on light surfaces  */
+  --navy-bg:     #1E293B;   /* Slate 800 — dark section backgrounds          */
+  --blue:        #B48E4B;   /* muted gold — primary accent / action color    */
+  --blue-light:  #F1F5F9;   /* Slate 100 — soft highlight tint (no cream)    */
+  --blue-mid:    #9C7A40;   /* gold, darkened for hover states               */
+  --white:       #FFFFFF;
+  --surface:     #F8FAFC;   /* Slate 50 — neutral card/section surface       */
+  --border:      #E2E8F0;   /* Slate 200                                     */
+  --text-main:   #334155;   /* Slate 700 — paragraph text on light surfaces  */
+  --text-muted:  #64748B;   /* Slate 500                                     */
+  --success:     #6B8E6B;
+  --warning:     #B48E4B;
 
-  /* Reference-image palette */
-  --stone:      #FFFFFF;
-  --stone-deep: #DCD3C2;
-  --slate:      #2C2C2C;
-  --brass:      #A17F3E;
-  --brass-deep: #2C2C2C;
-  --gold:       #C09A51;
+  --slate:       #334155;   /* paragraph text on light surfaces */
+  --brass:       #0F172A;   /* heading text on light surfaces   */
+  --brass-deep:  #FFFFFF;   /* text on solid gold buttons/badges */
+  --gold:        #B48E4B;
+  --gold-deep:   #9C7A40;
+  --text-on-dark:    #F8FAFC; /* Slate 50 — paragraph text on dark sections */
+  --heading-on-dark: #FFFFFF;
+  --stat-label:      #CBD5E1; /* Slate 300 — stat captions on dark sections */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,13 +34,17 @@
 body {
   font-family: 'Inter', sans-serif;
   font-size: 16px;
-  color: var(--slate);
+  color: var(--text-main);
   background: var(--white);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-h1,h2,h3,h4,h5,h6 { font-family: 'Playfair Display', serif; font-weight: 600; line-height: 1.2; color: var(--brass); letter-spacing: 0.2px; }
+/* Headings default to the functional sans-serif family at the dark heading
+   color; the serif display face is reserved for the handful of elements
+   called out explicitly (logo, hero heading, CTA heading, stat numbers). */
+h1,h2,h3,h4,h5,h6 { font-family: 'Inter', sans-serif; font-weight: 600; line-height: 1.25; color: var(--navy); letter-spacing: normal; }
+.font-display { font-family: 'Playfair Display', serif; }
 
 .screen { display: none; opacity: 0; transition: opacity 0.3s ease; min-height: 100vh; }
 .screen.active { display: block; opacity: 1; }
@@ -53,26 +57,26 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Playfair Display', serif; font-weight: 600; li
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 48px; height: 64px;
 }
-.navbar-logo { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 19px; color: var(--brass); letter-spacing: 1px; text-decoration: none; }
+.navbar-logo { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 19px; color: var(--navy); letter-spacing: 1px; text-decoration: none; }
 .navbar-links { display: flex; gap: 32px; }
-.navbar-links a { font-size: 15px; font-weight: 500; color: var(--slate); text-decoration: none; transition: color 0.2s; cursor: pointer; font-family: 'EB Garamond', serif; }
-.navbar-links a:hover { color: var(--brass); }
+.navbar-links a { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: var(--text-main); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+.navbar-links a:hover { color: var(--gold); }
 .navbar-right { display: flex; align-items: center; gap: 12px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gold); color: var(--brass-deep); font-family: 'Playfair Display', serif; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gold); color: var(--brass-deep); font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
 /* BUTTONS */
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; text-decoration: none; }
-.btn-primary { background: var(--gold); color: var(--brass-deep); border-color: var(--gold); }
-.btn-primary:hover { background: var(--gold-deep, #B8954A); border-color: var(--gold-deep, #B8954A); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(156,122,74,0.25); }
-.btn-outline { background: transparent; color: var(--slate); border-color: var(--slate); }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; border: 1.5px solid transparent; text-decoration: none; }
+.btn-primary { background: var(--gold); color: #FFFFFF; border-color: var(--gold); }
+.btn-primary:hover { background: var(--gold-deep); border-color: var(--gold-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(180,142,75,0.28); }
+.btn-outline { background: transparent; color: var(--text-main); border-color: var(--border); }
 .btn-outline:hover { background: var(--blue-light); transform: translateY(-1px); }
-.btn-outline-white { background: transparent; color: white; border-color: rgba(255,255,255,0.7); }
+.btn-outline-white { background: transparent; color: #FFFFFF; border-color: #FFFFFF; }
 .btn-outline-white:hover { background: rgba(255,255,255,0.1); }
-.btn-outline-navy { background: transparent; color: var(--slate); border-color: var(--slate); }
-.btn-outline-navy:hover { background: var(--blue-light); border-color: var(--brass); color: var(--brass); }
+.btn-outline-navy { background: transparent; color: var(--navy); border-color: var(--border); }
+.btn-outline-navy:hover { background: var(--blue-light); border-color: var(--gold); color: var(--gold); }
 .btn-disabled { background: var(--border); color: var(--text-muted); border-color: var(--border); cursor: not-allowed; }
 .btn-sm { padding: 7px 16px; font-size: 13px; }
-.btn-lg { padding: 14px 32px; font-size: 16px; }
+.btn-lg { padding: 14px 32px; font-size: 15px; }
 
 /* PROGRESS INDICATOR */
 .progress-indicator { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 48px; }
@@ -83,11 +87,11 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Playfair Display', serif; font-weight: 600; li
 .step-circle.active { background: var(--gold); border-color: var(--gold); color: var(--brass-deep); }
 .step-circle.done { background: var(--success); border-color: var(--success); color: white; }
 .step-label { font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
-.step-label.active { color: var(--brass); font-weight: 600; }
+.step-label.active { color: var(--gold); font-weight: 600; }
 
 /* CARDS */
-.card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: box-shadow 0.2s, transform 0.2s; }
-.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0px 4px 20px rgba(15,23,42,0.05); transition: box-shadow 0.2s, transform 0.2s; }
+.card:hover { box-shadow: 0px 8px 28px rgba(15,23,42,0.08); }
 .card-surface { background: var(--surface); }
 
 /* PROGRESS BAR */
@@ -97,9 +101,9 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Playfair Display', serif; font-weight: 600; li
 
 /* CHIPS & BADGES */
 .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 500; }
-.chip-blue { background: var(--blue-light); color: var(--brass); }
+.chip-blue { background: var(--blue-light); color: var(--gold-deep); }
 .chip-green { background: #ECFDF5; color: var(--success); }
-.chip-navy { background: var(--slate); color: white; }
+.chip-navy { background: var(--navy-bg); color: white; }
 .chip-muted { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
 .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
 .badge-blue { background: var(--gold); color: var(--brass-deep); }

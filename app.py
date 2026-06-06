@@ -40,56 +40,56 @@ HTML = f"""<!DOCTYPE html>
 <style>
 {CSS}
 /* ── SCREEN 1 ── */
-.hero {{ display:flex; min-height:calc(100vh - 64px); }}
+.hero {{ display:flex; min-height:calc(100vh - 64px); background:var(--navy-bg); }}
 .hero-left {{
-  flex:0 0 55%; background:var(--navy-bg); padding:72px 64px;
+  flex:0 0 55%; padding:72px 64px;
   display:flex; flex-direction:column; justify-content:center; gap:28px;
 }}
-.hero-eyebrow {{ font-size:11px; letter-spacing:3px; font-weight:700; color:var(--blue); text-transform:uppercase; }}
-.hero-heading {{ font-family:'Playfair Display',serif; font-size:48px; font-weight:800; line-height:1.1; color:white; }}
-.hero-heading span {{ color:var(--blue); }}
-.hero-sub {{ font-size:16px; color:rgba(255,255,255,0.72); max-width:460px; line-height:1.7; }}
+.hero-eyebrow {{ font-size:11px; letter-spacing:3px; font-weight:700; color:var(--gold); text-transform:uppercase; }}
+.hero-heading {{ font-family:'Playfair Display',serif; font-size:48px; font-weight:800; line-height:1.1; color:var(--heading-on-dark); }}
+.hero-heading span {{ color:var(--gold); }}
+.hero-sub {{ font-size:16px; color:var(--text-on-dark); opacity:0.78; max-width:460px; line-height:1.7; }}
 .hero-ctas {{ display:flex; gap:14px; flex-wrap:wrap; }}
 .hero-right {{
-  flex:0 0 45%; background:var(--surface); padding:72px 48px;
+  flex:0 0 45%; padding:72px 48px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;
 }}
 .floating-card {{
   background:white; border:1px solid var(--border); border-radius:14px;
   padding:28px; width:100%; max-width:380px;
-  box-shadow:0 8px 32px rgba(91,100,112,0.12);
+  box-shadow:0 20px 48px rgba(0,0,0,0.28);
 }}
-.floating-card-header {{ font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted); margin-bottom:20px; font-weight:600; }}
+.floating-card-header {{ font-family:'Inter',sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted); margin-bottom:20px; font-weight:600; }}
 .prof-row {{ margin-bottom:16px; }}
 .prof-row:last-child {{ margin-bottom:0; }}
-.prof-label {{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--navy); }}
-.prof-label span {{ color:var(--blue); }}
+.prof-label {{ display:flex; justify-content:space-between; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--navy); }}
+.prof-label span {{ color:var(--gold); }}
 .floating-badge {{ font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }}
 .step-cards {{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; padding:64px 48px; background:white; }}
-.step-card {{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px 24px; transition:box-shadow .2s,transform .2s; }}
-.step-card:hover {{ box-shadow:0 4px 20px rgba(0,0,0,0.08); transform:translateY(-2px); }}
-.step-num {{ font-family:'Playfair Display',serif; font-size:36px; font-weight:800; color:var(--blue-light); letter-spacing:-1px; margin-bottom:12px; }}
-.step-icon {{ font-size:28px; margin-bottom:12px; }}
-.step-title {{ font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:8px; }}
-.step-desc {{ font-size:13px; color:var(--text-muted); line-height:1.5; }}
+.step-card {{ background:var(--white); border:1px solid var(--border); border-radius:12px; padding:28px 24px; box-shadow:0px 4px 20px rgba(15,23,42,0.05); transition:box-shadow .2s,transform .2s; }}
+.step-card:hover {{ box-shadow:0px 8px 28px rgba(15,23,42,0.09); transform:translateY(-2px); }}
+.step-icon {{ width:28px; height:28px; margin-bottom:14px; color:var(--gold); }}
+.step-icon svg {{ width:28px; height:28px; display:block; }}
+.step-title {{ font-family:'Inter',sans-serif; font-size:16px; font-weight:600; color:var(--navy); margin-bottom:8px; }}
+.step-desc {{ font-family:'Inter',sans-serif; font-size:14px; font-weight:400; color:var(--text-muted); line-height:1.5; }}
 .stats-section {{ background:var(--navy-bg); padding:64px 48px; display:flex; justify-content:center; gap:64px; }}
 .stat-item {{ text-align:center; }}
-.stat-num {{ font-family:'Playfair Display',serif; font-size:42px; font-weight:800; color:white; margin-bottom:8px; }}
-.stat-label {{ font-size:14px; color:rgba(255,255,255,0.6); }}
-.cta-section {{ background:var(--blue-light); padding:80px 48px; text-align:center; }}
+.stat-num {{ font-family:'Playfair Display',serif; font-size:42px; font-weight:800; color:var(--heading-on-dark); margin-bottom:8px; }}
+.stat-label {{ font-family:'Inter',sans-serif; font-size:14px; font-weight:400; color:var(--stat-label); }}
+.cta-section {{ background:var(--surface); padding:80px 48px; text-align:center; }}
 .cta-section h2 {{ font-family:'Playfair Display',serif; font-size:32px; font-weight:800; color:var(--navy); margin-bottom:16px; }}
-.cta-section p {{ color:var(--text-muted); font-size:16px; margin-bottom:32px; }}
+.cta-section p {{ font-family:'Inter',sans-serif; color:var(--text-muted); font-size:15px; font-weight:400; margin-bottom:32px; }}
 
 /* ── SCREEN 2 ── */
 .upload-section {{ padding:64px 48px; max-width:960px; margin:0 auto; }}
-.upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Playfair Display',serif; font-size:36px; font-weight:800; color:var(--navy); }}
+.upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Inter',sans-serif; font-size:36px; font-weight:800; color:var(--navy); }}
 .upload-sub {{ text-align:center; color:var(--text-muted); margin-bottom:48px; font-size:16px; }}
 .upload-cards {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px; }}
 .upload-card {{ border:1px solid var(--border); border-radius:12px; padding:36px 28px; background:white; transition:border-color .2s,box-shadow .2s; }}
 .upload-card:hover {{ border-color:var(--blue); box-shadow:0 4px 16px rgba(156,122,74,0.14); }}
 .upload-card.selected {{ border-color:var(--blue); background:var(--blue-light); }}
 .upload-icon {{ font-size:40px; margin-bottom:16px; }}
-.upload-card h3 {{ font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--navy); margin-bottom:10px; }}
+.upload-card h3 {{ font-family:'Inter',sans-serif; font-size:20px; font-weight:700; color:var(--navy); margin-bottom:10px; }}
 .upload-card p {{ font-size:14px; color:var(--text-muted); margin-bottom:20px; line-height:1.5; }}
 .drop-zone {{
   border:2px dashed var(--border); border-radius:8px; padding:32px;
@@ -122,18 +122,18 @@ HTML = f"""<!DOCTYPE html>
   background:white; transition:box-shadow .2s; cursor:pointer; position:relative;
 }}
 .profession-card:hover {{ box-shadow:0 4px 16px rgba(0,0,0,0.08); }}
-.profession-card.best {{ border-left:4px solid var(--blue); background:#F1ECE1; }}
+.profession-card.best {{ border-left:4px solid var(--blue); background:var(--blue-light); }}
 .profession-card.selected {{ border-color:var(--blue); box-shadow:0 0 0 2px rgba(156,122,74,0.22); }}
-.prof-rank {{ font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:var(--blue-light); flex-shrink:0; width:48px; }}
+.prof-rank {{ font-family:'Inter',sans-serif; font-size:28px; font-weight:800; color:var(--blue-light); flex-shrink:0; width:48px; }}
 .prof-info {{ flex:1; }}
-.prof-name {{ font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
+.prof-name {{ font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
 .prof-desc {{ font-size:13px; color:var(--text-muted); margin-bottom:12px; }}
 .prof-bar-label {{ font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:flex; justify-content:space-between; }}
 .prof-meta {{ flex-shrink:0; text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }}
 .prof-meta-item {{ font-size:12px; color:var(--text-muted); }}
 .prof-badge-wrap {{ position:absolute; top:16px; right:16px; }}
 .custom-prof-card {{ border:2px dashed var(--border); border-radius:12px; padding:28px; background:var(--surface); }}
-.custom-prof-card h3 {{ font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:6px; }}
+.custom-prof-card h3 {{ font-family:'Inter',sans-serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:6px; }}
 .custom-prof-card p {{ font-size:13px; color:var(--text-muted); margin-bottom:16px; }}
 .custom-input-row {{ display:flex; gap:10px; margin-bottom:12px; }}
 .custom-input-row input {{ flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; outline:none; }}
@@ -146,12 +146,12 @@ HTML = f"""<!DOCTYPE html>
 .readiness-bar-wrap {{ background:var(--blue-light); border-radius:12px; padding:24px 28px; margin-bottom:40px; }}
 .readiness-bar-header {{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }}
 .readiness-bar-header span:first-child {{ font-size:14px; font-weight:600; color:var(--navy); }}
-.readiness-bar-header span:last-child {{ font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:var(--blue); }}
+.readiness-bar-header span:last-child {{ font-family:'Inter',sans-serif; font-size:22px; font-weight:800; color:var(--blue); }}
 .readiness-sub {{ font-size:12px; color:var(--text-muted); margin-top:8px; }}
 .skill-cols {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }}
 .skill-col-card {{ border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white; }}
 .skill-col-header {{ padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }}
-.skill-col-header h3 {{ font-family:'Playfair Display',serif; font-size:15px; font-weight:700; color:var(--navy); flex:1; }}
+.skill-col-header h3 {{ font-family:'Inter',sans-serif; font-size:15px; font-weight:700; color:var(--navy); flex:1; }}
 .skill-list {{ padding:8px 0; }}
 .skill-item {{ display:flex; align-items:center; gap:12px; padding:10px 20px; border-bottom:1px solid var(--border); font-size:13px; font-weight:500; }}
 .skill-item:last-child {{ border-bottom:none; }}
@@ -164,7 +164,7 @@ HTML = f"""<!DOCTYPE html>
 .packages-section {{ padding:48px; max-width:1100px; margin:0 auto; }}
 .slider-wrap {{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px 28px; margin-bottom:36px; }}
 .slider-label {{ font-size:14px; font-weight:600; color:var(--navy); margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }}
-.slider-label span:last-child {{ font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--blue); }}
+.slider-label span:last-child {{ font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:var(--blue); }}
 input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 .slider-note {{ font-size:12px; color:var(--text-muted); margin-top:8px; }}
 .packages-grid {{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }}
@@ -174,12 +174,12 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   transition:box-shadow .2s,border-color .2s; display:flex; flex-direction:column;
 }}
 .package-card:hover {{ box-shadow:0 4px 20px rgba(0,0,0,0.08); }}
-.package-card.recommended {{ border:2px solid var(--blue); background:#F1ECE1; }}
+.package-card.recommended {{ border:2px solid var(--blue); background:var(--blue-light); }}
 .package-card.selected {{ box-shadow:0 0 0 3px rgba(156,122,74,0.22); }}
 .pkg-recommended-badge {{ position:absolute; top:-13px; left:50%; transform:translateX(-50%); white-space:nowrap; }}
 .pkg-icon {{ font-size:28px; margin-bottom:12px; }}
-.pkg-name {{ font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
-.pkg-days {{ font-family:'Playfair Display',serif; font-size:32px; font-weight:800; color:var(--blue); }}
+.pkg-name {{ font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
+.pkg-days {{ font-family:'Inter',sans-serif; font-size:32px; font-weight:800; color:var(--blue); }}
 .pkg-days-label {{ font-size:12px; color:var(--text-muted); margin-bottom:6px; }}
 .pkg-hours {{ font-size:13px; color:var(--text-muted); margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--border); }}
 .pkg-courses {{ display:flex; flex-direction:column; gap:12px; flex:1; margin-bottom:20px; }}
@@ -200,7 +200,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 .timeline-bullet {{
   width:36px; height:36px; border-radius:50%; border:2px solid var(--border);
   display:flex; align-items:center; justify-content:center;
-  font-family:'Playfair Display',serif; font-size:13px; font-weight:700; color:var(--text-muted);
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:700; color:var(--text-muted);
   background:white; flex-shrink:0; z-index:1;
 }}
 .timeline-bullet.active {{ background:var(--blue); border-color:var(--blue); color:white; }}
@@ -211,12 +211,12 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   flex:1; background:white; border:1px solid var(--border); border-radius:12px;
   padding:20px 24px; margin-bottom:24px; position:relative;
 }}
-.timeline-card.active {{ background:#F1ECE1; border-left:4px solid var(--blue); }}
+.timeline-card.active {{ background:var(--blue-light); border-left:4px solid var(--blue); }}
 .timeline-card-inner {{ display:flex; gap:20px; }}
 .timeline-card-main {{ flex:1; }}
 .timeline-card-side {{ flex-shrink:0; text-align:right; min-width:140px; }}
 .tl-skill-label {{ font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-muted); font-weight:600; margin-bottom:4px; }}
-.tl-skill-name {{ font-family:'Playfair Display',serif; font-size:15px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
+.tl-skill-name {{ font-family:'Inter',sans-serif; font-size:15px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
 .tl-course-name {{ font-size:13px; color:var(--text-muted); margin-bottom:12px; }}
 .tl-duration {{ font-size:12px; color:var(--text-muted); margin-top:10px; }}
 .tl-date {{ font-size:12px; color:var(--text-muted); margin-bottom:4px; }}
@@ -228,28 +228,28 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   padding:20px 24px; margin-top:4px;
 }}
 .end-bullet {{ width:36px; height:36px; border-radius:50%; background:var(--success); color:white; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }}
-.end-text h3 {{ font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--success); }}
+.end-text h3 {{ font-family:'Inter',sans-serif; font-size:16px; font-weight:700; color:var(--success); }}
 .end-text p {{ font-size:13px; color:var(--text-muted); }}
 
 /* ── SCREEN 7 ── */
 .dashboard-section {{ padding:32px 48px; max-width:1100px; margin:0 auto; }}
 .greeting-row {{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; }}
-.greeting-text h2 {{ font-family:'Playfair Display',serif; font-size:24px; font-weight:800; color:var(--navy); margin-bottom:4px; }}
+.greeting-text h2 {{ font-family:'Inter',sans-serif; font-size:24px; font-weight:800; color:var(--navy); margin-bottom:4px; }}
 .greeting-text p {{ font-size:14px; color:var(--text-muted); }}
 .metric-cards {{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }}
 .metric-card {{ border:1px solid var(--border); border-radius:12px; padding:20px; background:white; }}
 .metric-label {{ font-size:12px; color:var(--text-muted); font-weight:500; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px; }}
-.metric-value {{ font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:var(--navy); margin-bottom:4px; }}
+.metric-value {{ font-family:'Inter',sans-serif; font-size:28px; font-weight:800; color:var(--navy); margin-bottom:4px; }}
 .metric-sub {{ font-size:12px; color:var(--text-muted); }}
 .active-stage-card {{ border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:24px; background:white; }}
 .active-stage-header {{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }}
-.active-stage-title {{ font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--navy); }}
+.active-stage-title {{ font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:var(--navy); }}
 .active-course-meta {{ font-size:14px; color:var(--text-muted); margin-bottom:16px; }}
 .progress-label {{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--navy); margin-bottom:8px; }}
 .active-stage-actions {{ display:flex; gap:12px; margin-top:20px; flex-wrap:wrap; }}
 .active-stage-note {{ font-size:12px; color:var(--text-muted); margin-top:10px; }}
 .skill-progress-card {{ border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:24px; background:white; }}
-.skill-progress-card h3 {{ font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:20px; }}
+.skill-progress-card h3 {{ font-family:'Inter',sans-serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:20px; }}
 .skill-progress-row {{ margin-bottom:14px; }}
 .skill-progress-row:last-child {{ margin-bottom:0; }}
 .skill-progress-meta {{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }}
@@ -259,7 +259,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 .owned-chips p {{ font-size:12px; color:var(--text-muted); margin-bottom:8px; }}
 .owned-chips-list {{ display:flex; flex-wrap:wrap; gap:6px; }}
 .upload-proof-card {{ border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:24px; background:white; }}
-.upload-proof-card h3 {{ font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
+.upload-proof-card h3 {{ font-family:'Inter',sans-serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
 .upload-proof-sub {{ font-size:13px; color:var(--text-muted); margin-bottom:16px; }}
 .upload-proof-drop {{ border:2px dashed var(--border); border-radius:8px; padding:28px; text-align:center; color:var(--text-muted); font-size:13px; margin-bottom:14px; cursor:pointer; transition:border-color .2s; }}
 .upload-proof-drop:hover {{ border-color:var(--blue); color:var(--blue); }}
@@ -344,27 +344,23 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   <div id="how-it-works">
     <div class="step-cards">
       <div class="step-card">
-        <div class="step-num">01</div>
-        <div class="step-icon">📄</div>
-        <div class="step-title">Upload CV or fill in your data</div>
+        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg></div>
+        <div class="step-title">1. Upload CV or fill in your data</div>
         <div class="step-desc">Upload your CV or fill in a quick form to start your profile analysis.</div>
       </div>
       <div class="step-card">
-        <div class="step-num">02</div>
-        <div class="step-icon">🤖</div>
-        <div class="step-title">AI analyzes your profile</div>
+        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/></svg></div>
+        <div class="step-title">2. AI analyzes your profile</div>
         <div class="step-desc">Pathfinder AI matches your skills against thousands of O*NET and SKKNI standardized professions.</div>
       </div>
       <div class="step-card">
-        <div class="step-num">03</div>
-        <div class="step-icon">🗺️</div>
-        <div class="step-title">Get your career roadmap</div>
+        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l-5 2V4l5-2 6 2 5-2v16l-5 2-6-2z"/><path d="M9 2v16M15 4v16"/></svg></div>
+        <div class="step-title">3. Get your career roadmap</div>
         <div class="step-desc">Receive a personalized learning map showing exactly what skills you need to master.</div>
       </div>
       <div class="step-card">
-        <div class="step-num">04</div>
-        <div class="step-icon">🏆</div>
-        <div class="step-title">Build skills, land your career</div>
+        <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9.5 13.5 8 22l4-2 4 2-1.5-8.5"/></svg></div>
+        <div class="step-title">4. Build skills, land your career</div>
         <div class="step-desc">Take certified courses and prove your competence to the world of work.</div>
       </div>
     </div>
@@ -484,7 +480,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   </div>
 
   <div class="results-section">
-    <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Professions most suited for you</h2>
+    <h2 style="font-family:'Inter',sans-serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Professions most suited for you</h2>
     <p class="text-muted" style="margin-bottom:24px;font-size:15px">Based on <strong>14 skills</strong> detected from your profile, here are the top 3 profession matches</p>
 
     <div class="skill-chips" style="margin-bottom:36px">
@@ -586,7 +582,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   </div>
 
   <div class="gap-section">
-    <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Skill map toward Financial Analyst</h2>
+    <h2 style="font-family:'Inter',sans-serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Skill map toward Financial Analyst</h2>
     <p class="text-muted" style="margin-bottom:28px">You already have <strong>15 of 19 skills</strong> required. Here's the full breakdown.</p>
 
     <div class="readiness-bar-wrap">
@@ -683,7 +679,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   </div>
 
   <div class="packages-section">
-    <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Choose your learning pace</h2>
+    <h2 style="font-family:'Inter',sans-serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Choose your learning pace</h2>
     <p class="text-muted" style="margin-bottom:32px">All plans cover the same certified courses at the same standard. The difference is in depth of content.</p>
 
     <div class="slider-wrap">
@@ -811,7 +807,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   <div class="roadmap-section">
     <div class="roadmap-header">
       <div>
-        <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:8px">Your Roadmap to Financial Analyst</h2>
+        <h2 style="font-family:'Inter',sans-serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:8px">Your Roadmap to Financial Analyst</h2>
         <p class="text-muted" style="font-size:14px">Standard Plan · 2 hrs/day · Starting Today</p>
       </div>
       <div class="roadmap-stats">
