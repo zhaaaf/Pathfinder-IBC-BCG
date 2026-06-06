@@ -40,9 +40,12 @@ HTML = f"""<!DOCTYPE html>
 <style>
 {CSS}
 /* ── SCREEN 1 ── */
-.hero {{ display:flex; min-height:calc(100vh - 64px); background:var(--navy-bg); }}
+.hero {{ background:var(--navy-bg); display:flex; justify-content:center; min-height:calc(100vh - 64px); }}
+.hero-inner {{
+  display:flex; width:100%; max-width:1200px; padding:0 48px;
+}}
 .hero-left {{
-  flex:0 0 55%; padding:72px 64px;
+  flex:0 0 55%; padding:72px 16px 72px 0;
   display:flex; flex-direction:column; justify-content:center; gap:28px;
 }}
 .hero-eyebrow {{ font-size:11px; letter-spacing:3px; font-weight:700; color:var(--gold); text-transform:uppercase; }}
@@ -52,7 +55,7 @@ HTML = f"""<!DOCTYPE html>
 .hero-ctas {{ display:flex; gap:14px; flex-wrap:wrap; }}
 .hero-microcopy {{ font-family:'Inter',sans-serif; font-size:12px; font-weight:400; color:var(--text-on-dark); opacity:0.45; }}
 .hero-right {{
-  flex:0 0 45%; padding:72px 48px;
+  flex:0 0 45%; padding:72px 0 72px 16px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;
   position:relative;
 }}
@@ -280,10 +283,10 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 .motivation-card p strong {{ color:white; font-style:normal; }}
 
 @media (max-width:768px) {{
-  .hero {{ flex-direction:column; }}
-  .hero-left {{ flex:none; padding:48px 24px; }}
+  .hero-inner {{ flex-direction:column; padding:0 24px; }}
+  .hero-left {{ flex:none; padding:48px 0; }}
   .hero-heading {{ font-size:32px; }}
-  .hero-right {{ flex:none; padding:40px 24px; }}
+  .hero-right {{ flex:none; padding:0 0 40px 0; }}
   .step-cards {{ grid-template-columns:1fr 1fr; padding:40px 20px; }}
   .step-connector {{ display:none; }}
   .stats-section {{ flex-direction:column; gap:32px; padding:48px 24px; text-align:center; }}
@@ -321,6 +324,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   </nav>
 
   <div class="hero">
+   <div class="hero-inner">
     <div class="hero-left">
       <p class="hero-eyebrow">AI-Powered Career Mapping</p>
       <h1 class="hero-heading">Discover Your Career<br><span>Path Today</span></h1>
@@ -355,6 +359,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
         Analyzed using O*NET standards
       </p>
     </div>
+   </div>
   </div>
 
   <div id="how-it-works">
