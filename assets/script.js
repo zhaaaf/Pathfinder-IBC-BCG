@@ -11,6 +11,7 @@ function showScreen(id) {
   const target = document.getElementById(id);
   if (!target) return;
   target.style.display = 'block';
+  if (id === 'screen-3' && typeof loadResultsScreen === 'function') loadResultsScreen();
   requestAnimationFrame(() => {
     target.style.opacity = '1';
     target.classList.add('active');
@@ -48,22 +49,30 @@ function selectPackage(pkg) {
 
 // Profession selection
 function selectProfession(prof) {
-  document.querySelectorAll('.profession-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.match-card').forEach(c => c.classList.remove('selected'));
   const card = document.getElementById('prof-' + prof);
   if (card) card.classList.add('selected');
   localStorage.setItem('pathfinder_profession', prof);
 }
 
-// Add custom profession chip
+// Add custom profession chip (safe DOM construction — value is user-typed text)
 function addProfession() {
   const input = document.getElementById('custom-prof-input');
   if (!input || !input.value.trim()) return;
   const val = input.value.trim();
   const container = document.getElementById('custom-prof-chips');
+  if (!container) return;
   const chip = document.createElement('span');
   chip.className = 'chip chip-blue';
   chip.style.margin = '4px';
-  chip.innerHTML = val + ' <span onclick="this.parentElement.remove()" style="cursor:pointer;margin-left:4px;font-weight:700;">×</span>';
+  chip.appendChild(document.createTextNode(val + ' '));
+  const remove = document.createElement('span');
+  remove.textContent = '×';
+  remove.style.cursor = 'pointer';
+  remove.style.marginLeft = '4px';
+  remove.style.fontWeight = '700';
+  remove.addEventListener('click', () => chip.remove());
+  chip.appendChild(remove);
   container.appendChild(chip);
   input.value = '';
 }

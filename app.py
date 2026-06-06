@@ -201,31 +201,47 @@ HTML = f"""<!DOCTYPE html>
 #scan-progress {{ height:100%; background:var(--blue); border-radius:99px; width:0%; transition:width .1s linear; }}
 .security-note {{ text-align:center; color:var(--text-muted); font-size:13px; margin-top:16px; }}
 
-/* ── SCREEN 3 ── */
-.results-section {{ padding:48px; max-width:960px; margin:0 auto; }}
-.skill-chips {{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:40px; }}
-.profession-card {{
-  border:1px solid var(--border); border-radius:12px; padding:24px 28px;
-  margin-bottom:16px; display:flex; align-items:center; gap:24px;
-  background:white; transition:box-shadow .2s; cursor:pointer; position:relative;
+/* ── SCREEN 3 — Profession Match Results ── */
+.results-section {{ padding:48px; max-width:1280px; margin:0 auto; }}
+.results-title {{ font-size:34px; font-weight:700; color:var(--navy); margin-bottom:8px; }}
+.skill-chips {{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:36px; }}
+.skill-detected-chip {{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 14px 6px 10px;
+  border-radius:99px; background:#F1F5F9; color:var(--navy);
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
 }}
-.profession-card:hover {{ box-shadow:0 4px 16px rgba(0,0,0,0.08); }}
-.profession-card.best {{ border-left:4px solid var(--blue); background:var(--blue-light); }}
-.profession-card.selected {{ border-color:var(--blue); box-shadow:0 0 0 2px rgba(156,122,74,0.22); }}
-.prof-rank {{ font-family:'Inter',sans-serif; font-size:28px; font-weight:800; color:var(--blue-light); flex-shrink:0; width:48px; }}
-.prof-info {{ flex:1; }}
-.prof-name {{ font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:var(--navy); margin-bottom:4px; }}
-.prof-desc {{ font-size:13px; color:var(--text-muted); margin-bottom:12px; }}
-.prof-bar-label {{ font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; display:flex; justify-content:space-between; }}
-.prof-meta {{ flex-shrink:0; text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }}
-.prof-meta-item {{ font-size:12px; color:var(--text-muted); }}
-.prof-badge-wrap {{ position:absolute; top:16px; right:16px; }}
-.custom-prof-card {{ border:2px dashed var(--border); border-radius:12px; padding:28px; background:var(--surface); }}
-.custom-prof-card h3 {{ font-family:'Inter',sans-serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:6px; }}
-.custom-prof-card p {{ font-size:13px; color:var(--text-muted); margin-bottom:16px; }}
-.custom-input-row {{ display:flex; gap:10px; margin-bottom:12px; }}
-.custom-input-row input {{ flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; outline:none; }}
-.custom-input-row input:focus {{ border-color:var(--blue); }}
+.skill-detected-chip svg {{ width:14px; height:14px; color:var(--success); flex-shrink:0; }}
+.results-loading {{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:96px 0; color:var(--text-muted); font-size:14px; }}
+.results-spinner {{ width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:results-spin .8s linear infinite; }}
+@keyframes results-spin {{ to {{ transform:rotate(360deg); }} }}
+
+.results-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; align-items:stretch; }}
+.match-card {{
+  position:relative; display:flex; flex-direction:column; gap:10px;
+  border:1px solid var(--border); border-radius:12px; padding:24px;
+  background:white; cursor:pointer; transition:box-shadow .2s,transform .2s;
+}}
+.match-card:hover {{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(15,23,42,0.08); }}
+.match-card.best {{ border-top:4px solid var(--gold); box-shadow:0 6px 24px rgba(15,23,42,0.08); }}
+.match-card.selected {{ border-color:var(--blue); box-shadow:0 0 0 2px rgba(156,122,74,0.22); }}
+.match-best-badge {{ position:absolute; top:16px; right:16px; }}
+.match-rank {{ font-family:'Inter',sans-serif; font-size:24px; font-weight:800; color:var(--blue-light); }}
+.match-title {{ font-family:'Inter',sans-serif; font-size:17px; font-weight:700; color:var(--navy); }}
+.match-onet-code {{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.4px; color:var(--text-muted); text-transform:uppercase; }}
+.match-desc {{ font-size:13px; color:var(--text-muted); flex:1; }}
+.match-meta-line {{ font-size:12px; color:var(--text-muted); }}
+.match-stats-row {{ display:flex; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-muted); }}
+.match-select-btn {{ width:100%; justify-content:center; margin-top:4px; }}
+
+.match-add-card {{
+  display:flex; flex-direction:column; border:2px dashed #CBD5E1; border-radius:12px;
+  padding:24px; background:#F8FAFC;
+}}
+.match-add-card h3 {{ font-family:'Inter',sans-serif; font-size:15px; font-weight:700; color:var(--navy); margin-bottom:6px; }}
+.match-add-card p {{ font-size:12px; color:var(--text-muted); margin-bottom:16px; }}
+.match-add-card .custom-input-row {{ display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }}
+.match-add-card input {{ width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; outline:none; background:white; }}
+.match-add-card input:focus {{ border-color:var(--blue); }}
 #custom-prof-chips {{ display:flex; flex-wrap:wrap; gap:6px; min-height:28px; }}
 .nav-bottom {{ display:flex; justify-content:space-between; align-items:center; padding:32px 48px; border-top:1px solid var(--border); background:white; position:sticky; bottom:0; }}
 
@@ -371,11 +387,10 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   .upload-action {{ padding:0 24px 24px; }}
   .results-section,.gap-section,.packages-section,.roadmap-section,.dashboard-section {{ padding:40px 20px; }}
   .packages-grid {{ grid-template-columns:1fr; }}
+  .results-grid {{ grid-template-columns:1fr 1fr; }}
   .skill-cols {{ grid-template-columns:1fr; }}
   .metric-cards {{ grid-template-columns:1fr 1fr; }}
   .roadmap-header {{ flex-direction:column; }}
-  .profession-card {{ flex-direction:column; }}
-  .prof-meta {{ align-items:flex-start; text-align:left; }}
   .timeline-card-inner {{ flex-direction:column; }}
   .timeline-card-side {{ text-align:left; }}
   .nav-bottom {{ padding:20px; }}
@@ -653,81 +668,17 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   </div>
 
   <div class="results-section">
-    <h2 style="font-family:'Inter',sans-serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px">Professions most suited for you</h2>
-    <p class="text-muted" style="margin-bottom:24px;font-size:15px">Based on <strong>14 skills</strong> detected from your profile, here are the top 3 profession matches</p>
+    <h1 class="font-display results-title">Professions most suited for you</h1>
+    <p class="text-muted" id="results-subtitle" style="margin-bottom:24px;font-size:15px">Analyzing your profile&hellip;</p>
 
-    <div class="skill-chips" style="margin-bottom:36px">
-      <span class="chip chip-blue">Financial Modeling ✓</span>
-      <span class="chip chip-blue">Microsoft Excel ✓</span>
-      <span class="chip chip-blue">Data Analysis ✓</span>
-      <span class="chip chip-blue">Accounting ✓</span>
-      <span class="chip chip-blue">Auditing ✓</span>
-      <span class="chip chip-blue">SAP Basic ✓</span>
-      <span class="chip chip-blue">Business Valuation ✓</span>
-      <span class="chip chip-blue">Risk Assessment ✓</span>
-      <span class="chip chip-blue">Budgeting ✓</span>
-      <span class="chip chip-blue">SQL Basic ✓</span>
+    <div id="results-loading" class="results-loading">
+      <div class="results-spinner"></div>
+      <div>Matching your skills against O*NET and SKKNI profession standards&hellip;</div>
     </div>
 
-    <div class="profession-card best" id="prof-financial-analyst" onclick="selectProfession('financial-analyst');showScreen('screen-4')">
-      <div class="prof-rank">01</div>
-      <div class="prof-info">
-        <div class="prof-name">Financial Analyst</div>
-        <div class="prof-desc">Analyzes financial data to support business and investment decision-making</div>
-        <div class="prof-bar-label"><span>Skill Match</span><span style="color:var(--blue);font-weight:700">79%</span></div>
-        <div class="progress-bar-wrap" style="height:8px"><div class="progress-bar-fill" style="width:79%"></div></div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:6px">15 of 19 skills matched</div>
-      </div>
-      <div class="prof-meta">
-        <div class="prof-meta-item">Gap: <strong style="color:var(--navy)">4 skills</strong></div>
-        <div class="prof-meta-item">Est. roadmap: <strong style="color:var(--navy)">68 days</strong></div>
-        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();selectProfession('financial-analyst');showScreen('screen-4')">Select</button>
-      </div>
-      <div class="prof-badge-wrap"><span class="badge badge-blue">Best Match</span></div>
-    </div>
-
-    <div class="profession-card" id="prof-accountant" onclick="selectProfession('accountant');showScreen('screen-4')">
-      <div class="prof-rank" style="color:var(--border)">02</div>
-      <div class="prof-info">
-        <div class="prof-name">Accountant</div>
-        <div class="prof-desc">Prepares and analyzes financial reports according to applicable accounting standards</div>
-        <div class="prof-bar-label"><span>Skill Match</span><span style="color:var(--blue);font-weight:700">68%</span></div>
-        <div class="progress-bar-wrap" style="height:8px"><div class="progress-bar-fill" style="width:68%"></div></div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:6px">13 of 19 skills matched</div>
-      </div>
-      <div class="prof-meta">
-        <div class="prof-meta-item">Gap: <strong style="color:var(--navy)">6 skills</strong></div>
-        <div class="prof-meta-item">Est. roadmap: <strong style="color:var(--navy)">84 days</strong></div>
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();selectProfession('accountant');showScreen('screen-4')">Select</button>
-      </div>
-    </div>
-
-    <div class="profession-card" id="prof-auditor" onclick="selectProfession('auditor');showScreen('screen-4')">
-      <div class="prof-rank" style="color:var(--border)">03</div>
-      <div class="prof-info">
-        <div class="prof-name">Auditor</div>
-        <div class="prof-desc">Examines and verifies financial reports and regulatory compliance</div>
-        <div class="prof-bar-label"><span>Skill Match</span><span style="color:var(--blue);font-weight:700">58%</span></div>
-        <div class="progress-bar-wrap" style="height:8px"><div class="progress-bar-fill" style="width:58%"></div></div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:6px">11 of 19 skills matched</div>
-      </div>
-      <div class="prof-meta">
-        <div class="prof-meta-item">Gap: <strong style="color:var(--navy)">8 skills</strong></div>
-        <div class="prof-meta-item">Est. roadmap: <strong style="color:var(--navy)">105 days</strong></div>
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();selectProfession('auditor');showScreen('screen-4')">Select</button>
-      </div>
-    </div>
-
-    <div class="divider">— or —</div>
-
-    <div class="custom-prof-card">
-      <h3>Add a profession you're interested in</h3>
-      <p>Even if your skills aren't yet a strong match, Pathfinder will still build you a complete roadmap for it</p>
-      <div class="custom-input-row">
-        <input id="custom-prof-input" type="text" placeholder="Search profession... (e.g. Data Scientist, UI/UX Designer)" onkeydown="if(event.key==='Enter') addProfession()">
-        <button class="btn btn-outline btn-sm" onclick="addProfession()">+ Add Profession</button>
-      </div>
-      <div id="custom-prof-chips"></div>
+    <div id="results-content" style="display:none">
+      <div class="skill-chips" id="detected-skills-list"></div>
+      <div class="results-grid" id="results-grid"></div>
     </div>
   </div>
 
@@ -1579,6 +1530,160 @@ function addCertFiles(fileList, listEl) {{
     item.appendChild(remove);
     listEl.appendChild(item);
   }});
+}}
+
+// ── PROFESSION MATCH RESULTS ────────────────────────────────
+// Mock "/api/analyze-profile" response — shaped exactly like the real
+// contract (detected_skills + top_matches with O*NET code, absolute
+// match ratio, gap count, estimated roadmap length) so this screen can
+// be pointed at a live backend later with no markup changes.
+const RESULTS_MOCK = {{
+  detected_skills: [
+    'Financial Modeling', 'Microsoft Excel', 'Data Analysis', 'Accounting', 'Auditing',
+    'SAP Basic', 'Business Valuation', 'Risk Assessment', 'Budgeting', 'SQL Basic',
+    'Forecasting', 'Bookkeeping', 'Financial Reporting', 'Variance Analysis'
+  ],
+  top_matches: [
+    {{
+      title: 'Financial Analyst',
+      onet_code: '13-2051.00',
+      description: 'Analyzes financial data to support business and investment decision-making.',
+      matched_count: 15,
+      total_required: 19,
+      gap_count: 4,
+      estimated_days: 68
+    }},
+    {{
+      title: 'Accountant',
+      onet_code: '13-2011.00',
+      description: 'Prepares and analyzes financial reports according to applicable accounting standards.',
+      matched_count: 13,
+      total_required: 19,
+      gap_count: 6,
+      estimated_days: 84
+    }},
+    {{
+      title: 'Auditor',
+      onet_code: '13-2011.01',
+      description: 'Examines and verifies financial reports and regulatory compliance.',
+      matched_count: 11,
+      total_required: 19,
+      gap_count: 8,
+      estimated_days: 105
+    }}
+  ]
+}};
+
+function escHtml(value) {{
+  const div = document.createElement('div');
+  div.textContent = String(value);
+  return div.innerHTML;
+}}
+
+function slugifyTitle(title) {{
+  return String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '');
+}}
+
+function buildMatchCard(match, index) {{
+  const ratio  = match.total_required > 0 ? Math.round((match.matched_count / match.total_required) * 100) : 0;
+  const isBest = index === 0;
+  const slug   = slugifyTitle(match.title);
+
+  const card = document.createElement('div');
+  card.className = 'match-card' + (isBest ? ' best' : '');
+  card.id = 'prof-' + slug;
+  card.innerHTML =
+    (isBest ? '<span class="badge badge-blue match-best-badge">Best Match</span>' : '') +
+    '<div class="match-rank" style="' + (isBest ? '' : 'color:var(--border)') + '">' + String(index + 1).padStart(2, '0') + '</div>' +
+    '<div class="match-title">' + escHtml(match.title) + '</div>' +
+    '<div class="match-onet-code">O*NET-SOC ' + escHtml(match.onet_code) + '</div>' +
+    '<div class="match-desc">' + escHtml(match.description) + '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)"><span>Skill Match</span><span style="color:var(--blue);font-weight:700">' + ratio + '%</span></div>' +
+    '<div class="progress-bar-wrap" style="height:8px"><div class="progress-bar-fill" style="width:' + ratio + '%"></div></div>' +
+    '<div class="match-meta-line">' + match.matched_count + ' of ' + match.total_required + ' skills matched</div>' +
+    '<div class="match-stats-row">' +
+      '<span>Gap: <strong style="color:var(--navy)">' + match.gap_count + ' skills</strong></span>' +
+      '<span>Roadmap: <strong style="color:var(--navy)">' + match.estimated_days + ' days</strong></span>' +
+    '</div>' +
+    '<button type="button" class="btn ' + (isBest ? 'btn-primary' : 'btn-outline') + ' btn-sm match-select-btn">Select</button>';
+
+  const goToProfile = () => {{ selectProfession(slug); showScreen('screen-4'); }};
+  card.addEventListener('click', goToProfile);
+  card.querySelector('.match-select-btn').addEventListener('click', (e) => {{ e.stopPropagation(); goToProfile(); }});
+  return card;
+}}
+
+function buildAddProfessionCard() {{
+  const card = document.createElement('div');
+  card.className = 'match-add-card';
+  card.innerHTML =
+    '<h3>Add a profession you\\'re interested in</h3>' +
+    '<p>Even if your skills aren\\'t yet a strong match, Pathfinder will still build you a complete roadmap for it.</p>' +
+    '<div class="custom-input-row">' +
+      '<input id="custom-prof-input" type="text" placeholder="Search profession... e.g. Data Scientist">' +
+      '<button type="button" class="btn btn-outline btn-sm" id="add-profession-btn">+ Add Profession</button>' +
+    '</div>' +
+    '<div id="custom-prof-chips"></div>';
+
+  const input = card.querySelector('#custom-prof-input');
+  card.querySelector('#add-profession-btn').addEventListener('click', addProfession);
+  input.addEventListener('keydown', (e) => {{ if (e.key === 'Enter') addProfession(); }});
+  return card;
+}}
+
+function renderResultsScreen() {{
+  const data = RESULTS_MOCK;
+
+  const subtitle = document.getElementById('results-subtitle');
+  if (subtitle) {{
+    subtitle.innerHTML = '';
+    subtitle.appendChild(document.createTextNode('Based on '));
+    const strong = document.createElement('strong');
+    strong.textContent = data.detected_skills.length + ' skills';
+    subtitle.appendChild(strong);
+    subtitle.appendChild(document.createTextNode(' detected from your profile, here are your top profession matches.'));
+  }}
+
+  const chipList = document.getElementById('detected-skills-list');
+  if (chipList) {{
+    chipList.innerHTML = '';
+    data.detected_skills.forEach((skill) => {{
+      const chip = document.createElement('span');
+      chip.className = 'skill-detected-chip';
+      const check = document.createElement('span');
+      check.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      chip.appendChild(check);
+      chip.appendChild(document.createTextNode(skill));
+      chipList.appendChild(chip);
+    }});
+  }}
+
+  const grid = document.getElementById('results-grid');
+  if (grid) {{
+    grid.innerHTML = '';
+    data.top_matches.slice(0, 3).forEach((match, i) => grid.appendChild(buildMatchCard(match, i)));
+    grid.appendChild(buildAddProfessionCard());
+  }}
+}}
+
+function loadResultsScreen() {{
+  const loading = document.getElementById('results-loading');
+  const content = document.getElementById('results-content');
+  if (!loading || !content) return;
+  if (content.dataset.loaded === '1') return;
+
+  loading.style.display = 'flex';
+  content.style.display = 'none';
+
+  // Simulated POST /api/analyze-profile latency — swap this timeout for a
+  // real fetch() once the backend endpoint exists; the render function
+  // below already consumes the exact response shape the API would return.
+  setTimeout(() => {{
+    renderResultsScreen();
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    content.dataset.loaded = '1';
+  }}, 700);
 }}
 
 // ── NAVBAR SHADOW ON SCROLL ─────────────────────────────────
