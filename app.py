@@ -50,9 +50,18 @@ HTML = f"""<!DOCTYPE html>
 .hero-heading span {{ color:var(--gold); }}
 .hero-sub {{ font-size:16px; color:var(--text-on-dark); opacity:0.78; max-width:460px; line-height:1.7; }}
 .hero-ctas {{ display:flex; gap:14px; flex-wrap:wrap; }}
+.hero-microcopy {{ font-family:'Inter',sans-serif; font-size:12px; font-weight:400; color:var(--text-on-dark); opacity:0.45; }}
 .hero-right {{
   flex:0 0 45%; padding:72px 48px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;
+  position:relative;
+}}
+.floating-card-wrap {{ position:relative; width:100%; max-width:380px; }}
+.example-output-badge {{
+  position:absolute; top:-13px; right:18px; z-index:2;
+  font-family:'Inter',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.5px;
+  color:var(--gold); background:#FFFFFF; border:1px solid rgba(180,142,75,0.35);
+  border-radius:99px; padding:4px 14px; box-shadow:0 4px 10px rgba(0,0,0,0.12);
 }}
 .floating-card {{
   background:white; border:1px solid var(--border); border-radius:14px;
@@ -65,7 +74,9 @@ HTML = f"""<!DOCTYPE html>
 .prof-label {{ display:flex; justify-content:space-between; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--navy); }}
 .prof-label span {{ color:var(--gold); }}
 .floating-badge {{ font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }}
-.step-cards {{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; padding:64px 48px; background:white; }}
+.step-cards {{ display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto 1fr; align-items:center; gap:8px; padding:64px 48px; background:white; }}
+.step-connector {{ display:flex; align-items:center; justify-content:center; color:var(--border); width:48px; }}
+.step-connector svg {{ width:48px; height:18px; display:block; }}
 .step-card {{ background:var(--white); border:1px solid var(--border); border-radius:12px; padding:28px 24px; box-shadow:0px 4px 20px rgba(15,23,42,0.05); transition:box-shadow .2s,transform .2s; }}
 .step-card:hover {{ box-shadow:0px 8px 28px rgba(15,23,42,0.09); transform:translateY(-2px); }}
 .step-icon {{ width:28px; height:28px; margin-bottom:14px; color:var(--gold); }}
@@ -274,6 +285,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   .hero-heading {{ font-size:32px; }}
   .hero-right {{ flex:none; padding:40px 24px; }}
   .step-cards {{ grid-template-columns:1fr 1fr; padding:40px 20px; }}
+  .step-connector {{ display:none; }}
   .stats-section {{ flex-direction:column; gap:32px; padding:48px 24px; text-align:center; }}
   .upload-section {{ padding:40px 20px; }}
   .upload-cards {{ grid-template-columns:1fr; }}
@@ -312,14 +324,17 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
     <div class="hero-left">
       <p class="hero-eyebrow">AI-Powered Career Mapping</p>
       <h1 class="hero-heading">Discover Your Career<br><span>Path Today</span></h1>
-      <p class="hero-sub">Pathfinder analyzes your current skills, matches them against O*NET and SKKNI industry standards, and builds your personalized learning roadmap — so you can compete and win in today's job market.</p>
+      <p class="hero-sub">Know exactly what skills you need for your dream career. Pathfinder compares your CV with global industry standards to build a personalized learning roadmap.</p>
       <div class="hero-ctas">
         <button class="btn btn-primary btn-lg" onclick="showScreen('screen-2')">Analyze My CV</button>
         <button class="btn btn-outline-white btn-lg" onclick="document.getElementById('how-it-works').scrollIntoView({{behavior:'smooth'}})">See How It Works</button>
       </div>
+      <p class="hero-microcopy">PDF or DOCX. 100% Free &amp; Secure.</p>
     </div>
     <div class="hero-right">
-      <div class="floating-card">
+      <div class="floating-card-wrap">
+        <span class="example-output-badge">Example Output</span>
+        <div class="floating-card">
         <p class="floating-card-header">Profile Analysis Results</p>
         <div class="prof-row">
           <div class="prof-label">Financial Analyst <span>79%</span></div>
@@ -332,6 +347,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
         <div class="prof-row">
           <div class="prof-label">Auditor <span>58%</span></div>
           <div class="progress-bar-wrap" style="height:8px"><div class="progress-bar-fill" style="width:58%"></div></div>
+        </div>
         </div>
       </div>
       <p class="floating-badge">
@@ -348,16 +364,19 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
         <div class="step-title">1. Upload CV or fill in your data</div>
         <div class="step-desc">Upload your CV or fill in a quick form to start your profile analysis.</div>
       </div>
+      <div class="step-connector"><svg viewBox="0 0 64 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="12" x2="50" y2="12" stroke-dasharray="4 5"/><path d="M44 6l8 6-8 6"/></svg></div>
       <div class="step-card">
         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/></svg></div>
         <div class="step-title">2. AI analyzes your profile</div>
         <div class="step-desc">Pathfinder AI matches your skills against thousands of O*NET and SKKNI standardized professions.</div>
       </div>
+      <div class="step-connector"><svg viewBox="0 0 64 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="12" x2="50" y2="12" stroke-dasharray="4 5"/><path d="M44 6l8 6-8 6"/></svg></div>
       <div class="step-card">
         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l-5 2V4l5-2 6 2 5-2v16l-5 2-6-2z"/><path d="M9 2v16M15 4v16"/></svg></div>
         <div class="step-title">3. Get your career roadmap</div>
         <div class="step-desc">Receive a personalized learning map showing exactly what skills you need to master.</div>
       </div>
+      <div class="step-connector"><svg viewBox="0 0 64 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="12" x2="50" y2="12" stroke-dasharray="4 5"/><path d="M44 6l8 6-8 6"/></svg></div>
       <div class="step-card">
         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9.5 13.5 8 22l4-2 4 2-1.5-8.5"/></svg></div>
         <div class="step-title">4. Build skills, land your career</div>
