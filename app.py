@@ -20,18 +20,22 @@ st.markdown("""
 .block-container { padding: 0 !important; max-width: 100% !important; }
 [data-testid="stAppViewContainer"] { padding: 0 !important; }
 
-/* ── Live CV-analysis trigger (native widgets — bridges the embedded   ──
-   HTML mockup to a real Python/Claude backend pipeline) ───────────── */
-.pf-live-analyze-wrap { max-width: 1280px; margin: 28px auto 0; padding: 0 32px; font-family: 'Inter', sans-serif; }
-.pf-live-analyze { border: 1px solid #E2E8F0; border-radius: 16px; padding: 28px 32px;
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%); box-shadow: 0 6px 24px rgba(15,23,42,0.06); }
-.pf-live-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
-  color: #B48E4B; background: rgba(180,142,75,0.12); border-radius: 99px; padding: 4px 12px; margin-bottom: 10px; }
-.pf-live-analyze h3 { font-size: 20px; font-weight: 700; color: #0F172A; margin: 0 0 6px; }
-.pf-live-analyze p { font-size: 14px; color: #64748B; margin: 0 0 18px; max-width: 760px; line-height: 1.6; }
-.pf-live-analyze-wrap [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #FFFFFF; }
-.pf-live-analyze-wrap [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
-.pf-live-analyze-wrap [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
+/* ── Real "Upload Document" / "Enter Manually" engine ──────────────
+   The preview above is a sandboxed iframe (st.components.v1.html) with
+   no channel back to Python, so its tabs can only ever be a mockup —
+   real file bytes can only reach this server through native Streamlit
+   widgets. This block IS those same two input modes, for real, with
+   results flowing into the very results screen shown in the preview. */
+.st-key-pf_real_engine { max-width: 1200px; margin: 0 auto 40px; padding: 0 48px; font-family: 'Inter', sans-serif; }
+.st-key-pf_real_engine [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid #E2E8F0; }
+.st-key-pf_real_engine [aria-selected="true"] { color: #B48E4B !important; }
+.st-key-pf_real_engine [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #F8FAFC; }
+.st-key-pf_real_engine [data-testid="stWidgetLabel"] p { font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #64748B; }
+.st-key-pf_real_engine [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
+.st-key-pf_real_engine [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
+.pf-real-engine-intro { max-width: 1200px; margin: 0 auto; padding: 28px 48px 8px; font-family: 'Inter', sans-serif; }
+.pf-real-engine-intro h3 { font-size: 18px; font-weight: 700; color: #1E293B; margin: 0 0 4px; }
+.pf-real-engine-intro p { font-size: 13px; color: #64748B; margin: 0; line-height: 1.5; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -196,64 +200,12 @@ CSS = load_file("assets/styles.css")
 JS  = load_file("assets/script.js")
 
 
-# ────────────────────────────────────────────────────────────────────
-# LIVE ANALYSIS TRIGGER
-#
-# The embedded app below is rendered via st.components.v1.html() — a
-# sandboxed iframe with a one-way (Python → JS) data channel and no
-# Next.js/custom-component build chain to bridge it back. Streamlit's
-# native widget protocol is the *only* real channel that can carry an
-# uploaded file from the browser into this Python process, so the real
-# "Upload CV → analyze" trigger lives here. Once analysis completes,
-# its real, structured result is injected straight into the embedded
-# results screen below — replacing 100% of the previous mock data.
-# ────────────────────────────────────────────────────────────────────
 st.session_state.setdefault("analysis_result", None)
 st.session_state.setdefault("analysis_error", None)
 
-st.markdown('<div class="pf-live-analyze-wrap"><div class="pf-live-analyze">', unsafe_allow_html=True)
-st.markdown(
-    '<span class="pf-live-badge">Live AI Analysis</span>'
-    '<h3>Upload your CV (PDF) for a real Pathfinder skill match</h3>'
-    '<p>This runs the full pipeline end-to-end — server-side PDF text extraction, '
-    'Claude-powered O*NET&nbsp;/&nbsp;SKKNI skill mapping, and live profession matching with '
-    'an absolute match ratio. Nothing below is mocked: the results screen renders exactly '
-    'what your uploaded document produces.</p>',
-    unsafe_allow_html=True,
-)
-
-up_col, btn_col = st.columns([3, 1], vertical_alignment="bottom")
-with up_col:
-    cv_pdf_file = st.file_uploader(
-        "Upload CV / Resume (PDF)", type=["pdf"], label_visibility="collapsed", key="pf_cv_pdf",
-    )
-with btn_col:
-    analyze_clicked = st.button(
-        "🔍  Analyze My CV", type="primary", use_container_width=True, disabled=cv_pdf_file is None,
-    )
-
-if analyze_clicked and cv_pdf_file is not None:
-    st.session_state["analysis_error"] = None
-    st.session_state["analysis_result"] = None
-    try:
-        with st.spinner("Extracting your CV and matching it against O*NET / SKKNI standards…"):
-            st.session_state["analysis_result"] = run_profile_analysis(cv_pdf_file.getvalue())
-    except Exception as exc:
-        st.session_state["analysis_error"] = str(exc)
-    st.rerun()
-
-if st.session_state.get("analysis_error"):
-    st.error(f"Analysis failed: {st.session_state['analysis_error']}")
-elif st.session_state.get("analysis_result"):
-    _result = st.session_state["analysis_result"]
-    st.success(
-        f"Analysis complete — {len(_result['detected_skills'])} skills detected, "
-        f"{len(_result['top_matches'])} profession matches found. Scroll down to view "
-        "your live results in the Pathfinder results screen."
-    )
-
-st.markdown('</div></div>', unsafe_allow_html=True)
-
+# RESULTS_DATA only depends on session_state (persists across Streamlit
+# reruns), so it can be computed here — before the iframe — even though
+# the actual upload control that produces it renders further down.
 _analysis_result = st.session_state.get("analysis_result")
 RESULTS_DATA_JSON = json.dumps(_analysis_result) if _analysis_result else "null"
 JUMP_TO_RESULTS_JS = "true" if _analysis_result else "false"
@@ -1937,3 +1889,64 @@ initCertDropZone('cert-drop-zone-manual', 'cert-file-input-manual', 'cert-file-l
 </html>"""
 
 st.components.v1.html(HTML, height=900, scrolling=True)
+
+# ────────────────────────────────────────────────────────────────────
+# REAL "Upload Document" / "Enter Manually" — the live input for the
+# preview's Upload Profile step. The preview is a sandboxed iframe with
+# no return channel to Python, so its tabs can only mock the flow; these
+# are the SAME two input modes wired for real — whatever you submit here
+# is parsed/analyzed and the preview's results screen above re-renders
+# with your actual O*NET / SKKNI matches (see RESULTS_DATA / JUMP_TO_RESULTS).
+# ────────────────────────────────────────────────────────────────────
+st.markdown(
+    '<div class="pf-real-engine-intro">'
+    '<h3>Run it for real, the same two ways</h3>'
+    '<p>The screen above is a live preview of the experience. To generate <strong>your</strong> actual '
+    'matches, use either input mode below — upload your CV or type your profile in — and the preview\'s '
+    'results screen will re-render with your real, AI-generated O*NET / SKKNI matches.</p>'
+    '</div>',
+    unsafe_allow_html=True,
+)
+
+with st.container(key="pf_real_engine"):
+    tab_doc, tab_manual = st.tabs(["📄  Upload Document", "✍️  Enter Manually"])
+
+    with tab_doc:
+        cv_pdf_file = st.file_uploader("Upload CV / Resume (PDF)", type=["pdf"], key="pf_cv_pdf")
+        if st.button("🔍  Analyze My CV", type="primary", key="pf_analyze_doc", disabled=cv_pdf_file is None):
+            st.session_state["analysis_error"] = None
+            st.session_state["analysis_result"] = None
+            try:
+                with st.spinner("Extracting your CV and matching it against O*NET / SKKNI standards…"):
+                    st.session_state["analysis_result"] = run_profile_analysis(cv_pdf_file.getvalue())
+            except Exception as exc:
+                st.session_state["analysis_error"] = str(exc)
+            st.rerun()
+
+    with tab_manual:
+        manual_profile_text = st.text_area(
+            "Describe your profile — education, work experience, and skills",
+            placeholder="e.g. Bachelor's in Mathematics from ITB, 2 years as a data analyst building Python/SQL "
+                        "dashboards. Skills: statistics, machine learning basics, Excel, SQL...",
+            height=180, key="pf_manual_text",
+        )
+        if st.button("🔍  Analyze My Profile", type="primary", key="pf_analyze_manual",
+                     disabled=not manual_profile_text.strip()):
+            st.session_state["analysis_error"] = None
+            st.session_state["analysis_result"] = None
+            try:
+                with st.spinner("Matching your profile against O*NET / SKKNI standards…"):
+                    st.session_state["analysis_result"] = analyze_profile_with_claude(manual_profile_text.strip())
+            except Exception as exc:
+                st.session_state["analysis_error"] = str(exc)
+            st.rerun()
+
+    if st.session_state.get("analysis_error"):
+        st.error(f"Analysis failed: {st.session_state['analysis_error']}")
+    elif st.session_state.get("analysis_result"):
+        _result = st.session_state["analysis_result"]
+        st.success(
+            f"✓ Analysis complete — {len(_result['detected_skills'])} skills detected, "
+            f"{len(_result['top_matches'])} profession matches found. The preview above now shows "
+            f"your real results screen."
+        )
