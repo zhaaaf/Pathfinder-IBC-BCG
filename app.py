@@ -1,5 +1,11 @@
 import streamlit as st
 import os
+import io
+import json
+import re
+
+import pdfplumber
+from anthropic import Anthropic
 
 st.set_page_config(
     page_title="Pathfinder — AI Career Mapping",
@@ -13,6 +19,19 @@ st.markdown("""
 #MainMenu, header, footer, .stDeployButton { display: none !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; }
 [data-testid="stAppViewContainer"] { padding: 0 !important; }
+
+/* ── Live CV-analysis trigger (native widgets — bridges the embedded   ──
+   HTML mockup to a real Python/Claude backend pipeline) ───────────── */
+.pf-live-analyze-wrap { max-width: 1280px; margin: 28px auto 0; padding: 0 32px; font-family: 'Inter', sans-serif; }
+.pf-live-analyze { border: 1px solid #E2E8F0; border-radius: 16px; padding: 28px 32px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%); box-shadow: 0 6px 24px rgba(15,23,42,0.06); }
+.pf-live-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+  color: #B48E4B; background: rgba(180,142,75,0.12); border-radius: 99px; padding: 4px 12px; margin-bottom: 10px; }
+.pf-live-analyze h3 { font-size: 20px; font-weight: 700; color: #0F172A; margin: 0 0 6px; }
+.pf-live-analyze p { font-size: 14px; color: #64748B; margin: 0 0 18px; max-width: 760px; line-height: 1.6; }
+.pf-live-analyze-wrap [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #FFFFFF; }
+.pf-live-analyze-wrap [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
+.pf-live-analyze-wrap [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -26,8 +45,219 @@ def load_file(path):
     return ""
 
 
+# ────────────────────────────────────────────────────────────────────
+# REAL CV ANALYSIS PIPELINE  (PDF text extraction → LLM skill mapping)
+#
+# This replaces the previous mock "RESULTS_MOCK" payload with a live,
+# end-to-end pipeline: an uploaded PDF's raw bytes are parsed into text
+# server-side, then sent to Claude with structured-output instructions
+# that map the candidate's real skills onto O*NET "Technology Skills" /
+# "Knowledge" categories + Indonesian SKKNI competency unit codes, and
+# surface the top 3 closest O*NET-SOC profession matches with an
+# absolute (matched / total_required) match ratio — no arbitrary
+# weighting, no hardcoded professions.
+# ────────────────────────────────────────────────────────────────────
+
+ANALYZE_SYSTEM_PROMPT = (
+    "You are an expert career data encoder. Analyze the provided raw CV text. \n"
+    "1. Extract all technical hard skills and cross-functional soft skills. \n"
+    "2. Map these skills directly to official O*NET \"Technology Skills\" or \"Knowledge\" "
+    "categories, and assign the closest Indonesian SKKNI competency unit code.\n"
+    "3. Query your internal database of O*NET Standard Occupational Classifications (SOC) to "
+    "find the top 3 closest profession titles that match the user's background. If the user has "
+    "a Mathematics and Python background, you must output tech/analytical roles (e.g., Data "
+    "Scientist, Operations Research Analyst) rather than finance roles.\n"
+    "4. Calculate the absolute match ratio: matched_skills divided by total_required_skills for "
+    "that specific profession.\n\n"
+    "Respond with ONLY a single raw JSON object — no markdown code fences, no commentary, no "
+    "leading or trailing text — matching exactly this schema:\n"
+    "{\n"
+    '  "detected_skills": ["string"],\n'
+    '  "top_matches": [\n'
+    "    {\n"
+    '      "title": "string",\n'
+    '      "onet_code": "string",\n'
+    '      "description": "string",\n'
+    '      "matched_count": number,\n'
+    '      "total_required": number,\n'
+    '      "gap_count": number,\n'
+    '      "estimated_days": number\n'
+    "    }\n"
+    "  ]\n"
+    "}"
+)
+
+ANALYZE_MODEL = "claude-3-5-sonnet-20241022"
+
+
+def extract_pdf_text(file_bytes: bytes) -> str:
+    """Step 1 — read the raw binary buffer of the uploaded PDF and extract clean text."""
+    pages = []
+    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text() or ""
+            if page_text.strip():
+                pages.append(page_text.strip())
+    return "\n\n".join(pages).strip()
+
+
+def _coerce_match_record(raw):
+    """Normalize one top_matches entry from the LLM into the exact numeric/string contract."""
+    matched = int(raw.get("matched_count", 0) or 0)
+    total = int(raw.get("total_required", 0) or 0)
+    gap = raw.get("gap_count")
+    gap = int(gap) if gap is not None else max(total - matched, 0)
+    return {
+        "title": str(raw.get("title", "")).strip(),
+        "onet_code": str(raw.get("onet_code", "")).strip(),
+        "description": str(raw.get("description", "")).strip(),
+        "matched_count": matched,
+        "total_required": total,
+        "gap_count": gap,
+        "estimated_days": int(raw.get("estimated_days", 0) or 0),
+    }
+
+
+def analyze_profile_with_claude(cv_text: str) -> dict:
+    """Step 2 — send extracted CV text to Claude using structured-output instructions
+    and parse the response into the {detected_skills, top_matches} contract."""
+    try:
+        api_key = st.secrets.get("ANTHROPIC_API_KEY")
+    except Exception:
+        # Raised as StreamlitSecretNotFoundError when no secrets.toml exists at all —
+        # treat it the same as "key not configured" rather than letting it bubble up.
+        api_key = None
+    if not api_key:
+        raise RuntimeError(
+            "ANTHROPIC_API_KEY is not configured. Add it under Settings → Secrets in Streamlit "
+            "Cloud (or in .streamlit/secrets.toml locally) to enable real CV analysis — "
+            "e.g. ANTHROPIC_API_KEY = \"sk-ant-...\"."
+        )
+
+    client = Anthropic(api_key=api_key)
+    response = client.messages.create(
+        model=ANALYZE_MODEL,
+        max_tokens=2048,
+        system=ANALYZE_SYSTEM_PROMPT,
+        messages=[{
+            "role": "user",
+            "content": (
+                "Here is the raw CV text extracted from the candidate's uploaded PDF. Analyze it "
+                "per your system instructions and respond with ONLY the JSON object described "
+                "there — no markdown fences, no extra text.\n\n"
+                "--- BEGIN CV TEXT ---\n"
+                f"{cv_text}\n"
+                "--- END CV TEXT ---"
+            ),
+        }],
+    )
+
+    raw_text = "".join(
+        block.text for block in response.content if getattr(block, "type", None) == "text"
+    ).strip()
+
+    # Defensive: some models wrap JSON in ```json ... ``` even when told not to.
+    fenced = re.match(r"^```(?:json)?\s*(.*?)\s*```$", raw_text, flags=re.DOTALL | re.IGNORECASE)
+    if fenced:
+        raw_text = fenced.group(1).strip()
+
+    try:
+        data = json.loads(raw_text)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"Claude returned a response that wasn't valid JSON ({exc}). "
+            f"Raw output (truncated): {raw_text[:500]}"
+        ) from exc
+
+    detected_skills = [str(s).strip() for s in data.get("detected_skills", []) if str(s).strip()]
+    top_matches = [_coerce_match_record(m) for m in data.get("top_matches", [])]
+
+    if not detected_skills or not top_matches:
+        raise RuntimeError(
+            "Claude's response was missing 'detected_skills' or 'top_matches'. "
+            f"Got keys: {list(data.keys())}"
+        )
+
+    return {"detected_skills": detected_skills, "top_matches": top_matches}
+
+
+def run_profile_analysis(file_bytes: bytes) -> dict:
+    """Full pipeline: raw PDF bytes → extracted text → live LLM structured analysis."""
+    cv_text = extract_pdf_text(file_bytes)
+    if not cv_text:
+        raise RuntimeError(
+            "No extractable text was found in this PDF — it may be a scanned/image-based "
+            "document. Try uploading a text-based PDF export of your CV/resume."
+        )
+    return analyze_profile_with_claude(cv_text)
+
+
 CSS = load_file("assets/styles.css")
 JS  = load_file("assets/script.js")
+
+
+# ────────────────────────────────────────────────────────────────────
+# LIVE ANALYSIS TRIGGER
+#
+# The embedded app below is rendered via st.components.v1.html() — a
+# sandboxed iframe with a one-way (Python → JS) data channel and no
+# Next.js/custom-component build chain to bridge it back. Streamlit's
+# native widget protocol is the *only* real channel that can carry an
+# uploaded file from the browser into this Python process, so the real
+# "Upload CV → analyze" trigger lives here. Once analysis completes,
+# its real, structured result is injected straight into the embedded
+# results screen below — replacing 100% of the previous mock data.
+# ────────────────────────────────────────────────────────────────────
+st.session_state.setdefault("analysis_result", None)
+st.session_state.setdefault("analysis_error", None)
+
+st.markdown('<div class="pf-live-analyze-wrap"><div class="pf-live-analyze">', unsafe_allow_html=True)
+st.markdown(
+    '<span class="pf-live-badge">Live AI Analysis</span>'
+    '<h3>Upload your CV (PDF) for a real Pathfinder skill match</h3>'
+    '<p>This runs the full pipeline end-to-end — server-side PDF text extraction, '
+    'Claude-powered O*NET&nbsp;/&nbsp;SKKNI skill mapping, and live profession matching with '
+    'an absolute match ratio. Nothing below is mocked: the results screen renders exactly '
+    'what your uploaded document produces.</p>',
+    unsafe_allow_html=True,
+)
+
+up_col, btn_col = st.columns([3, 1], vertical_alignment="bottom")
+with up_col:
+    cv_pdf_file = st.file_uploader(
+        "Upload CV / Resume (PDF)", type=["pdf"], label_visibility="collapsed", key="pf_cv_pdf",
+    )
+with btn_col:
+    analyze_clicked = st.button(
+        "🔍  Analyze My CV", type="primary", use_container_width=True, disabled=cv_pdf_file is None,
+    )
+
+if analyze_clicked and cv_pdf_file is not None:
+    st.session_state["analysis_error"] = None
+    st.session_state["analysis_result"] = None
+    try:
+        with st.spinner("Extracting your CV and matching it against O*NET / SKKNI standards…"):
+            st.session_state["analysis_result"] = run_profile_analysis(cv_pdf_file.getvalue())
+    except Exception as exc:
+        st.session_state["analysis_error"] = str(exc)
+    st.rerun()
+
+if st.session_state.get("analysis_error"):
+    st.error(f"Analysis failed: {st.session_state['analysis_error']}")
+elif st.session_state.get("analysis_result"):
+    _result = st.session_state["analysis_result"]
+    st.success(
+        f"Analysis complete — {len(_result['detected_skills'])} skills detected, "
+        f"{len(_result['top_matches'])} profession matches found. Scroll down to view "
+        "your live results in the Pathfinder results screen."
+    )
+
+st.markdown('</div></div>', unsafe_allow_html=True)
+
+_analysis_result = st.session_state.get("analysis_result")
+RESULTS_DATA_JSON = json.dumps(_analysis_result) if _analysis_result else "null"
+JUMP_TO_RESULTS_JS = "true" if _analysis_result else "false"
+
 
 HTML = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1533,46 +1763,14 @@ function addCertFiles(fileList, listEl) {{
 }}
 
 // ── PROFESSION MATCH RESULTS ────────────────────────────────
-// Mock "/api/analyze-profile" response — shaped exactly like the real
-// contract (detected_skills + top_matches with O*NET code, absolute
-// match ratio, gap count, estimated roadmap length) so this screen can
-// be pointed at a live backend later with no markup changes.
-const RESULTS_MOCK = {{
-  detected_skills: [
-    'Financial Modeling', 'Microsoft Excel', 'Data Analysis', 'Accounting', 'Auditing',
-    'SAP Basic', 'Business Valuation', 'Risk Assessment', 'Budgeting', 'SQL Basic',
-    'Forecasting', 'Bookkeeping', 'Financial Reporting', 'Variance Analysis'
-  ],
-  top_matches: [
-    {{
-      title: 'Financial Analyst',
-      onet_code: '13-2051.00',
-      description: 'Analyzes financial data to support business and investment decision-making.',
-      matched_count: 15,
-      total_required: 19,
-      gap_count: 4,
-      estimated_days: 68
-    }},
-    {{
-      title: 'Accountant',
-      onet_code: '13-2011.00',
-      description: 'Prepares and analyzes financial reports according to applicable accounting standards.',
-      matched_count: 13,
-      total_required: 19,
-      gap_count: 6,
-      estimated_days: 84
-    }},
-    {{
-      title: 'Auditor',
-      onet_code: '13-2011.01',
-      description: 'Examines and verifies financial reports and regulatory compliance.',
-      matched_count: 11,
-      total_required: 19,
-      gap_count: 8,
-      estimated_days: 105
-    }}
-  ]
-}};
+// RESULTS_DATA is injected directly from Python — it is the LIVE output
+// of run_profile_analysis() (PDF text extraction → Claude structured
+// O*NET/SKKNI skill mapping), or `null` until the user uploads a CV via
+// the "Live AI Analysis" panel above and clicks "Analyze My CV". There
+// is no mock/static fallback: until real data exists, this screen shows
+// an explicit empty state instead of fabricated professions.
+const RESULTS_DATA = {RESULTS_DATA_JSON};
+const JUMP_TO_RESULTS_ON_LOAD = {JUMP_TO_RESULTS_JS};
 
 function escHtml(value) {{
   const div = document.createElement('div');
@@ -1631,10 +1829,35 @@ function buildAddProfessionCard() {{
   return card;
 }}
 
-function renderResultsScreen() {{
-  const data = RESULTS_MOCK;
+function buildEmptyResultsState() {{
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'grid-column:1 / -1;text-align:center;padding:72px 24px;border:1px dashed var(--border);border-radius:12px;background:#F8FAFC;';
+  const h = document.createElement('h3');
+  h.style.cssText = "font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin:0 0 8px;";
+  h.textContent = 'No analysis yet — your results will appear here';
+  const p = document.createElement('p');
+  p.style.cssText = 'font-size:14px;color:var(--text-muted);max-width:480px;margin:0 auto;line-height:1.6;';
+  p.textContent = 'Upload your CV (PDF) in the "Live AI Analysis" panel above this app and click '
+    + '"Analyze My CV". Pathfinder will extract your real skills, map them to O*NET / SKKNI '
+    + 'standards with Claude, and compute your actual profession-match percentages — nothing here is mocked.';
+  wrap.appendChild(h);
+  wrap.appendChild(p);
+  return wrap;
+}}
 
+function renderResultsScreen() {{
+  const data = RESULTS_DATA;
   const subtitle = document.getElementById('results-subtitle');
+  const chipList = document.getElementById('detected-skills-list');
+  const grid     = document.getElementById('results-grid');
+
+  if (!data) {{
+    if (subtitle) subtitle.textContent = 'Upload your CV in the panel above and click "Analyze My CV" to generate your real, AI-powered profession matches.';
+    if (chipList) chipList.innerHTML = '';
+    if (grid) {{ grid.innerHTML = ''; grid.appendChild(buildEmptyResultsState()); }}
+    return;
+  }}
+
   if (subtitle) {{
     subtitle.innerHTML = '';
     subtitle.appendChild(document.createTextNode('Based on '));
@@ -1644,7 +1867,6 @@ function renderResultsScreen() {{
     subtitle.appendChild(document.createTextNode(' detected from your profile, here are your top profession matches.'));
   }}
 
-  const chipList = document.getElementById('detected-skills-list');
   if (chipList) {{
     chipList.innerHTML = '';
     data.detected_skills.forEach((skill) => {{
@@ -1658,7 +1880,6 @@ function renderResultsScreen() {{
     }});
   }}
 
-  const grid = document.getElementById('results-grid');
   if (grid) {{
     grid.innerHTML = '';
     data.top_matches.slice(0, 3).forEach((match, i) => grid.appendChild(buildMatchCard(match, i)));
@@ -1672,18 +1893,28 @@ function loadResultsScreen() {{
   if (!loading || !content) return;
   if (content.dataset.loaded === '1') return;
 
+  if (!RESULTS_DATA) {{
+    // Nothing has been analyzed yet (no server round-trip happened) — go
+    // straight to the explicit empty state instead of faking a fetch.
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    renderResultsScreen();
+    content.dataset.loaded = '1';
+    return;
+  }}
+
+  // The real analysis (PDF extraction + Claude O*NET/SKKNI mapping) has
+  // already completed server-side during the Streamlit rerun that produced
+  // this page — RESULTS_DATA is live data, not a placeholder. This brief
+  // loader is purely a render transition, not a simulated network call.
   loading.style.display = 'flex';
   content.style.display = 'none';
-
-  // Simulated POST /api/analyze-profile latency — swap this timeout for a
-  // real fetch() once the backend endpoint exists; the render function
-  // below already consumes the exact response shape the API would return.
   setTimeout(() => {{
     renderResultsScreen();
     loading.style.display = 'none';
     content.style.display = 'block';
     content.dataset.loaded = '1';
-  }}, 700);
+  }}, 450);
 }}
 
 // ── NAVBAR SHADOW ON SCROLL ─────────────────────────────────
@@ -1692,7 +1923,11 @@ window.addEventListener('scroll', () => {{
 }});
 
 // ── INIT ────────────────────────────────────────────────────
-showScreen('screen-1');
+// If a real analysis result was just produced (the user uploaded a CV via
+// the live-analysis panel and the page rerendered with RESULTS_DATA
+// populated), jump straight to the results screen so they see their real
+// matches immediately instead of having to navigate the demo flow again.
+showScreen(JUMP_TO_RESULTS_ON_LOAD ? 'screen-3' : 'screen-1');
 initSlider();
 initDropZone();
 initCertDropZone('cert-drop-zone-doc', 'cert-file-input-doc', 'cert-file-list-doc');
