@@ -99,7 +99,7 @@ HTML = f"""<!DOCTYPE html>
 .upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Inter',sans-serif; font-size:36px; font-weight:800; color:var(--navy); }}
 .upload-sub {{ text-align:center; color:var(--text-muted); margin-bottom:48px; font-size:16px; }}
 .upload-card-single {{
-  max-width:900px; margin:0 auto; background:var(--white);
+  max-width:1100px; margin:0 auto; background:var(--white);
   border:1px solid var(--border); border-radius:14px; overflow:hidden;
   box-shadow:0px 4px 24px rgba(15,23,42,0.06);
 }}
@@ -137,8 +137,12 @@ HTML = f"""<!DOCTYPE html>
 }}
 .form-field input:focus,.form-field select:focus,.form-field textarea:focus {{ border-color:var(--blue); background:white; }}
 .form-field textarea {{ resize:vertical; min-height:80px; }}
-.form-grid-2col {{ display:grid; grid-template-columns:1fr 1fr; gap:0 36px; align-items:start; }}
-.form-grid-2col .form-field textarea {{ min-height:90px; }}
+.form-grid-3col {{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 28px; align-items:start; }}
+.form-grid-3col .form-field textarea {{ min-height:90px; }}
+.work-exp-head {{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }}
+.work-exp-head .form-section-label {{ margin-bottom:0; }}
+.work-exp-head .text-link-btn {{ margin:0; white-space:nowrap; }}
+.upload-divider {{ margin-top:28px; }}
 .form-section-label {{ display:block; font-family:'Inter',sans-serif; font-size:12px; font-weight:700; color:var(--navy); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px; }}
 .optional-tag {{ font-weight:400; text-transform:none; letter-spacing:normal; color:var(--text-muted); font-size:12px; }}
 .exp-block,.cert-block {{ position:relative; border:1px solid var(--border); border-radius:10px; padding:18px 18px 6px; margin-bottom:14px; background:var(--surface); }}
@@ -169,6 +173,27 @@ HTML = f"""<!DOCTYPE html>
 .chip-token i {{ font-style:normal; cursor:pointer; opacity:0.6; }}
 .chip-token i:hover {{ opacity:1; }}
 .chip-input input {{ flex:1; min-width:120px; border:none; outline:none; background:transparent; font-family:'Inter',sans-serif; font-size:14px; padding:4px; }}
+.cert-upload-zone {{
+  border:1.5px dashed var(--border); border-radius:10px; padding:22px 16px;
+  text-align:center; color:var(--text-muted); font-size:13px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  cursor:pointer; user-select:none; transition:border-color .2s,background .2s;
+}}
+.cert-upload-zone:hover {{ border-color:var(--gold); }}
+.cert-upload-zone.drag-over {{ border-color:var(--gold); background:var(--blue-light); }}
+.cert-upload-zone svg {{ width:26px; height:26px; display:block; color:var(--text-muted); margin-bottom:4px; }}
+.cert-upload-zone .cert-zone-text {{ font-family:'Inter',sans-serif; font-size:13px; font-weight:500; color:var(--navy); }}
+.cert-upload-zone .cert-zone-hint {{ font-size:12px; color:var(--text-muted); }}
+.cert-file-list {{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }}
+.cert-file-item {{
+  display:flex; align-items:center; gap:8px; padding:8px 10px;
+  border:1px solid var(--border); border-radius:8px; background:var(--surface);
+  font-family:'Inter',sans-serif; font-size:13px; color:var(--text-main);
+}}
+.cert-file-item svg {{ width:16px; height:16px; flex-shrink:0; color:var(--gold); }}
+.cert-file-name {{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }}
+.cert-file-remove {{ cursor:pointer; color:var(--text-muted); font-weight:700; padding:0 4px; line-height:1; transition:color .2s; }}
+.cert-file-remove:hover {{ color:var(--navy); }}
 .scan-bar-wrap {{ background:var(--border); border-radius:99px; height:4px; overflow:hidden; margin-top:8px; }}
 #scan-progress {{ height:100%; background:var(--blue); border-radius:99px; width:0%; transition:width .1s linear; }}
 .security-note {{ text-align:center; color:var(--text-muted); font-size:13px; margin-top:16px; }}
@@ -337,7 +362,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   .step-connector {{ display:none; }}
   .stats-section {{ flex-direction:column; gap:32px; padding:48px 24px; text-align:center; }}
   .upload-section {{ padding:40px 20px; }}
-  .form-grid-2col {{ grid-template-columns:1fr; }}
+  .form-grid-3col {{ grid-template-columns:1fr; }}
   .upload-panel {{ padding:24px; }}
   .upload-action {{ padding:0 24px 24px; }}
   .results-section,.gap-section,.packages-section,.roadmap-section,.dashboard-section {{ padding:40px 20px; }}
@@ -487,12 +512,21 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
           <div class="drop-hint">PDF or DOCX. Max 5MB</div>
         </div>
         <div id="file-name-display"></div>
+
+        <label class="form-section-label upload-divider">Upload Certificate <span class="optional-tag">(Optional)</span></label>
+        <input type="file" id="cert-file-input-doc" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="display:none">
+        <div class="cert-upload-zone" id="cert-drop-zone-doc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+          <div class="cert-zone-text">Drag &amp; drop certificate files here, or click to browse</div>
+          <div class="cert-zone-hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+        </div>
+        <div class="cert-file-list" id="cert-file-list-doc"></div>
       </div>
 
       <!-- Enter Manually panel -->
       <div class="upload-panel" id="panel-manual" style="display:none">
-        <div class="form-grid-2col">
-          <!-- LEFT COLUMN — Personal & Education -->
+        <div class="form-grid-3col">
+          <!-- COLUMN 1 — Personal & Education -->
           <div>
             <div class="form-field">
               <label>Full Name</label>
@@ -525,9 +559,12 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
             </div>
           </div>
 
-          <!-- RIGHT COLUMN — Professional Data -->
+          <!-- COLUMN 2 — Work Experience -->
           <div>
-            <label class="form-section-label">Work Experience</label>
+            <div class="work-exp-head">
+              <label class="form-section-label">Work Experience</label>
+              <button type="button" class="text-link-btn" onclick="addExperienceBlock()">+ Add Another</button>
+            </div>
             <div id="work-exp-list">
               <div class="exp-block" data-exp-block>
                 <div class="form-field"><label>Job Title</label><input type="text" class="exp-title" placeholder="e.g. Finance Staff"></div>
@@ -544,8 +581,10 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
                 <div class="form-field"><label>Key Responsibilities</label><textarea class="exp-desc" placeholder="Describe your main responsibilities and achievements..."></textarea></div>
               </div>
             </div>
-            <button type="button" class="text-link-btn" onclick="addExperienceBlock()">+ Add Another Experience</button>
+          </div>
 
+          <!-- COLUMN 3 — Skills & Certifications -->
+          <div>
             <div class="form-field">
               <label>Skills You Have</label>
               <div class="chip-input" id="skills-chip-input" onclick="document.getElementById('skills-input').focus()">
@@ -554,7 +593,15 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
             </div>
 
             <label class="form-section-label">Certifications &amp; Licenses <span class="optional-tag">(Optional)</span></label>
-            <div id="cert-list">
+            <input type="file" id="cert-file-input-manual" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="display:none">
+            <div class="cert-upload-zone" id="cert-drop-zone-manual">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+              <div class="cert-zone-text">Drag &amp; drop certificate files here, or click to browse</div>
+              <div class="cert-zone-hint">PDF, JPG or PNG &middot; multiple files allowed</div>
+            </div>
+            <div class="cert-file-list" id="cert-file-list-manual"></div>
+
+            <div id="cert-list" style="margin-top:14px">
               <div class="cert-block" data-cert-block>
                 <div class="form-field"><label>Certification Name</label><input type="text" class="cert-name" placeholder="e.g. Certified Public Accountant (CPA)"></div>
                 <div class="form-field"><label>Issuer / Organization</label><input type="text" class="cert-issuer" placeholder="e.g. IAPI"></div>
@@ -1390,6 +1437,73 @@ function initDropZone() {{
   }}
 }}
 
+// ── CERTIFICATE DRAG & DROP (multi-file, reusable) ─────────
+const CERT_ALLOWED_EXT = /\\.(pdf|jpe?g|png)$/i;
+const CERT_MAX_SIZE = 5 * 1024 * 1024;
+
+function initCertDropZone(zoneId, inputId, listId) {{
+  const zone  = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  const list  = document.getElementById(listId);
+  if (!zone || !input || !list) return;
+
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('dragover',  (e) => {{ e.preventDefault(); zone.classList.add('drag-over'); }});
+  zone.addEventListener('dragenter', (e) => {{ e.preventDefault(); zone.classList.add('drag-over'); }});
+  zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+
+  zone.addEventListener('drop', (e) => {{
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    addCertFiles(e.dataTransfer.files, list);
+  }});
+
+  input.addEventListener('change', (e) => {{
+    addCertFiles(e.target.files, list);
+    input.value = '';
+  }});
+}}
+
+function addCertFiles(fileList, listEl) {{
+  Array.from(fileList).forEach((file) => {{
+    if (!CERT_ALLOWED_EXT.test(file.name)) {{
+      alert('Please upload a PDF, JPG or PNG file.');
+      return;
+    }}
+    if (file.size > CERT_MAX_SIZE) {{
+      alert('File size must be less than 5MB.');
+      return;
+    }}
+
+    const item = document.createElement('div');
+    item.className = 'cert-file-item';
+
+    const icon = document.createElement('span');
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+
+    const name = document.createElement('span');
+    name.className = 'cert-file-name';
+    name.textContent = file.name;
+
+    const size = document.createElement('span');
+    size.className = 'text-muted';
+    size.style.fontSize = '12px';
+    size.style.flexShrink = '0';
+    size.textContent = (file.size / 1024).toFixed(0) + ' KB';
+
+    const remove = document.createElement('span');
+    remove.className = 'cert-file-remove';
+    remove.textContent = '\\u00D7';
+    remove.onclick = () => item.remove();
+
+    item.appendChild(icon);
+    item.appendChild(name);
+    item.appendChild(size);
+    item.appendChild(remove);
+    listEl.appendChild(item);
+  }});
+}}
+
 // ── NAVBAR SHADOW ON SCROLL ─────────────────────────────────
 window.addEventListener('scroll', () => {{
   document.querySelectorAll('.navbar').forEach(n => n.classList.toggle('scrolled', window.scrollY > 4));
@@ -1399,6 +1513,8 @@ window.addEventListener('scroll', () => {{
 showScreen('screen-1');
 initSlider();
 initDropZone();
+initCertDropZone('cert-drop-zone-doc', 'cert-file-input-doc', 'cert-file-list-doc');
+initCertDropZone('cert-drop-zone-manual', 'cert-file-input-manual', 'cert-file-list-manual');
 </script>
 </body>
 </html>"""
