@@ -1,34 +1,49 @@
 /* =============================================
    PATHFINDER — GLOBAL STYLES
    ============================================= */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=EB+Garamond:wght@400;500;600;700&display=swap');
 
 :root {
-  --navy:       #0D1B3E;
-  --blue:       #2563EB;
-  --blue-light: #EEF2FF;
-  --blue-mid:   #3B82F6;
+  /* Aliases retained so every existing var(--x) reference cascades to the new look.
+     --navy was the title color in the old design -> remapped to antique brass since
+     nearly all of its usages in app.py are card/section title text. */
+  --navy:       #9C7A4A;
+  --navy-bg:    #6B6356;
+  --blue:       #9C7A4A;
+  --blue-light: #F1ECE1;
+  --blue-mid:   #B8954A;
   --white:      #FFFFFF;
-  --surface:    #F8FAFC;
-  --border:     #E2E8F0;
-  --text-main:  #0D1B3E;
-  --text-muted: #64748B;
-  --success:    #059669;
-  --warning:    #D97706;
+  --surface:    #F3EFE6;
+  --border:     #DDD6C9;
+  --text-main:  #5B6470;
+  --text-muted: #8A8377;
+  --success:    #6B8E6B;
+  --warning:    #C9A227;
+
+  /* Reference-image palette */
+  --stone:      #ECE7DC;
+  --stone-deep: #DCD3C2;
+  --slate:      #5B6470;
+  --brass:      #9C7A4A;
+  --brass-deep: #7D6038;
+  --gold:       #C9A961;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  color: var(--text-main);
-  background: var(--white);
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  color: var(--slate);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, transparent 45%),
+    radial-gradient(circle at 80% 60%, rgba(0,0,0,0.04) 0%, transparent 50%),
+    var(--stone);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; line-height: 1.2; }
+h1,h2,h3,h4,h5,h6 { font-family: 'Playfair Display', serif; font-weight: 600; line-height: 1.2; color: var(--brass); letter-spacing: 0.2px; }
 
 .screen { display: none; opacity: 0; transition: opacity 0.3s ease; min-height: 100vh; }
 .screen.active { display: block; opacity: 1; }
@@ -41,23 +56,23 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; line-height: 1.2; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 48px; height: 64px;
 }
-.navbar-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--navy); letter-spacing: 1px; text-decoration: none; }
+.navbar-logo { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 19px; color: var(--brass); letter-spacing: 1px; text-decoration: none; }
 .navbar-links { display: flex; gap: 32px; }
-.navbar-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.2s; cursor: pointer; }
-.navbar-links a:hover { color: var(--navy); }
+.navbar-links a { font-size: 15px; font-weight: 500; color: var(--slate); text-decoration: none; transition: color 0.2s; cursor: pointer; font-family: 'EB Garamond', serif; }
+.navbar-links a:hover { color: var(--brass); }
 .navbar-right { display: flex; align-items: center; gap: 12px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue); color: white; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gold); color: var(--brass-deep); font-family: 'Playfair Display', serif; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
 /* BUTTONS */
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; text-decoration: none; }
-.btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
-.btn-primary:hover { background: var(--blue-mid); border-color: var(--blue-mid); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
-.btn-outline { background: transparent; color: var(--blue); border-color: var(--blue); }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; text-decoration: none; }
+.btn-primary { background: var(--gold); color: var(--brass-deep); border-color: var(--gold); }
+.btn-primary:hover { background: var(--gold-deep, #B8954A); border-color: var(--gold-deep, #B8954A); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(156,122,74,0.25); }
+.btn-outline { background: transparent; color: var(--slate); border-color: var(--slate); }
 .btn-outline:hover { background: var(--blue-light); transform: translateY(-1px); }
 .btn-outline-white { background: transparent; color: white; border-color: rgba(255,255,255,0.7); }
 .btn-outline-white:hover { background: rgba(255,255,255,0.1); }
-.btn-outline-navy { background: transparent; color: var(--navy); border-color: var(--navy); }
-.btn-outline-navy:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+.btn-outline-navy { background: transparent; color: var(--slate); border-color: var(--slate); }
+.btn-outline-navy:hover { background: var(--blue-light); border-color: var(--brass); color: var(--brass); }
 .btn-disabled { background: var(--border); color: var(--text-muted); border-color: var(--border); cursor: not-allowed; }
 .btn-sm { padding: 7px 16px; font-size: 13px; }
 .btn-lg { padding: 14px 32px; font-size: 16px; }
@@ -68,29 +83,29 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; line-height: 1.2; }
 .progress-step { display: flex; align-items: center; gap: 8px; flex: 1; }
 .progress-step:not(:last-child)::after { content: ''; flex: 1; height: 2px; background: var(--border); margin: 0 8px; }
 .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; border: 2px solid var(--border); color: var(--text-muted); background: white; }
-.step-circle.active { background: var(--blue); border-color: var(--blue); color: white; }
+.step-circle.active { background: var(--gold); border-color: var(--gold); color: var(--brass-deep); }
 .step-circle.done { background: var(--success); border-color: var(--success); color: white; }
 .step-label { font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
-.step-label.active { color: var(--navy); font-weight: 600; }
+.step-label.active { color: var(--brass); font-weight: 600; }
 
 /* CARDS */
-.card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: box-shadow 0.2s, transform 0.2s; }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: box-shadow 0.2s, transform 0.2s; }
 .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
 .card-surface { background: var(--surface); }
 
 /* PROGRESS BAR */
 .progress-bar-wrap { background: var(--border); border-radius: 99px; overflow: hidden; }
-.progress-bar-fill { height: 100%; border-radius: 99px; background: var(--blue); transition: width 0.6s ease; }
+.progress-bar-fill { height: 100%; border-radius: 99px; background: var(--gold); transition: width 0.6s ease; }
 .progress-bar-fill.success { background: var(--success); }
 
 /* CHIPS & BADGES */
 .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 500; }
-.chip-blue { background: var(--blue-light); color: var(--blue); }
+.chip-blue { background: var(--blue-light); color: var(--brass); }
 .chip-green { background: #ECFDF5; color: var(--success); }
-.chip-navy { background: var(--navy); color: white; }
+.chip-navy { background: var(--slate); color: white; }
 .chip-muted { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
 .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
-.badge-blue { background: var(--blue); color: white; }
+.badge-blue { background: var(--gold); color: var(--brass-deep); }
 .badge-green { background: var(--success); color: white; }
 .badge-warning { background: var(--warning); color: white; }
 .badge-surface { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
