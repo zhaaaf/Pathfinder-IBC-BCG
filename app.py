@@ -99,7 +99,7 @@ HTML = f"""<!DOCTYPE html>
 .upload-heading {{ text-align:center; margin-bottom:8px; font-family:'Inter',sans-serif; font-size:36px; font-weight:800; color:var(--navy); }}
 .upload-sub {{ text-align:center; color:var(--text-muted); margin-bottom:48px; font-size:16px; }}
 .upload-card-single {{
-  max-width:620px; margin:0 auto; background:var(--white);
+  max-width:860px; margin:0 auto; background:var(--white);
   border:1px solid var(--border); border-radius:14px; overflow:hidden;
   box-shadow:0px 4px 24px rgba(15,23,42,0.06);
 }}
@@ -137,6 +137,8 @@ HTML = f"""<!DOCTYPE html>
 }}
 .form-field input:focus,.form-field select:focus,.form-field textarea:focus {{ border-color:var(--blue); background:white; }}
 .form-field textarea {{ resize:vertical; min-height:80px; }}
+.form-grid-2col {{ display:grid; grid-template-columns:1fr 1fr; gap:0 36px; }}
+.form-grid-2col .form-field textarea {{ min-height:160px; }}
 .scan-bar-wrap {{ background:var(--border); border-radius:99px; height:4px; overflow:hidden; margin-top:8px; }}
 #scan-progress {{ height:100%; background:var(--blue); border-radius:99px; width:0%; transition:width .1s linear; }}
 .security-note {{ text-align:center; color:var(--text-muted); font-size:13px; margin-top:16px; }}
@@ -305,6 +307,7 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
   .step-connector {{ display:none; }}
   .stats-section {{ flex-direction:column; gap:32px; padding:48px 24px; text-align:center; }}
   .upload-section {{ padding:40px 20px; }}
+  .form-grid-2col {{ grid-template-columns:1fr; }}
   .upload-panel {{ padding:24px; }}
   .upload-action {{ padding:0 24px 24px; }}
   .results-section,.gap-section,.packages-section,.roadmap-section,.dashboard-section {{ padding:40px 20px; }}
@@ -458,26 +461,47 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
 
       <!-- Enter Manually panel -->
       <div class="upload-panel" id="panel-manual" style="display:none">
-        <div class="form-field">
-          <label>Full Name</label>
-          <input type="text" placeholder="Enter your full name">
-        </div>
-        <div class="form-field">
-          <label>Latest Education</label>
-          <select>
-            <option>B.S. Accounting — Universitas Padjadjaran</option>
-            <option>B.S. Management</option>
-            <option>B.S. Economics</option>
-            <option>Master's Degree</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label>Work Experience</label>
-          <textarea placeholder="e.g. 2 years as Finance Staff at PT ABC, managing financial reports and account reconciliation..."></textarea>
-        </div>
-        <div class="form-field">
-          <label>Skills You Have</label>
-          <input type="text" placeholder="e.g. Excel, SAP, Financial Modeling, Data Analysis...">
+        <div class="form-grid-2col">
+          <div>
+            <div class="form-field">
+              <label>Full Name</label>
+              <input type="text" placeholder="Enter your full name">
+            </div>
+            <div class="form-field">
+              <label>Education Level</label>
+              <select>
+                <option>High School</option>
+                <option>Associate Degree</option>
+                <option selected>Bachelor's</option>
+                <option>Master's</option>
+                <option>Doctorate</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Major / Field of Study</label>
+              <select>
+                <option>Accounting</option>
+                <option>Finance &amp; Banking</option>
+                <option>Management</option>
+                <option>Economics</option>
+                <option>Information Systems</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Institution Name</label>
+              <input type="text" placeholder="e.g. Universitas Padjadjaran">
+            </div>
+          </div>
+          <div>
+            <div class="form-field">
+              <label>Work Experience</label>
+              <textarea placeholder="e.g. 2 years as Finance Staff at PT ABC, managing financial reports and account reconciliation..."></textarea>
+            </div>
+            <div class="form-field">
+              <label>Skills You Have</label>
+              <textarea placeholder="e.g. Excel, SAP, Financial Modeling, Data Analysis..."></textarea>
+            </div>
+          </div>
         </div>
       </div>
 
