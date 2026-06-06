@@ -547,18 +547,20 @@ input[type=range] {{ width:100%; accent-color:var(--blue); cursor:pointer; }}
             </div>
             <div class="form-field">
               <label>Education Level</label>
-              <select id="m-edu-level">
-                <option>Middle School / Junior High</option>
-                <option>High School</option>
-                <option>Vocational High School</option>
-                <option>Associate Degree (D1/D2/D3)</option>
-                <option>Applied Bachelor's Degree (D4)</option>
-                <option selected>Bachelor's Degree (S1)</option>
-                <option>Master's Degree (S2)</option>
-                <option>Doctorate / Ph.D. (S3)</option>
+              <select id="m-edu-level" onchange="handleEduLevelChange(this.value)">
+                <option>High School Diploma / GED</option>
+                <option>Certificate / Diploma</option>
+                <option>Associate Degree</option>
+                <option selected>Bachelor's Degree</option>
+                <option>Master's Degree</option>
+                <option>Doctorate (Ph.D.)</option>
                 <option>Professional Degree</option>
-                <option>Other / Non-Degree</option>
+                <option>Other</option>
               </select>
+            </div>
+            <div class="form-field" id="m-edu-other-wrap" style="display:none">
+              <label>Please specify your degree</label>
+              <input type="text" id="m-edu-other" placeholder="e.g. Vocational Certificate in Culinary Arts">
             </div>
             <div class="form-field combobox-field">
               <label>Major / Field of Study</label>
@@ -1254,12 +1256,75 @@ function disableAnalyze() {{
 }}
 
 // ── MAJOR / FIELD OF STUDY — searchable combobox ───────────
+// Comprehensive list spanning CIP / ISCED-F instructional-program families.
 const MAJOR_OPTIONS = [
-  'Accounting', 'Finance & Banking', 'Management', 'Economics', 'Information Systems',
-  'Computer Science', 'Marketing', 'Industrial Engineering', 'Psychology', 'Law',
-  'Communication Science', 'International Relations', 'Mechanical Engineering',
-  'Civil Engineering', 'Electrical Engineering', 'Architecture', 'Medicine',
-  'Nursing', 'Pharmacy', 'Public Health'
+  // Agriculture & Natural Resources
+  'Agricultural Business', 'Agricultural Economics', 'Agronomy and Crop Science', 'Animal Science',
+  'Aquaculture', 'Fishery and Wildlife Sciences', 'Food Science and Technology', 'Forestry',
+  'Horticulture', 'Natural Resources Management', 'Soil Science', 'Sustainable Agriculture', 'Veterinary Science',
+  // Architecture & Construction
+  'Architecture', 'Architectural Engineering', 'Construction Management', 'Interior Design',
+  'Landscape Architecture', 'Urban and Regional Planning',
+  // Arts, Design & Humanities
+  'Animation and Visual Effects', 'Art History', 'Creative Writing', 'Fashion Design',
+  'Film and Media Production', 'Fine Arts', 'Game Design', 'Graphic Design', 'Industrial Design',
+  'Music', 'Music Performance', 'Music Production', 'Philosophy', 'Photography',
+  'Theatre Arts', 'Visual Communication Design',
+  // Business & Management
+  'Accounting', 'Actuarial Science', 'Business Administration', 'Business Analytics',
+  'Digital Marketing', 'E-commerce', 'Entrepreneurship', 'Finance', 'Hospitality Management',
+  'Human Resource Management', 'International Business', 'Logistics and Supply Chain Management',
+  'Management', 'Management Information Systems', 'Marketing', 'Operations Management',
+  'Project Management', 'Real Estate', 'Retail Management', 'Risk Management and Insurance',
+  // Communication & Media
+  'Advertising', 'Broadcast Journalism', 'Communication Studies', 'Digital Media',
+  'Journalism', 'Mass Communication', 'Media and Communication Studies', 'Public Relations',
+  // Computer Science & Information Technology
+  'Artificial Intelligence', 'Bioinformatics', 'Cloud Computing', 'Computer Engineering',
+  'Computer Science', 'Cybersecurity', 'Data Science', 'Game Development', 'Information Systems',
+  'Information Technology', 'Mobile App Development', 'Network and Systems Administration',
+  'Software Engineering', 'UX/UI Design', 'Web Development',
+  // Education
+  'Curriculum and Instruction', 'Early Childhood Education', 'Educational Leadership',
+  'Educational Psychology', 'Elementary Education', 'Secondary Education', 'Special Education',
+  'Teaching English as a Foreign Language',
+  // Engineering
+  'Aerospace Engineering', 'Agricultural Engineering', 'Automotive Engineering', 'Biomedical Engineering',
+  'Chemical Engineering', 'Civil Engineering', 'Electrical Engineering', 'Electronics Engineering',
+  'Environmental Engineering', 'Geotechnical Engineering', 'Industrial Engineering',
+  'Materials Science and Engineering', 'Mechanical Engineering', 'Mechatronics Engineering',
+  'Mining Engineering', 'Naval Architecture and Marine Engineering', 'Nuclear Engineering',
+  'Petroleum Engineering', 'Renewable Energy Engineering', 'Robotics Engineering',
+  'Structural Engineering', 'Telecommunications Engineering',
+  // Health Professions
+  'Audiology', 'Clinical Laboratory Science', 'Dentistry', 'Dietetics and Nutrition',
+  'Health Administration', 'Health Informatics', 'Medicine', 'Midwifery', 'Nursing',
+  'Occupational Therapy', 'Optometry', 'Pharmacy', 'Physical Therapy', 'Public Health',
+  'Radiologic Technology', 'Speech-Language Pathology', 'Veterinary Medicine',
+  // Humanities, Languages & Religion
+  'Arabic Studies', 'Chinese Studies', 'Classics', 'English Language and Literature',
+  'French Studies', 'German Studies', 'History', 'Islamic Studies', 'Japanese Studies',
+  'Korean Studies', 'Linguistics', 'Literature', 'Religious Studies', 'Spanish Studies',
+  'Theology', 'Translation and Interpretation',
+  // Law & Legal Studies
+  'Criminal Justice', 'International Law', 'Law', 'Legal Studies', 'Paralegal Studies',
+  // Mathematics & Statistics
+  'Actuarial Mathematics', 'Applied Mathematics', 'Mathematics', 'Statistics',
+  // Natural & Physical Sciences
+  'Astronomy', 'Biochemistry', 'Biology', 'Biotechnology', 'Chemistry', 'Environmental Science',
+  'Genetics', 'Geology', 'Geophysics', 'Marine Biology', 'Meteorology', 'Microbiology',
+  'Molecular Biology', 'Oceanography', 'Physics', 'Zoology',
+  // Psychology
+  'Clinical Psychology', 'Cognitive Science', 'Counseling Psychology',
+  'Industrial-Organizational Psychology', 'Psychology',
+  // Social Sciences
+  'Anthropology', 'Archaeology', 'Criminology', 'Demography', 'Development Studies', 'Economics',
+  'Gender Studies', 'Geography', 'International Relations', 'Political Science',
+  'Public Administration', 'Public Policy', 'Social Work', 'Sociology', 'Urban Studies',
+  // Sports, Trades & Technical
+  'Aviation Maintenance', 'Automotive Technology', 'Culinary Arts', 'Electrical Technology',
+  'Exercise Science', 'HVAC Technology', 'Kinesiology', 'Sports Management', 'Sports Science',
+  'Welding Technology'
 ];
 
 function filterMajorOptions(query) {{
@@ -1277,7 +1342,7 @@ function filterMajorOptions(query) {{
   if (q && !MAJOR_OPTIONS.some(m => m.toLowerCase() === q)) {{
     const other = document.createElement('div');
     other.className = 'combobox-option combobox-option-other';
-    other.textContent = 'Other: Type your major — use "' + query.trim() + '"';
+    other.textContent = "Add '" + query.trim() + "' as custom major";
     other.onmousedown = () => selectMajor(document.getElementById('m-major-input').value);
     list.appendChild(other);
   }}
@@ -1290,6 +1355,15 @@ function selectMajor(value) {{
 function closeMajorList() {{
   const list = document.getElementById('m-major-list');
   if (list) list.style.display = 'none';
+}}
+
+// ── EDUCATION LEVEL — "Other" reveals a free-text degree field ──
+function handleEduLevelChange(value) {{
+  const wrap  = document.getElementById('m-edu-other-wrap');
+  const input = document.getElementById('m-edu-other');
+  if (!wrap || !input) return;
+  wrap.style.display = value === 'Other' ? 'block' : 'none';
+  if (value !== 'Other') input.value = '';
 }}
 
 // ── WORK EXPERIENCE — dynamic blocks ────────────────────────
@@ -1346,11 +1420,14 @@ function buildProfilePayload() {{
 
   const skills = Array.from(document.querySelectorAll('#skills-chip-input .chip-token')).map(c => c.getAttribute('data-skill'));
 
+  const eduLevel = document.getElementById('m-edu-level').value;
+  const eduOther = document.getElementById('m-edu-other').value.trim();
+
   return {{
     user_profile: {{
       full_name: document.getElementById('m-full-name').value.trim(),
       education: {{
-        level:       document.getElementById('m-edu-level').value,
+        level:       eduLevel === 'Other' && eduOther ? eduOther : eduLevel,
         major:       document.getElementById('m-major-input').value.trim(),
         institution: document.getElementById('m-institution').value.trim()
       }},
