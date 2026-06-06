@@ -1,44 +1,41 @@
 /* =============================================
    PATHFINDER — GLOBAL STYLES
    ============================================= */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=EB+Garamond:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   /* Aliases retained so every existing var(--x) reference cascades to the new look.
-     --navy was the title color in the old design -> remapped to antique brass since
+     --navy was the title color in the old design -> remapped to deep copper since
      nearly all of its usages in app.py are card/section title text. */
-  --navy:       #9C7A4A;
-  --navy-bg:    #6B6356;
-  --blue:       #9C7A4A;
-  --blue-light: #F1ECE1;
-  --blue-mid:   #B8954A;
+  --navy:       #A17F3E;
+  --navy-bg:    #2C2C2C;
+  --blue:       #A17F3E;
+  --blue-light: #F4ECDC;
+  --blue-mid:   #C09A51;
   --white:      #FFFFFF;
-  --surface:    #F3EFE6;
-  --border:     #DDD6C9;
-  --text-main:  #5B6470;
-  --text-muted: #8A8377;
+  --surface:    #FAF8F4;
+  --border:     #E7E1D6;
+  --text-main:  #2C2C2C;
+  --text-muted: #6B6B6B;
   --success:    #6B8E6B;
-  --warning:    #C9A227;
+  --warning:    #C09A51;
 
   /* Reference-image palette */
-  --stone:      #ECE7DC;
+  --stone:      #FFFFFF;
   --stone-deep: #DCD3C2;
-  --slate:      #5B6470;
-  --brass:      #9C7A4A;
-  --brass-deep: #7D6038;
-  --gold:       #C9A961;
+  --slate:      #2C2C2C;
+  --brass:      #A17F3E;
+  --brass-deep: #2C2C2C;
+  --gold:       #C09A51;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'EB Garamond', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   color: var(--slate);
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, transparent 45%),
-    radial-gradient(circle at 80% 60%, rgba(0,0,0,0.04) 0%, transparent 50%),
-    var(--stone);
+  background: var(--white);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }

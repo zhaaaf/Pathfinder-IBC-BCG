@@ -36,7 +36,7 @@ HTML = f"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pathfinder — AI Career Mapping</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 {CSS}
 /* ── SCREEN 1 ── */
@@ -104,7 +104,7 @@ HTML = f"""<!DOCTYPE html>
 .form-field label {{ display:block; font-size:13px; font-weight:600; color:var(--navy); margin-bottom:5px; }}
 .form-field input,.form-field select,.form-field textarea {{
   width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
-  font-family:'EB Garamond',serif; font-size:14px; color:var(--text-main);
+  font-family:'Inter',sans-serif; font-size:14px; color:var(--text-main);
   background:var(--surface); outline:none; transition:border-color .2s;
 }}
 .form-field input:focus,.form-field select:focus,.form-field textarea:focus {{ border-color:var(--blue); background:white; }}
@@ -136,7 +136,7 @@ HTML = f"""<!DOCTYPE html>
 .custom-prof-card h3 {{ font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--navy); margin-bottom:6px; }}
 .custom-prof-card p {{ font-size:13px; color:var(--text-muted); margin-bottom:16px; }}
 .custom-input-row {{ display:flex; gap:10px; margin-bottom:12px; }}
-.custom-input-row input {{ flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-family:'EB Garamond',serif; font-size:14px; outline:none; }}
+.custom-input-row input {{ flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; outline:none; }}
 .custom-input-row input:focus {{ border-color:var(--blue); }}
 #custom-prof-chips {{ display:flex; flex-wrap:wrap; gap:6px; min-height:28px; }}
 .nav-bottom {{ display:flex; justify-content:space-between; align-items:center; padding:32px 48px; border-top:1px solid var(--border); background:white; position:sticky; bottom:0; }}
