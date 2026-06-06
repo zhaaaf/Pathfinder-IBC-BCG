@@ -26,16 +26,15 @@ st.markdown("""
    real file bytes can only reach this server through native Streamlit
    widgets. This block IS those same two input modes, for real, with
    results flowing into the very results screen shown in the preview. */
-.st-key-pf_real_engine { max-width: 1200px; margin: 0 auto 40px; padding: 0 48px; font-family: 'Inter', sans-serif; }
-.st-key-pf_real_engine [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid #E2E8F0; }
-.st-key-pf_real_engine [aria-selected="true"] { color: #B48E4B !important; }
-.st-key-pf_real_engine [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #F8FAFC; }
-.st-key-pf_real_engine [data-testid="stWidgetLabel"] p { font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #64748B; }
-.st-key-pf_real_engine [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
-.st-key-pf_real_engine [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
-.pf-real-engine-intro { max-width: 1200px; margin: 0 auto; padding: 28px 48px 8px; font-family: 'Inter', sans-serif; }
-.pf-real-engine-intro h3 { font-size: 18px; font-weight: 700; color: #1E293B; margin: 0 0 4px; }
-.pf-real-engine-intro p { font-size: 13px; color: #64748B; margin: 0; line-height: 1.5; }
+[data-testid="stExpander"] { max-width: 1200px; margin: 16px auto; }
+[data-testid="stExpander"] summary { font-family: 'Inter', sans-serif; font-weight: 600; }
+[data-testid="stExpander"] [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid #E2E8F0; }
+[data-testid="stExpander"] [aria-selected="true"] { color: #B48E4B !important; }
+[data-testid="stExpander"] [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #F8FAFC; }
+[data-testid="stExpander"] [data-testid="stWidgetLabel"] p { font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #64748B; }
+[data-testid="stExpander"] [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
+[data-testid="stExpander"] [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
+.pf-real-engine-intro p { font-size: 13px; color: #64748B; margin: 0 0 12px; line-height: 1.5; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1718,7 +1717,7 @@ function addCertFiles(fileList, listEl) {{
 // RESULTS_DATA is injected directly from Python — it is the LIVE output
 // of run_profile_analysis() (PDF text extraction → Claude structured
 // O*NET/SKKNI skill mapping), or `null` until the user uploads a CV via
-// the "Live AI Analysis" panel above and clicks "Analyze My CV". There
+// the "Run it for real" panel below this preview. There
 // is no mock/static fallback: until real data exists, this screen shows
 // an explicit empty state instead of fabricated professions.
 const RESULTS_DATA = {RESULTS_DATA_JSON};
@@ -1789,8 +1788,8 @@ function buildEmptyResultsState() {{
   h.textContent = 'No analysis yet — your results will appear here';
   const p = document.createElement('p');
   p.style.cssText = 'font-size:14px;color:var(--text-muted);max-width:480px;margin:0 auto;line-height:1.6;';
-  p.textContent = 'Upload your CV (PDF) in the "Live AI Analysis" panel above this app and click '
-    + '"Analyze My CV". Pathfinder will extract your real skills, map them to O*NET / SKKNI '
+  p.textContent = 'Scroll down to "Run it for real" below this preview, then upload your CV or type your '
+    + 'profile in. Pathfinder will extract your real skills, map them to O*NET / SKKNI '
     + 'standards with Claude, and compute your actual profession-match percentages — nothing here is mocked.';
   wrap.appendChild(h);
   wrap.appendChild(p);
@@ -1804,7 +1803,7 @@ function renderResultsScreen() {{
   const grid     = document.getElementById('results-grid');
 
   if (!data) {{
-    if (subtitle) subtitle.textContent = 'Upload your CV in the panel above and click "Analyze My CV" to generate your real, AI-powered profession matches.';
+    if (subtitle) subtitle.textContent = 'Scroll down to "Run it for real" below this preview and upload your CV or type your profile in to generate your real, AI-powered profession matches.';
     if (chipList) chipList.innerHTML = '';
     if (grid) {{ grid.innerHTML = ''; grid.appendChild(buildEmptyResultsState()); }}
     return;
@@ -1892,23 +1891,24 @@ st.components.v1.html(HTML, height=900, scrolling=True)
 
 # ────────────────────────────────────────────────────────────────────
 # REAL "Upload Document" / "Enter Manually" — the live input for the
-# preview's Upload Profile step. The preview is a sandboxed iframe with
-# no return channel to Python, so its tabs can only mock the flow; these
-# are the SAME two input modes wired for real — whatever you submit here
-# is parsed/analyzed and the preview's results screen above re-renders
-# with your actual O*NET / SKKNI matches (see RESULTS_DATA / JUMP_TO_RESULTS).
+# preview's Upload Profile step. The preview is a single sandboxed-iframe
+# SPA with no return channel to Python (and no signal telling Python which
+# of its 7 internal screens is showing), so this can't conditionally
+# appear "only on the upload step" — it's collapsed by default and tucked
+# into one expander so it reads as a tool you open when you're ready,
+# not a block competing for space on every screen of the preview.
 # ────────────────────────────────────────────────────────────────────
-st.markdown(
-    '<div class="pf-real-engine-intro">'
-    '<h3>Run it for real, the same two ways</h3>'
-    '<p>The screen above is a live preview of the experience. To generate <strong>your</strong> actual '
-    'matches, use either input mode below — upload your CV or type your profile in — and the preview\'s '
-    'results screen will re-render with your real, AI-generated O*NET / SKKNI matches.</p>'
-    '</div>',
-    unsafe_allow_html=True,
-)
+_engine_open = bool(st.session_state.get("analysis_result") or st.session_state.get("analysis_error"))
+with st.expander("🔍  Run it for real — Upload Document / Enter Manually (live AI analysis)", expanded=_engine_open):
+    st.markdown(
+        '<div class="pf-real-engine-intro">'
+        '<p>The screen above is a live preview. To generate <strong>your</strong> actual matches, use either '
+        'input mode below — upload your CV or type your profile in — and the preview\'s results screen will '
+        're-render with your real, AI-generated O*NET / SKKNI matches.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-with st.container(key="pf_real_engine"):
     tab_doc, tab_manual = st.tabs(["📄  Upload Document", "✍️  Enter Manually"])
 
     with tab_doc:
