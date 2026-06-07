@@ -90,7 +90,7 @@ def _logo_tag() -> str:
             b64 = base64.b64encode(path.read_bytes()).decode()
             return (
                 f'<img src="data:{mime};base64,{b64}" '
-                f'style="height:36px;vertical-align:middle;margin-right:8px;'
+                f'style="height:108px;vertical-align:middle;margin-right:10px;'
                 f'object-fit:contain;">'
             )
 
@@ -99,7 +99,7 @@ def _logo_tag() -> str:
         b64 = base64.b64encode(svg.read_bytes()).decode()
         return (
             f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'style="height:36px;vertical-align:middle;margin-right:8px;">'
+            f'style="height:108px;vertical-align:middle;margin-right:10px;">'
         )
     return ""
 
@@ -1107,11 +1107,11 @@ def _inject_css():
     footer           { visibility: hidden; }
     [data-testid="stHeader"] { visibility: hidden; height: 0 !important; }
 
-    /* ── PHASE 1: Main content block — exact 5.5rem top, 2rem sides ─────────── */
+    /* ── PHASE 1: Main content block — padding-top matches tall topbar ──────── */
     .main .block-container,
     [data-testid="stMainBlockContainer"] {
         background-color: var(--warm-bg) !important;
-        padding-top:   5.5rem !important;
+        padding-top:   9rem   !important;
         padding-left:  2rem   !important;
         padding-right: 2rem   !important;
         max-width: 100% !important;
@@ -1493,20 +1493,24 @@ def _inject_css():
         background: var(--gold-pale) !important;
     }
 
-    /* ── PHASE 4: Tab strip ─────────────────────────────────────────────────── */
+    /* ── PHASE 4: Tab strip — each tab fills its half, text centered ───────── */
     .stTabs [data-baseweb="tab-list"] {
         border-bottom: 2px solid #E8E0D5 !important;
         gap: 0 !important;
-        justify-content: center !important;
+        justify-content: stretch !important;
         background: transparent !important;
+        width: 100% !important;
     }
-    /* Inactive tab */
+    /* Inactive tab — centered in its half */
     .stTabs [data-baseweb="tab"] {
+        flex: 1 !important;
+        justify-content: center !important;
+        text-align: center !important;
         font-family: var(--sans) !important;
-        font-size: 0.83rem !important;
+        font-size: 0.88rem !important;
         font-weight: 500 !important;
         color: #6B6B6B !important;
-        padding: 0.55rem 1.4rem !important;
+        padding: 0.65rem 1rem !important;
         border-radius: 0 !important;
         letter-spacing: 0.02em !important;
         background: transparent !important;
@@ -1616,6 +1620,21 @@ def _inject_css():
 
     /* ── Equal-height result columns ──────────────────────────────────────────── */
     [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* ── Equal-height bordered containers (upload CV / Certs side-by-side) ──── */
+    [data-testid="stHorizontalBlock"] {
+        align-items: stretch !important;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] > div {
+        flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
     }
