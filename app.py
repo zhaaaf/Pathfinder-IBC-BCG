@@ -6,9 +6,10 @@ import json
 import re
 import uuid
 import datetime
+import math
 
 import pdfplumber
-from anthropic import Anthropic
+import google.generativeai as genai
 
 from database import (
     init_db,
@@ -141,6 +142,103 @@ st.markdown("""
 .pf-section-divider hr { border:none; border-top:1px solid #E2E8F0; }
 .pf-section-heading { font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:#0F172A; margin:0 0 4px; }
 .pf-section-subheading { font-size:13px; color:#64748B; margin:0 0 16px; }
+
+/* ── Skill Gap page ──────────────────────────────────────────────── */
+.pf-readiness-wrap { max-width:1100px; margin:24px auto; padding:0 48px; }
+.pf-readiness-card { background:#FBF1E0; border:1px solid #F1E3C8; border-radius:14px; padding:24px 28px; }
+.pf-readiness-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Inter',sans-serif; }
+.pf-readiness-label { font-size:14px; font-weight:600; color:#0F172A; }
+.pf-readiness-pct { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:#B48E4B; }
+.pf-readiness-bar-bg { background:#E2E8F0; border-radius:99px; height:12px; overflow:hidden; }
+.pf-readiness-bar-fg { background:linear-gradient(90deg,#B48E4B,#9C7A40); height:100%; border-radius:99px; transition:width 0.5s ease; }
+.pf-readiness-sub { font-size:12px; color:#64748B; margin-top:8px; font-family:'Inter',sans-serif; }
+.pf-skill-cols-wrap { max-width:1100px; margin:20px auto; padding:0 48px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.pf-skill-col { border:1px solid #E2E8F0; border-radius:12px; overflow:hidden; background:#fff; }
+.pf-skill-col-head { padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; align-items:center; gap:10px; font-family:'Inter',sans-serif; }
+.pf-skill-col-head h3 { font-size:14px; font-weight:700; color:#0F172A; flex:1; margin:0; }
+.pf-skill-col-head .pf-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px; }
+.pf-badge-green { background:#DCFCE7; color:#16A34A; }
+.pf-badge-gold { background:#FBF1E0; color:#B48E4B; }
+.pf-skill-list { padding:6px 0; }
+.pf-skill-row { display:flex; align-items:center; gap:10px; padding:10px 20px; border-bottom:1px solid #F1F5F9; font-family:'Inter',sans-serif; font-size:13px; font-weight:500; color:#0F172A; }
+.pf-skill-row:last-child { border-bottom:none; }
+.pf-skill-have-icon { color:#16A34A; font-size:15px; flex-shrink:0; }
+.pf-skill-need-icon { width:16px; height:16px; border-radius:50%; border:2px solid #B48E4B; flex-shrink:0; }
+.pf-skill-skkni { font-size:10px; font-weight:700; color:#B48E4B; background:#FBF1E0; border-radius:4px; padding:1px 6px; margin-left:auto; white-space:nowrap; }
+.pf-skill-callout { margin:12px 20px 16px; background:#FBF1E0; border-left:3px solid #B48E4B; border-radius:6px; padding:10px 14px; font-size:12px; color:#9C7A40; font-family:'Inter',sans-serif; line-height:1.5; }
+
+/* ── Choose Plan page ────────────────────────────────────────────── */
+.pf-plan-wrap { max-width:1100px; margin:0 auto; padding:0 48px 48px; }
+.pf-hours-slider-card { background:#FAFAF7; border:1px solid #E2E8F0; border-radius:12px; padding:22px 24px; margin-bottom:24px; font-family:'Inter',sans-serif; }
+.pf-hours-slider-label { display:flex; justify-content:space-between; align-items:center; font-size:14px; font-weight:600; color:#0F172A; margin-bottom:12px; }
+.pf-hours-slider-val { font-size:20px; font-weight:700; color:#B48E4B; font-family:'Playfair Display',serif; }
+.pf-plan-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:4px; }
+.pf-plan-card { border:1px solid #E2E8F0; border-radius:12px; padding:24px; background:#fff; display:flex; flex-direction:column; position:relative; }
+.pf-plan-card.recommended { border:2px solid #B48E4B; background:#FDFAF4; }
+.pf-plan-recommended-badge { position:absolute; top:-13px; left:50%; transform:translateX(-50%); background:#B48E4B; color:#fff; font-size:11px; font-weight:700; padding:3px 14px; border-radius:99px; white-space:nowrap; font-family:'Inter',sans-serif; }
+.pf-plan-icon { font-size:28px; margin-bottom:10px; }
+.pf-plan-name { font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:#0F172A; margin-bottom:2px; }
+.pf-plan-days { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; color:#B48E4B; line-height:1; }
+.pf-plan-days-label { font-size:12px; color:#64748B; margin-bottom:4px; font-family:'Inter',sans-serif; }
+.pf-plan-hours { font-size:13px; color:#64748B; padding-bottom:14px; border-bottom:1px solid #E2E8F0; margin-bottom:14px; font-family:'Inter',sans-serif; }
+.pf-plan-course-list { flex:1; display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.pf-plan-course-item { font-size:12px; }
+.pf-plan-course-name { font-weight:600; color:#0F172A; margin-bottom:3px; font-family:'Inter',sans-serif; }
+.pf-plan-course-meta { display:flex; align-items:center; gap:6px; color:#94A3B8; }
+.pf-plan-cert-note { font-size:12px; color:#64748B; padding-top:10px; border-top:1px solid #E2E8F0; font-family:'Inter',sans-serif; }
+
+/* ── Roadmap page ────────────────────────────────────────────────── */
+.pf-roadmap-wrap { max-width:900px; margin:0 auto; padding:0 48px 48px; }
+.pf-roadmap-header-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+.pf-roadmap-title { font-family:'Inter',sans-serif; font-size:26px; font-weight:800; color:#0F172A; margin:0 0 4px; }
+.pf-roadmap-sub { font-size:13px; color:#64748B; margin:0; }
+.pf-roadmap-stat-chips { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+.pf-roadmap-stat-chip { background:#F1F5F9; border:1px solid #E2E8F0; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:600; color:#0F172A; font-family:'Inter',sans-serif; white-space:nowrap; }
+.pf-timeline { position:relative; }
+.pf-tl-item { display:flex; gap:16px; margin-bottom:0; }
+.pf-tl-left { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+.pf-tl-bullet { width:36px; height:36px; border-radius:50%; border:2px solid #E2E8F0; display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; font-size:13px; font-weight:700; color:#94A3B8; background:#fff; z-index:1; }
+.pf-tl-bullet.active { background:#B48E4B; border-color:#B48E4B; color:#fff; }
+.pf-tl-bullet.done { background:#16A34A; border-color:#16A34A; color:#fff; }
+.pf-tl-line { flex:1; width:2px; background:#E2E8F0; margin:3px 0; min-height:40px; }
+.pf-tl-line.active { background:#B48E4B; }
+.pf-tl-line.done { background:#16A34A; }
+.pf-tl-card { flex:1; border:1px solid #E2E8F0; border-radius:12px; padding:18px 22px; margin-bottom:20px; background:#fff; }
+.pf-tl-card.active { border-left:4px solid #B48E4B; background:#FDFAF4; }
+.pf-tl-card.done { border-left:4px solid #16A34A; background:#F0FDF4; }
+.pf-tl-card-inner { display:flex; gap:16px; }
+.pf-tl-card-main { flex:1; }
+.pf-tl-card-side { flex-shrink:0; text-align:right; min-width:130px; }
+.pf-tl-stage-label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:#94A3B8; font-weight:600; margin-bottom:3px; font-family:'Inter',sans-serif; }
+.pf-tl-skill-name { font-family:'Inter',sans-serif; font-size:15px; font-weight:700; color:#0F172A; margin-bottom:3px; }
+.pf-tl-course-name { font-size:13px; color:#64748B; margin-bottom:10px; }
+.pf-tl-duration { font-size:12px; color:#94A3B8; margin-top:8px; }
+.pf-tl-date { font-size:12px; color:#64748B; margin-bottom:4px; font-family:'Inter',sans-serif; }
+.pf-tl-date strong { color:#0F172A; }
+.pf-tl-end-node { display:flex; align-items:center; gap:14px; background:#F0FDF9; border:1px solid #16A34A; border-radius:12px; padding:18px 22px; margin-top:4px; margin-left:52px; }
+.pf-tl-end-bullet { width:36px; height:36px; border-radius:50%; background:#16A34A; color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.pf-tl-end-text h3 { font-family:'Inter',sans-serif; font-size:15px; font-weight:700; color:#16A34A; margin:0 0 2px; }
+.pf-tl-end-text p { font-size:12px; color:#64748B; margin:0; }
+
+/* ── Dashboard page ──────────────────────────────────────────────── */
+.pf-dash-wrap { max-width:1100px; margin:0 auto; padding:0 48px 48px; }
+.pf-dash-greeting { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+.pf-dash-greeting h2 { font-family:'Inter',sans-serif; font-size:22px; font-weight:800; color:#0F172A; margin:0 0 4px; }
+.pf-dash-greeting p { font-size:14px; color:#64748B; margin:0; }
+.pf-metric-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.pf-metric-card { border:1px solid #E2E8F0; border-radius:12px; padding:18px 20px; background:#fff; font-family:'Inter',sans-serif; }
+.pf-metric-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#94A3B8; margin-bottom:6px; }
+.pf-metric-value { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:#0F172A; margin-bottom:2px; }
+.pf-metric-sub { font-size:11px; color:#94A3B8; }
+.pf-active-stage-card { border:1px solid #E2E8F0; border-radius:12px; padding:24px; background:#fff; margin-bottom:20px; font-family:'Inter',sans-serif; }
+.pf-active-stage-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.pf-active-stage-title { font-size:17px; font-weight:700; color:#0F172A; }
+.pf-active-course-meta { font-size:13px; color:#64748B; margin-bottom:14px; }
+.pf-progress-label { display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:#0F172A; margin-bottom:6px; }
+.pf-dash-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+.pf-motivation-card { background:#0F172A; border-radius:12px; padding:20px 24px; margin-top:20px; font-family:'Inter',sans-serif; }
+.pf-motivation-card p { color:rgba(255,255,255,0.85); font-size:14px; line-height:1.6; font-style:italic; margin:0; }
+.pf-motivation-card strong { color:#B48E4B; font-style:normal; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -203,7 +301,7 @@ ANALYZE_SYSTEM_PROMPT = (
     "}"
 )
 
-ANALYZE_MODEL = "claude-3-5-sonnet-20241022"
+ANALYZE_MODEL = "gemini-1.5-flash"   # free tier: 15 RPM, 1M tokens/day
 
 
 def extract_pdf_text(file_bytes: bytes) -> str:
@@ -237,45 +335,42 @@ def _coerce_match_record(raw):
     }
 
 
-def analyze_profile_with_claude(cv_text: str) -> dict:
-    """Step 2 — send extracted CV text to Claude using structured-output instructions
-    and parse the response into the {detected_skills, top_matches} contract."""
+def analyze_profile_with_gemini(cv_text: str) -> dict:
+    """Step 2 — send extracted CV text to Gemini 1.5 Flash (free tier) and parse structured output."""
     try:
-        api_key = st.secrets.get("ANTHROPIC_API_KEY")
+        api_key = st.secrets.get("GEMINI_API_KEY")
     except Exception:
-        # Raised as StreamlitSecretNotFoundError when no secrets.toml exists at all —
-        # treat it the same as "key not configured" rather than letting it bubble up.
         api_key = None
     if not api_key:
         raise RuntimeError(
-            "ANTHROPIC_API_KEY is not configured. Add it under Settings → Secrets in Streamlit "
-            "Cloud (or in .streamlit/secrets.toml locally) to enable real CV analysis — "
-            "e.g. ANTHROPIC_API_KEY = \"sk-ant-...\"."
+            "GEMINI_API_KEY belum dikonfigurasi. "
+            "Dapatkan key GRATIS di aistudio.google.com/apikey "
+            "lalu tambahkan ke .streamlit/secrets.toml:\n"
+            'GEMINI_API_KEY = "AIzaSy..."'
         )
 
-    client = Anthropic(api_key=api_key)
-    response = client.messages.create(
-        model=ANALYZE_MODEL,
-        max_tokens=2048,
-        system=ANALYZE_SYSTEM_PROMPT,
-        messages=[{
-            "role": "user",
-            "content": (
-                "Here is the raw CV text extracted from the candidate's uploaded PDF. Analyze it "
-                "per your system instructions and respond with ONLY the JSON object described "
-                "there — no markdown fences, no extra text.\n\n"
-                "--- BEGIN CV TEXT ---\n"
-                f"{cv_text}\n"
-                "--- END CV TEXT ---"
-            ),
-        }],
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(
+        model_name=ANALYZE_MODEL,
+        generation_config=genai.GenerationConfig(
+            response_mime_type="application/json",
+            temperature=0.1,
+        ),
     )
 
-    raw_text = "".join(
-        block.text for block in response.content if getattr(block, "type", None) == "text"
-    ).strip()
+    full_prompt = (
+        ANALYZE_SYSTEM_PROMPT
+        + "\n\nHere is the raw CV text. Analyse it and respond with ONLY the JSON object "
+        "described above — no markdown fences, no extra text:\n\n"
+        "--- BEGIN CV TEXT ---\n"
+        + cv_text
+        + "\n--- END CV TEXT ---"
+    )
 
-    # Defensive: some models wrap JSON in ```json ... ``` even when told not to.
+    response = model.generate_content(full_prompt)
+    raw_text = response.text.strip()
+
+    # Defensive: strip markdown fences if model wraps despite mime-type hint
     fenced = re.match(r"^```(?:json)?\s*(.*?)\s*```$", raw_text, flags=re.DOTALL | re.IGNORECASE)
     if fenced:
         raw_text = fenced.group(1).strip()
@@ -284,7 +379,7 @@ def analyze_profile_with_claude(cv_text: str) -> dict:
         data = json.loads(raw_text)
     except json.JSONDecodeError as exc:
         raise RuntimeError(
-            f"Claude returned a response that wasn't valid JSON ({exc}). "
+            f"Gemini returned invalid JSON ({exc}). "
             f"Raw output (truncated): {raw_text[:500]}"
         ) from exc
 
@@ -293,22 +388,22 @@ def analyze_profile_with_claude(cv_text: str) -> dict:
 
     if not detected_skills or not top_matches:
         raise RuntimeError(
-            "Claude's response was missing 'detected_skills' or 'top_matches'. "
-            f"Got keys: {list(data.keys())}"
+            "Response missing 'detected_skills' or 'top_matches'. "
+            f"Keys returned: {list(data.keys())}"
         )
 
     return {"detected_skills": detected_skills, "top_matches": top_matches}
 
 
 def run_profile_analysis(file_bytes: bytes) -> dict:
-    """Full pipeline: raw PDF bytes → extracted text → live LLM structured analysis."""
+    """Full pipeline: raw PDF bytes → extracted text → Gemini structured analysis."""
     cv_text = extract_pdf_text(file_bytes)
     if not cv_text:
         raise RuntimeError(
-            "No extractable text was found in this PDF — it may be a scanned/image-based "
-            "document. Try uploading a text-based PDF export of your CV/resume."
+            "Tidak ada teks yang bisa diekstrak dari PDF ini — kemungkinan file scan/gambar. "
+            "Coba upload PDF hasil export teks dari Word/Google Docs."
         )
-    return analyze_profile_with_claude(cv_text)
+    return analyze_profile_with_gemini(cv_text)
 
 
 CSS = load_file("assets/styles.css")
@@ -334,6 +429,10 @@ st.session_state.setdefault("session_id", str(uuid.uuid4()))
 st.session_state.setdefault("pf_show_planner", False)
 st.session_state.setdefault("pf_selected_match", None)
 st.session_state.setdefault("pf_cert_states", {})   # {course_id: {"url": str, "verified": bool}}
+st.session_state.setdefault("pf_selected_plan", None)   # "fast" | "standard" | "comprehensive"
+st.session_state.setdefault("pf_study_hours_per_day", 2)
+st.session_state.setdefault("pf_roadmap_courses", [])   # ordered list of course dicts for roadmap
+st.session_state.setdefault("pf_completed_courses", set())  # set of course ids marked done
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -425,10 +524,10 @@ def _study_planner_dialog():
             )
 
     st.divider()
-    if st.button("🚀 Start My Journey — View Demo Roadmap", type="primary", use_container_width=True,
+    if st.button("🚀 Start My Journey — View Skill Gap", type="primary", use_container_width=True,
                  key="pf_planner_start"):
         st.session_state["pf_show_planner"] = False
-        st.session_state["pf_step"] = "demo"
+        st.session_state["pf_step"] = "skill_gap"
         st.rerun()
 
 
@@ -2118,6 +2217,590 @@ initCertDropZone('cert-drop-zone-manual', 'cert-file-input-manual', 'cert-file-l
 </body>
 </html>"""
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Native Pages: Skill Gap → Choose Plan → Roadmap → Dashboard
+# All pages read real session data & query the SQLite database.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _render_skill_gap():
+    """Page 3 — Skill Gap: shows acquired skills vs gap skills, readiness bar."""
+    sel = st.session_state.get("pf_selected_match") or {}
+    title = sel.get("title", "Your Chosen Profession")
+    onet_code = sel.get("onet_code", "")
+    match_ratio = sel.get("match_ratio", 0)
+    gap_skills = sel.get("gap_skills", [])
+    # matched_skills: use CV's detected_skills as the "have" column
+    _ar = st.session_state.get("analysis_result") or {}
+    matched_skills = [s for s in _ar.get("detected_skills", []) if s]
+
+    st.markdown('<div class="pf-native-navbar">PATHFINDER</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step done">✓ Upload Profile</div>'
+        '<div class="pf-native-step done">✓ Results</div>'
+        '<div class="pf-native-step current">3 · Skill Gap</div>'
+        '<div class="pf-native-step">4 · Choose Plan</div>'
+        '<div class="pf-native-step">5 · Roadmap</div>'
+        '<div class="pf-native-step">6 · Dashboard</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="pf-readiness-wrap">', unsafe_allow_html=True)
+
+    # Header
+    st.markdown(
+        f'<h2 class="pf-section-heading">Skill Gap Analysis</h2>'
+        f'<p class="pf-section-subheading">Target role: <strong>{html.escape(title)}</strong>'
+        + (f' &nbsp;·&nbsp; O*NET {html.escape(onet_code)}' if onet_code else '')
+        + '</p>',
+        unsafe_allow_html=True,
+    )
+
+    # Readiness card
+    ratio_pct = min(int(match_ratio), 100)
+    bar_color = "#16A34A" if ratio_pct >= 70 else ("#B48E4B" if ratio_pct >= 40 else "#EF4444")
+    st.markdown(
+        f'<div class="pf-readiness-card">'
+        f'  <div class="pf-readiness-header">'
+        f'    <span class="pf-readiness-label">Profile Readiness Score</span>'
+        f'    <span class="pf-readiness-pct" style="color:{bar_color}">{ratio_pct}%</span>'
+        f'  </div>'
+        f'  <div class="pf-readiness-bar-bg">'
+        f'    <div class="pf-readiness-bar-fg" style="width:{ratio_pct}%;background:{bar_color}"></div>'
+        f'  </div>'
+        f'  <div class="pf-readiness-sub">'
+        f'    {len(matched_skills)} of {len(matched_skills)+len(gap_skills)} required skills detected in your profile'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Two-column skill list
+    col_have, col_need = st.columns(2)
+
+    with col_have:
+        have_html = (
+            '<div class="pf-skill-col">'
+            f'  <div class="pf-skill-col-head">'
+            f'    <h3>✅ Skills You Have</h3>'
+            f'    <span class="pf-badge pf-badge-green">{len(matched_skills)}</span>'
+            f'  </div>'
+            f'  <div class="pf-skill-list">'
+        )
+        if matched_skills:
+            for sk in matched_skills:
+                have_html += (
+                    f'<div class="pf-skill-row">'
+                    f'  <span class="pf-skill-have-icon">✓</span>'
+                    f'  {html.escape(str(sk))}'
+                    f'</div>'
+                )
+        else:
+            have_html += '<div class="pf-skill-row" style="color:#94A3B8;font-style:italic;">No matched skills detected</div>'
+        have_html += '</div></div>'
+        st.markdown(have_html, unsafe_allow_html=True)
+
+    with col_need:
+        need_html = (
+            '<div class="pf-skill-col">'
+            f'  <div class="pf-skill-col-head">'
+            f'    <h3>🎯 Skills to Acquire</h3>'
+            f'    <span class="pf-badge pf-badge-gold">{len(gap_skills)}</span>'
+            f'  </div>'
+            f'  <div class="pf-skill-list">'
+        )
+        if gap_skills:
+            for sk in gap_skills:
+                need_html += (
+                    f'<div class="pf-skill-row">'
+                    f'  <span class="pf-skill-need-icon"></span>'
+                    f'  {html.escape(str(sk))}'
+                    f'</div>'
+                )
+            need_html += (
+                '<div class="pf-skill-callout">'
+                '💡 These are the specific skills identified as missing from your profile. '
+                'Your learning plan will target each one with a dedicated course.'
+                '</div>'
+            )
+        else:
+            need_html += '<div class="pf-skill-row" style="color:#16A34A;font-style:italic;">No skill gaps detected — great profile!</div>'
+        need_html += '</div></div>'
+        st.markdown(need_html, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_back, col_next = st.columns([1, 2])
+    with col_back:
+        if st.button("← Back to Results", key="sg_back", use_container_width=True):
+            st.session_state["pf_step"] = "results"
+            st.rerun()
+    with col_next:
+        if st.button("Choose My Learning Plan →", key="sg_next", type="primary", use_container_width=True):
+            st.session_state["pf_step"] = "choose_plan"
+            st.rerun()
+
+
+def _render_choose_plan():
+    """Page 4 — Choose Plan: 3 pace tiers with real courses from DB, hours/day slider."""
+    sel = st.session_state.get("pf_selected_match") or {}
+    title = sel.get("title", "Your Chosen Profession")
+    onet_code = sel.get("onet_code", "")
+    total_hours = sel.get("total_course_hours", 0)
+
+    st.markdown('<div class="pf-native-navbar">PATHFINDER</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step done">✓ Upload Profile</div>'
+        '<div class="pf-native-step done">✓ Results</div>'
+        '<div class="pf-native-step done">✓ Skill Gap</div>'
+        '<div class="pf-native-step current">4 · Choose Plan</div>'
+        '<div class="pf-native-step">5 · Roadmap</div>'
+        '<div class="pf-native-step">6 · Dashboard</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="pf-plan-wrap">', unsafe_allow_html=True)
+    st.markdown(
+        f'<h2 class="pf-section-heading">Choose Your Learning Plan</h2>'
+        f'<p class="pf-section-subheading">Role: <strong>{html.escape(title)}</strong>'
+        + (f' &nbsp;·&nbsp; {total_hours} total hours' if total_hours else '')
+        + '</p>',
+        unsafe_allow_html=True,
+    )
+
+    # Hours/day slider
+    hours_per_day = st.slider(
+        "Study hours per day",
+        min_value=1, max_value=8, value=st.session_state.get("pf_study_hours_per_day", 2),
+        key="cp_hours_slider",
+        help="Adjust to see how long each plan takes",
+    )
+    st.session_state["pf_study_hours_per_day"] = hours_per_day
+
+    # Fetch courses from DB
+    courses = get_courses_for_onet(onet_code, limit=9) if onet_code else []
+    if not courses:
+        # fallback: generic 3 stubs so UI isn't empty
+        courses = [
+            {"id": f"stub_{i}", "title": f"Core Competency Module {i+1}", "provider": "ONLINE",
+             "total_hours": 20 + i * 10, "url": "#"} for i in range(6)
+        ]
+
+    # Split courses across 3 tiers
+    fast_courses = courses[:2]
+    std_courses  = courses[:4]
+    comp_courses = courses[:min(6, len(courses))]
+
+    def _days(course_list):
+        h = sum(c.get("total_hours", 0) for c in course_list)
+        return max(1, math.ceil(h / hours_per_day))
+
+    plans = [
+        {
+            "key": "fast",
+            "icon": "⚡",
+            "name": "Fast Track",
+            "courses": fast_courses,
+            "cert_note": "Essential certificates only",
+        },
+        {
+            "key": "standard",
+            "icon": "🎯",
+            "name": "Standard",
+            "courses": std_courses,
+            "cert_note": "Core + advanced certificates",
+            "recommended": True,
+        },
+        {
+            "key": "comprehensive",
+            "icon": "🏆",
+            "name": "Comprehensive",
+            "courses": comp_courses,
+            "cert_note": "Full certificate portfolio",
+        },
+    ]
+
+    cols = st.columns(3)
+    for i, plan in enumerate(plans):
+        days = _days(plan["courses"])
+        total_h = sum(c.get("total_hours", 0) for c in plan["courses"])
+        is_selected = st.session_state.get("pf_selected_plan") == plan["key"]
+
+        card_class = "pf-plan-card" + (" recommended" if plan.get("recommended") else "")
+        badge_html = '<span class="pf-plan-recommended-badge">⭐ Recommended</span>' if plan.get("recommended") else ""
+
+        course_items_html = ""
+        for c in plan["courses"]:
+            course_items_html += (
+                f'<div class="pf-plan-course-item">'
+                f'  <div class="pf-plan-course-name">{html.escape(c["title"])}</div>'
+                f'  <div class="pf-plan-course-meta">'
+                f'    <span style="font-size:11px;background:#F1F5F9;padding:2px 7px;border-radius:4px;font-weight:600;">{c.get("provider","")}</span>'
+                f'    <span>·</span><span>{c.get("total_hours",0)} hrs</span>'
+                f'  </div>'
+                f'</div>'
+            )
+
+        with cols[i]:
+            st.markdown(
+                f'<div class="{card_class}">'
+                f'  {badge_html}'
+                f'  <div class="pf-plan-icon">{plan["icon"]}</div>'
+                f'  <div class="pf-plan-name">{plan["name"]}</div>'
+                f'  <div class="pf-plan-days">{days}</div>'
+                f'  <div class="pf-plan-days-label">days to complete</div>'
+                f'  <div class="pf-plan-hours">{total_h} hrs &nbsp;·&nbsp; {len(plan["courses"])} courses</div>'
+                f'  <div class="pf-plan-course-list">{course_items_html}</div>'
+                f'  <div class="pf-plan-cert-note">🎓 {plan["cert_note"]}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            btn_label = "✓ Selected" if is_selected else "Select This Plan"
+            if st.button(btn_label, key=f"cp_select_{plan['key']}", use_container_width=True,
+                         type="primary" if is_selected else "secondary"):
+                st.session_state["pf_selected_plan"] = plan["key"]
+                st.session_state["pf_roadmap_courses"] = plan["courses"]
+                st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_back, col_next = st.columns([1, 2])
+    with col_back:
+        if st.button("← Back to Skill Gap", key="cp_back", use_container_width=True):
+            st.session_state["pf_step"] = "skill_gap"
+            st.rerun()
+    with col_next:
+        has_plan = bool(st.session_state.get("pf_selected_plan"))
+        if st.button("View My Roadmap →", key="cp_next", type="primary",
+                     use_container_width=True, disabled=not has_plan):
+            st.session_state["pf_step"] = "roadmap"
+            st.rerun()
+
+
+def _render_roadmap():
+    """Page 5 — Roadmap: sequential timeline with calculated dates, cert upload per stage."""
+    sel = st.session_state.get("pf_selected_match") or {}
+    title = sel.get("title", "Your Chosen Profession")
+    hours_per_day = st.session_state.get("pf_study_hours_per_day", 2)
+    courses = st.session_state.get("pf_roadmap_courses", [])
+    completed = st.session_state.get("pf_completed_courses", set())
+    session_id = st.session_state.get("session_id", "")
+    plan_key = st.session_state.get("pf_selected_plan", "standard")
+    plan_names = {"fast": "Fast Track", "standard": "Standard", "comprehensive": "Comprehensive"}
+
+    st.markdown('<div class="pf-native-navbar">PATHFINDER</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step done">✓ Upload Profile</div>'
+        '<div class="pf-native-step done">✓ Results</div>'
+        '<div class="pf-native-step done">✓ Skill Gap</div>'
+        '<div class="pf-native-step done">✓ Choose Plan</div>'
+        '<div class="pf-native-step current">5 · Roadmap</div>'
+        '<div class="pf-native-step">6 · Dashboard</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    total_hours = sum(c.get("total_hours", 0) for c in courses)
+    total_days = max(1, math.ceil(total_hours / hours_per_day)) if hours_per_day else total_hours
+    end_date = datetime.date.today() + datetime.timedelta(days=total_days)
+
+    st.markdown(
+        f'<div class="pf-roadmap-wrap">'
+        f'<div class="pf-roadmap-header-row">'
+        f'  <div>'
+        f'    <h2 class="pf-roadmap-title">Your Learning Roadmap</h2>'
+        f'    <p class="pf-roadmap-sub">{html.escape(title)} · {plan_names.get(plan_key,"Standard")} plan</p>'
+        f'  </div>'
+        f'  <div class="pf-roadmap-stat-chips">'
+        f'    <div class="pf-roadmap-stat-chip">📚 {len(courses)} courses</div>'
+        f'    <div class="pf-roadmap-stat-chip">⏱ {total_hours} hrs total</div>'
+        f'    <div class="pf-roadmap-stat-chip">📅 {hours_per_day} hrs/day</div>'
+        f'    <div class="pf-roadmap-stat-chip">🏁 {end_date.strftime("%b %d, %Y")}</div>'
+        f'  </div>'
+        f'</div>'
+        f'<div class="pf-timeline">',
+        unsafe_allow_html=True,
+    )
+
+    current_date = datetime.date.today()
+    for idx, course in enumerate(courses):
+        course_hours = course.get("total_hours", 0)
+        course_days = max(1, math.ceil(course_hours / hours_per_day)) if hours_per_day else course_hours
+        finish_date = current_date + datetime.timedelta(days=course_days)
+        cid = course.get("id", f"course_{idx}")
+        is_done = cid in completed
+        is_active = not is_done and idx == min(
+            [i for i, c in enumerate(courses) if c.get("id", f"course_{i}") not in completed],
+            default=idx
+        )
+        bullet_class = "done" if is_done else ("active" if is_active else "")
+        card_class = "pf-tl-card " + bullet_class
+        line_class = "pf-tl-line " + ("done" if is_done else ("active" if is_active else ""))
+        bullet_icon = "✓" if is_done else str(idx + 1)
+        status_label = "✓ Completed" if is_done else ("🔵 In Progress" if is_active else "⏳ Upcoming")
+
+        st.markdown(
+            f'<div class="pf-tl-item">'
+            f'  <div class="pf-tl-left">'
+            f'    <div class="pf-tl-bullet {bullet_class}">{bullet_icon}</div>'
+            + (f'    <div class="{line_class}"></div>' if idx < len(courses) - 1 else '')
+            + f'  </div>'
+            f'  <div class="{card_class}">'
+            f'    <div class="pf-tl-card-inner">'
+            f'      <div class="pf-tl-card-main">'
+            f'        <div class="pf-tl-stage-label">Stage {idx+1} · {status_label}</div>'
+            f'        <div class="pf-tl-skill-name">{html.escape(course.get("title",""))}</div>'
+            f'        <div class="pf-tl-course-name">Provider: {course.get("provider","")}</div>'
+            f'        <div class="pf-tl-duration">⏱ {course_hours} hrs &nbsp;·&nbsp; ~{course_days} days</div>'
+            f'      </div>'
+            f'      <div class="pf-tl-card-side">'
+            f'        <div class="pf-tl-date">Start: <strong>{current_date.strftime("%b %d")}</strong></div>'
+            f'        <div class="pf-tl-date">End: <strong>{finish_date.strftime("%b %d, %Y")}</strong></div>'
+            f'      </div>'
+            f'    </div>',
+            unsafe_allow_html=True,
+        )
+
+        # Certificate upload + mark complete
+        if not is_done:
+            cert_col, btn_col = st.columns([3, 1])
+            with cert_col:
+                cert_url = st.text_input(
+                    "Certificate URL (optional)",
+                    key=f"rm_cert_{idx}",
+                    placeholder="https://coursera.org/verify/...",
+                    label_visibility="collapsed",
+                )
+            with btn_col:
+                if st.button("✓ Mark Done", key=f"rm_done_{idx}", use_container_width=True):
+                    completed.add(cid)
+                    st.session_state["pf_completed_courses"] = completed
+                    if cert_url.strip() and session_id:
+                        verify_user_skill(session_id, course.get("title", ""), cert_url.strip())
+                    st.rerun()
+
+        st.markdown('</div></div>', unsafe_allow_html=True)
+        current_date = finish_date
+
+    # Finish node
+    all_done = all(c.get("id", f"course_{i}") in completed for i, c in enumerate(courses))
+    finish_icon = "🎓" if all_done else "🏁"
+    finish_text = "Congratulations! All courses completed." if all_done else f"Complete all {len(courses)} courses to earn your full certificate portfolio."
+    st.markdown(
+        f'<div class="pf-tl-end-node">'
+        f'  <div class="pf-tl-end-bullet">{finish_icon}</div>'
+        f'  <div class="pf-tl-end-text">'
+        f'    <h3>{"Profile Complete!" if all_done else "Target Completion"}</h3>'
+        f'    <p>{finish_text} · {end_date.strftime("%B %d, %Y")}</p>'
+        f'  </div>'
+        f'</div>'
+        f'</div>'  # close pf-timeline
+        f'</div>',  # close pf-roadmap-wrap
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_back, col_next = st.columns([1, 2])
+    with col_back:
+        if st.button("← Back to Plan", key="rm_back", use_container_width=True):
+            st.session_state["pf_step"] = "choose_plan"
+            st.rerun()
+    with col_next:
+        if st.button("Go to Dashboard →", key="rm_next", type="primary", use_container_width=True):
+            st.session_state["pf_step"] = "dashboard"
+            st.rerun()
+
+
+def _render_dashboard():
+    """Page 6 — Dashboard: progress metrics, active course, certificate verification."""
+    sel = st.session_state.get("pf_selected_match") or {}
+    title = sel.get("title", "Your Chosen Profession")
+    onet_code = sel.get("onet_code", "")
+    match_ratio = sel.get("match_ratio", 0)
+    courses = st.session_state.get("pf_roadmap_courses", [])
+    completed = st.session_state.get("pf_completed_courses", set())
+    hours_per_day = st.session_state.get("pf_study_hours_per_day", 2)
+    session_id = st.session_state.get("session_id", "")
+    cert_states = st.session_state.get("pf_cert_states", {})
+
+    done_count = sum(1 for i, c in enumerate(courses) if c.get("id", f"course_{i}") in completed)
+    total_count = len(courses)
+    total_hours = sum(c.get("total_hours", 0) for c in courses)
+    done_hours = sum(
+        c.get("total_hours", 0) for i, c in enumerate(courses)
+        if c.get("id", f"course_{i}") in completed
+    )
+    progress_pct = int(done_hours / total_hours * 100) if total_hours else 0
+    days_elapsed = math.ceil(done_hours / hours_per_day) if hours_per_day else 0
+    remaining_hours = total_hours - done_hours
+    days_remaining = math.ceil(remaining_hours / hours_per_day) if hours_per_day and remaining_hours > 0 else 0
+    eta = (datetime.date.today() + datetime.timedelta(days=days_remaining)).strftime("%b %d, %Y") if days_remaining else "Completed!"
+
+    st.markdown('<div class="pf-native-navbar">PATHFINDER</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step done">✓ Upload Profile</div>'
+        '<div class="pf-native-step done">✓ Results</div>'
+        '<div class="pf-native-step done">✓ Skill Gap</div>'
+        '<div class="pf-native-step done">✓ Choose Plan</div>'
+        '<div class="pf-native-step done">✓ Roadmap</div>'
+        '<div class="pf-native-step current">6 · Dashboard</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="pf-dash-wrap">', unsafe_allow_html=True)
+
+    # Greeting
+    st.markdown(
+        f'<div class="pf-dash-greeting">'
+        f'  <div>'
+        f'    <h2>Learning Dashboard</h2>'
+        f'    <p>Target: <strong>{html.escape(title)}</strong>'
+        + (f' &nbsp;·&nbsp; O*NET {html.escape(onet_code)}' if onet_code else '')
+        + '</p>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # 4 metric cards
+    st.markdown(
+        f'<div class="pf-metric-cards">'
+        f'  <div class="pf-metric-card">'
+        f'    <div class="pf-metric-label">Profile Match</div>'
+        f'    <div class="pf-metric-value">{int(match_ratio)}%</div>'
+        f'    <div class="pf-metric-sub">Based on CV analysis</div>'
+        f'  </div>'
+        f'  <div class="pf-metric-card">'
+        f'    <div class="pf-metric-label">Courses Done</div>'
+        f'    <div class="pf-metric-value">{done_count}/{total_count}</div>'
+        f'    <div class="pf-metric-sub">Courses completed</div>'
+        f'  </div>'
+        f'  <div class="pf-metric-card">'
+        f'    <div class="pf-metric-label">Hours Logged</div>'
+        f'    <div class="pf-metric-value">{done_hours}</div>'
+        f'    <div class="pf-metric-sub">of {total_hours} total hrs</div>'
+        f'  </div>'
+        f'  <div class="pf-metric-card">'
+        f'    <div class="pf-metric-label">ETA</div>'
+        f'    <div class="pf-metric-value" style="font-size:18px;">{eta}</div>'
+        f'    <div class="pf-metric-sub">{days_remaining} days remaining</div>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Overall progress bar
+    bar_color = "#16A34A" if progress_pct == 100 else "#B48E4B"
+    st.markdown(
+        f'<div class="pf-active-stage-card">'
+        f'  <div class="pf-active-stage-header">'
+        f'    <div class="pf-active-stage-title">Overall Progress</div>'
+        f'    <span style="font-weight:700;color:{bar_color}">{progress_pct}%</span>'
+        f'  </div>'
+        f'  <div class="pf-progress-label"><span>{done_hours} hrs done</span><span>{remaining_hours} hrs left</span></div>'
+        f'  <div class="pf-readiness-bar-bg">'
+        f'    <div class="pf-readiness-bar-fg" style="width:{progress_pct}%;background:{bar_color}"></div>'
+        f'  </div>',
+        unsafe_allow_html=True,
+    )
+
+    # Active / next course
+    active_courses = [c for i, c in enumerate(courses) if c.get("id", f"course_{i}") not in completed]
+    if active_courses:
+        next_c = active_courses[0]
+        st.markdown(
+            f'<div style="margin-top:16px;padding-top:14px;border-top:1px solid #E2E8F0;">'
+            f'  <div class="pf-active-course-meta">📖 Currently up next: <strong>{html.escape(next_c["title"])}</strong>'
+            f'  &nbsp;·&nbsp; {next_c.get("provider","")} &nbsp;·&nbsp; {next_c.get("total_hours",0)} hrs</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Certificate verification panel
+    if courses:
+        st.markdown('<div class="pf-section-divider"></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<h3 class="pf-section-heading">🎓 Certificate Verification</h3>'
+            '<p class="pf-section-subheading">Paste your certificate URL to verify and unlock your credential badge.</p>',
+            unsafe_allow_html=True,
+        )
+
+        for idx, course in enumerate(courses):
+            cid = course.get("id", f"course_{idx}")
+            is_done = cid in completed
+            c_state = cert_states.get(cid, {})
+            is_verified = c_state.get("verified", False)
+
+            verified_class = " verified" if is_verified else ""
+            status_icon = "✅" if is_verified else ("⏳" if not is_done else "📋")
+            row_html = (
+                f'<div class="pf-cert-row{verified_class}">'
+                f'  <div style="flex:1;font-family:\'Inter\',sans-serif;font-size:13px;font-weight:600;color:#0F172A;">'
+                f'    {status_icon} {html.escape(course["title"])}'
+                f'  </div>'
+                f'  <div class="pf-course-provider" style="margin:0 12px;">{course.get("provider","")}</div>'
+                f'  <div class="pf-match-card-hours" style="font-size:12px;">{course.get("total_hours",0)} hrs</div>'
+                f'</div>'
+            )
+            st.markdown(row_html, unsafe_allow_html=True)
+
+            if not is_verified:
+                cv_col, vbtn_col = st.columns([3, 1])
+                with cv_col:
+                    cert_url = st.text_input(
+                        "Certificate URL",
+                        key=f"dash_cert_{idx}",
+                        placeholder="https://coursera.org/verify/...",
+                        label_visibility="collapsed",
+                    )
+                with vbtn_col:
+                    if st.button("Verify", key=f"dash_vbtn_{idx}", use_container_width=True):
+                        if cert_url.strip():
+                            ok = verify_user_skill(session_id, course["title"], cert_url.strip())
+                            cert_states[cid] = {"url": cert_url.strip(), "verified": True}
+                            st.session_state["pf_cert_states"] = cert_states
+                            completed.add(cid)
+                            st.session_state["pf_completed_courses"] = completed
+                            st.success(f"✓ Verified: {course['title']}")
+                            st.rerun()
+                        else:
+                            st.warning("Paste your certificate URL first.")
+
+    # Motivational card
+    st.markdown(
+        f'<div class="pf-motivation-card">'
+        f'  <p>You\'re building a <strong>future-proof career</strong> in {html.escape(title)}. '
+        f'  Each course you complete brings you one step closer to your goal. '
+        f'  Keep going — your future self will thank you. 🚀</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_back, col_restart = st.columns([1, 2])
+    with col_back:
+        if st.button("← Back to Roadmap", key="db_back", use_container_width=True):
+            st.session_state["pf_step"] = "roadmap"
+            st.rerun()
+    with col_restart:
+        if st.button("↺ Start New Analysis", key="db_restart", use_container_width=True):
+            for key in ["pf_step", "analysis_result", "analysis_error", "pf_cert_states",
+                        "pf_selected_match", "pf_selected_plan", "pf_roadmap_courses",
+                        "pf_completed_courses", "pf_show_planner"]:
+                st.session_state.pop(key, None)
+            st.rerun()
+
+
 if PF_STEP == "landing":
     # Native landing — ONE real "Get Started" CTA (no mockup duplicate
     # sitting beside it). Visuals are hand-styled to match Pathfinder's
@@ -2276,7 +2959,7 @@ elif PF_STEP == "upload":
                 st.session_state["analysis_error"] = None
                 st.session_state["analysis_result"] = None
                 try:
-                    result = _run_analysis_with_loading(analyze_profile_with_claude,
+                    result = _run_analysis_with_loading(analyze_profile_with_gemini,
                                                         manual_profile_text.strip())
                     st.session_state["analysis_result"] = result
                     upsert_user_profile(st.session_state["session_id"], manual_profile_text.strip())
@@ -2404,7 +3087,11 @@ elif PF_STEP == "results":
                     key=f"pf_select_match_{i}",
                     use_container_width=True,
                 ):
-                    st.session_state["pf_selected_match"] = {**match, "total_course_hours": total_course_hrs}
+                    st.session_state["pf_selected_match"] = {
+                        **match,
+                        "total_course_hours": total_course_hrs,
+                        "match_ratio": ratio,
+                    }
                     st.session_state["pf_show_planner"] = True
                     st.rerun()
 
@@ -2430,6 +3117,7 @@ elif PF_STEP == "results":
                 "matched_count": 0, "total_required": 0, "gap_count": 0,
                 "gap_skills": [], "estimated_days": 60,
                 "total_course_hours": 0,
+                "match_ratio": 0,
             }
             st.session_state["pf_show_planner"] = True
             st.rerun()
@@ -2501,25 +3189,19 @@ elif PF_STEP == "results":
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-else:  # PF_STEP == "demo"
-    # Illustrative tour of Skill Gap → Choose Plan → Roadmap → Dashboard —
-    # these screens never depended on real CV data (they're a fixed demo
-    # walkthrough), so the polished HTML/CSS/JS preview is a faithful,
-    # honest way to show them — opened straight on the Skill Gap screen.
-    _sel = st.session_state.get("pf_selected_match")
-    _demo_label = f"← Back to results for {_sel['title']}" if _sel else "← Back to my results"
-    st.markdown(
-        '<div class="pf-native-progress">'
-        '<div class="pf-native-step done">✓ Upload Profile</div>'
-        '<div class="pf-native-step done">✓ Results</div>'
-        '<div class="pf-native-step current">3 · Skill Gap → Dashboard</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown('<div class="pf-step-cta-wrap">', unsafe_allow_html=True)
-    if st.button(_demo_label, key="pf_back_to_results"):
-        st.session_state["pf_step"] = "results"
-        st.session_state["pf_show_planner"] = False
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.components.v1.html(HTML, height=900, scrolling=True)
+elif PF_STEP == "skill_gap":
+    _render_skill_gap()
+
+elif PF_STEP == "choose_plan":
+    _render_choose_plan()
+
+elif PF_STEP == "roadmap":
+    _render_roadmap()
+
+elif PF_STEP == "dashboard":
+    _render_dashboard()
+
+else:
+    # Unknown step — fall back to landing
+    st.session_state["pf_step"] = "landing"
+    st.rerun()
