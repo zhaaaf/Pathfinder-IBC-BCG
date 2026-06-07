@@ -1620,28 +1620,38 @@ def _inject_css():
         text-transform: uppercase; letter-spacing: 0.06em;
     }
 
-    /* ── Equal-height result columns ──────────────────────────────────────────── */
+    /* ── Equal-height columns — consolidated ─────────────────────────────────── */
+
+    /* 1. Row stretches to tallest column */
+    [data-testid="stHorizontalBlock"] {
+        align-items: stretch !important;
+    }
+
+    /* 2. Every column becomes a flex-column (fills row height) */
     [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* ── Equal-height bordered containers (CV / Certs side-by-side) ────────── */
-    /* Make columns in a row all stretch to the tallest sibling */
-    [data-testid="stHorizontalBlock"] {
-        align-items: stretch !important;
-    }
-    /* Each column vertical block fills the row height */
-    [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {
+    /* 3. Streamlit injects an intermediate <div> between stVerticalBlock
+          and the actual content / stVerticalBlockBorderWrapper.
+          Give it flex:1 so it stretches to fill the column. */
+    [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] > div {
+        flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
+        min-height: 0 !important;
     }
-    /* The border wrapper (st.container border=True) fills its column */
+
+    /* 4. st.container(border=True) wrapper fills its intermediate div */
     [data-testid="stVerticalBlockBorderWrapper"] {
         flex: 1 !important;
-        height: 100% !important;
-        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
     }
+
+    /* 5. pf-result-card keeps its own flex growth */
     .pf-result-card {
         flex: 1;
         min-height: 420px;
@@ -2731,6 +2741,11 @@ def _render_upload():
                                 st.rerun()
                         except Exception as e:
                             st.error(f"Analysis failed: {e}")
+                # Flex spacer — pushes CV card to match the Certs card height
+                st.markdown(
+                    '<div style="flex:1;min-height:168px;"></div>',
+                    unsafe_allow_html=True,
+                )
 
         # ---- Right: Certificates & Licenses -----------------------------------
         with col_cert:
