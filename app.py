@@ -90,7 +90,7 @@ def _logo_tag() -> str:
             b64 = base64.b64encode(path.read_bytes()).decode()
             return (
                 f'<img src="data:{mime};base64,{b64}" '
-                f'style="height:38px;vertical-align:middle;margin-right:6px;'
+                f'style="height:114px;vertical-align:middle;margin-right:10px;'
                 f'object-fit:contain;">'
             )
 
@@ -99,7 +99,7 @@ def _logo_tag() -> str:
         b64 = base64.b64encode(svg.read_bytes()).decode()
         return (
             f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'style="height:38px;vertical-align:middle;margin-right:6px;">'
+            f'style="height:114px;vertical-align:middle;margin-right:10px;">'
         )
     return ""
 
@@ -1093,7 +1093,7 @@ def _inject_css():
     .main .block-container,
     [data-testid="stMainBlockContainer"] {
         background-color: var(--warm-bg) !important;
-        padding-top: 5.5rem !important;
+        padding-top: 10rem !important;
         padding-left: 2rem !important;
         padding-right: 2rem !important;
         max-width: 100% !important;
@@ -1112,7 +1112,7 @@ def _inject_css():
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.75rem 2rem;
+        padding: 1.25rem 2rem;
         background: var(--white);
         border-bottom: 1px solid var(--warm-border);
         box-shadow: 0 2px 8px rgba(44,44,44,.08);
