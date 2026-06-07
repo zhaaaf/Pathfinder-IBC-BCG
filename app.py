@@ -301,7 +301,7 @@ ANALYZE_SYSTEM_PROMPT = (
     "}"
 )
 
-ANALYZE_MODEL = "gemini-3.0-flash"   # free tier: 15 RPM, 1M tokens/day
+ANALYZE_MODEL = "gemini-3-flash-preview"   # free tier: 15 RPM, 1M tokens/day
 
 
 def extract_pdf_text(file_bytes: bytes) -> str:
