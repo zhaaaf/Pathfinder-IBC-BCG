@@ -461,14 +461,15 @@ def _run_with_loading(fn, *args, **kwargs):
         pct = int((i + 1) / len(steps) * 100)
         with ph.container():
             st.markdown(f"""
-            <div style="text-align:center;padding:3rem 1rem;">
+            <div style="text-align:center;padding:3rem 1rem;background:#FAF8F5;border-radius:8px;">
               <div style="font-size:3rem;margin-bottom:1rem;">{icon}</div>
-              <div style="font-size:1.1rem;font-weight:600;color:#2563eb;margin-bottom:1rem;">{step}</div>
-              <div style="background:#e5e7eb;border-radius:9999px;height:8px;overflow:hidden;max-width:400px;margin:0 auto;">
-                <div style="background:linear-gradient(90deg,#2563eb,#7c3aed);height:100%;
+              <div style="font-size:1rem;font-weight:600;color:#A17F3E;margin-bottom:1rem;
+                          font-family:'Playfair Display',Georgia,serif;font-style:italic;">{step}</div>
+              <div style="background:#E8E0D5;border-radius:9999px;height:5px;overflow:hidden;max-width:400px;margin:0 auto;">
+                <div style="background:linear-gradient(90deg,#A17F3E,#C09A51);height:100%;
                             width:{pct}%;border-radius:9999px;"></div>
               </div>
-              <div style="font-size:0.8rem;color:#9ca3af;margin-top:0.5rem;">{pct}%</div>
+              <div style="font-size:0.78rem;color:#9A8060;margin-top:0.5rem;">{pct}%</div>
             </div>
             """, unsafe_allow_html=True)
         time.sleep(0.45)
@@ -493,79 +494,454 @@ def extract_pdf_text(file_bytes: bytes) -> str:
 def _inject_css():
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    /* ── Typefaces ─────────────────────────────────────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
 
+    /* ── CSS custom properties (design tokens) ─────────────────────────────── */
+    :root {
+        --white:        #FFFFFF;
+        --charcoal:     #2C2C2C;
+        --charcoal-mid: #4A4A4A;
+        --charcoal-soft:#6B6B6B;
+        --copper:       #A17F3E;
+        --copper-dark:  #7D6130;
+        --copper-light: #C9AC72;
+        --gold:         #C09A51;
+        --gold-pale:    #F5EDD8;
+        --gold-border:  #D4B87A;
+        --warm-bg:      #FAF8F5;
+        --warm-border:  #E8E0D5;
+        --warm-muted:   #F2EDE6;
+        --success:      #2D6A4F;
+        --success-bg:   #D8F3DC;
+        --danger:       #9B2335;
+        --danger-bg:    #FAE0E4;
+        --serif:        'Playfair Display', Georgia, 'Times New Roman', serif;
+        --sans:         'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* ── Global reset & typography ─────────────────────────────────────────── */
+    html, body, [class*="css"] {
+        font-family: var(--sans) !important;
+        color: var(--charcoal) !important;
+    }
+
+    /* ── App background — warm parchment ───────────────────────────────────── */
+    .stApp,
+    [data-testid="stHeader"],
+    .main .block-container,
+    [data-testid="stMainBlockContainer"] {
+        background-color: var(--warm-bg) !important;
+    }
+
+    /* ── Topbar ────────────────────────────────────────────────────────────── */
     .pf-topbar {
-        display:flex; align-items:center; justify-content:space-between;
-        padding:0.75rem 1.5rem; background:#fff;
-        border-bottom:1px solid #e5e7eb; margin-bottom:1.5rem;
-        border-radius:0 0 12px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1.75rem;
+        background: var(--white);
+        border-bottom: 1px solid var(--warm-border);
+        margin-bottom: 1.5rem;
+        border-radius: 0 0 0 0;
+        box-shadow: 0 1px 6px rgba(44,44,44,.06);
     }
-    .pf-logo { font-size:1.4rem; font-weight:800; color:#2563eb; letter-spacing:-0.5px; }
-    .pf-logo span { color:#7c3aed; }
-    .pf-steps { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
-    .pf-step { font-size:0.75rem; padding:0.3rem 0.8rem; border-radius:9999px;
-                font-weight:500; background:#f3f4f6; color:#6b7280; }
-    .pf-step.active { background:#2563eb; color:#fff; }
-    .pf-step.done { background:#d1fae5; color:#059669; }
+    .pf-logo {
+        font-family: var(--serif) !important;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--copper) !important;
+        letter-spacing: 0.02em;
+    }
+    .pf-logo span { color: var(--gold) !important; font-style: italic; }
 
+    .pf-steps { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+    .pf-step {
+        font-family: var(--sans);
+        font-size: 0.72rem;
+        padding: 0.3rem 0.85rem;
+        border-radius: 2px;
+        font-weight: 500;
+        background: var(--warm-muted);
+        color: var(--charcoal-soft);
+        letter-spacing: 0.04em;
+        border: 1px solid transparent;
+    }
+    .pf-step.active {
+        background: var(--gold);
+        color: var(--white);
+        border-color: var(--gold);
+    }
+    .pf-step.done {
+        background: var(--success-bg);
+        color: var(--success);
+        border-color: transparent;
+    }
+
+    /* ── Card — standard white card ────────────────────────────────────────── */
     .pf-card {
-        background:#fff; border:1px solid #e5e7eb; border-radius:16px;
-        padding:1.5rem; margin-bottom:1rem;
-        box-shadow:0 1px 3px rgba(0,0,0,.06);
+        background: var(--white);
+        border: 1px solid var(--warm-border);
+        border-radius: 4px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(44,44,44,.05);
     }
-    .pf-card-gold { border:2px solid #f59e0b !important;
-                    box-shadow:0 4px 14px rgba(245,158,11,.18) !important; }
-    .pf-card-dashed { border:2px dashed #d1d5db !important; background:#f9fafb !important; }
-    .pf-card-done { border:2px solid #059669 !important;
-                    background:#f0fdf4 !important; }
 
-    .pf-badge { display:inline-block; font-size:0.65rem; font-weight:700;
-                padding:0.2rem 0.55rem; border-radius:9999px;
-                text-transform:uppercase; letter-spacing:0.05em; }
-    .pf-badge-gold { background:#fef3c7; color:#d97706; }
-    .pf-badge-blue { background:#dbeafe; color:#1d4ed8; }
-    .pf-badge-green { background:#d1fae5; color:#059669; }
-    .pf-badge-red { background:#fee2e2; color:#dc2626; }
+    /* ── Card — gold/copper accent (Best Match) ────────────────────────────── */
+    .pf-card-gold {
+        border: 2px solid var(--copper) !important;
+        box-shadow: 0 6px 20px rgba(161,127,62,.16) !important;
+        background: linear-gradient(160deg, #FFFDF9 0%, var(--white) 100%) !important;
+    }
 
-    .pf-pill { display:inline-block; font-size:0.7rem; font-weight:500;
-               padding:0.15rem 0.55rem; border-radius:9999px;
-               background:#ede9fe; color:#7c3aed; margin:0.1rem; }
+    /* ── Card — dashed placeholder ──────────────────────────────────────────── */
+    .pf-card-dashed {
+        border: 2px dashed var(--warm-border) !important;
+        background: var(--warm-muted) !important;
+    }
 
-    .pf-work-card { background:#f8fafc; border:1px solid #e2e8f0;
-                    border-radius:12px; padding:1rem; margin-bottom:0.75rem; }
+    /* ── Card — completed (green) ───────────────────────────────────────────── */
+    .pf-card-done {
+        border: 2px solid var(--success) !important;
+        background: var(--success-bg) !important;
+    }
+
+    /* ── Badges ─────────────────────────────────────────────────────────────── */
+    .pf-badge {
+        display: inline-block;
+        font-family: var(--sans);
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 0.22rem 0.6rem;
+        border-radius: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .pf-badge-gold  { background: var(--gold-pale);  color: var(--copper-dark); }
+    .pf-badge-blue  { background: #E8EDF8;            color: #2A4490; }
+    .pf-badge-green { background: var(--success-bg);  color: var(--success); }
+    .pf-badge-red   { background: var(--danger-bg);   color: var(--danger); }
+
+    /* ── Skill pills ────────────────────────────────────────────────────────── */
+    .pf-pill {
+        display: inline-block;
+        font-family: var(--sans);
+        font-size: 0.68rem;
+        font-weight: 500;
+        padding: 0.18rem 0.6rem;
+        border-radius: 2px;
+        background: var(--gold-pale);
+        color: var(--copper-dark);
+        border: 1px solid var(--gold-border);
+        margin: 0.12rem;
+    }
+
+    /* ── Work experience card ────────────────────────────────────────────────── */
+    .pf-work-card {
+        background: var(--warm-muted);
+        border: 1px solid var(--warm-border);
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    /* ── Section header label ────────────────────────────────────────────────── */
     .pf-section-header {
-        font-size:0.7rem; font-weight:700; text-transform:uppercase;
-        letter-spacing:0.08em; color:#6b7280; margin-bottom:0.75rem;
-        padding-bottom:0.4rem; border-bottom:2px solid #e5e7eb;
+        font-family: var(--sans);
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--copper);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--warm-border);
     }
-    .pf-hero {
-        text-align:center; padding:4rem 1rem 3rem;
-        background:linear-gradient(135deg,#eff6ff 0%,#f5f3ff 100%);
-        border-radius:24px; margin-bottom:2rem;
-    }
-    .pf-hero h1 { font-size:3rem; font-weight:800; color:#111827;
-                   margin:0 0 0.5rem; line-height:1.1; }
-    .pf-hero h1 span { color:#2563eb; }
-    .pf-hero p { font-size:1.15rem; color:#6b7280; max-width:520px;
-                  margin:0 auto 2rem; }
-    .pf-cert-zone { border:2px dashed #d1d5db; border-radius:12px; padding:1.25rem;
-                    text-align:center; color:#9ca3af; font-size:0.85rem; margin-bottom:0.5rem; }
-    .pf-timeline-item { display:flex; gap:1rem; align-items:flex-start;
-                         padding:0.75rem 0; border-bottom:1px solid #f3f4f6; }
-    .pf-timeline-dot { width:32px; height:32px; border-radius:50%; flex-shrink:0;
-                        display:flex; align-items:center; justify-content:center;
-                        font-size:0.8rem; font-weight:700; }
-    .pf-stat { text-align:center; padding:1.25rem; background:#fff;
-               border:1px solid #e5e7eb; border-radius:16px; }
-    .pf-stat-num { font-size:2.2rem; font-weight:800; color:#2563eb; }
-    .pf-stat-label { font-size:0.8rem; color:#6b7280; margin-top:0.25rem; }
-    .pf-plan-selected { border:2px solid #2563eb !important;
-                         box-shadow:0 4px 12px rgba(37,99,235,.15) !important; }
 
-    #MainMenu, footer { visibility:hidden; }
-    .stDeployButton { display:none; }
+    /* ── Hero banner ─────────────────────────────────────────────────────────── */
+    .pf-hero {
+        text-align: center;
+        padding: 4.5rem 1rem 3.5rem;
+        background: linear-gradient(160deg, #FFFDF8 0%, #FAF5EB 60%, #F5EDD8 100%);
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--warm-border);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9),
+                    0 2px 12px rgba(161,127,62,.08);
+    }
+    .pf-hero h1 {
+        font-family: var(--serif) !important;
+        font-size: 3.25rem;
+        font-weight: 700;
+        color: var(--charcoal) !important;
+        margin: 0 0 0.5rem;
+        line-height: 1.12;
+        letter-spacing: -0.01em;
+    }
+    .pf-hero h1 span {
+        color: var(--copper) !important;
+        font-style: italic;
+    }
+    .pf-hero p {
+        font-size: 1.1rem;
+        color: var(--charcoal-soft) !important;
+        max-width: 520px;
+        margin: 0 auto 2rem;
+        line-height: 1.7;
+    }
+
+    /* ── Certificate dashed upload zone ─────────────────────────────────────── */
+    .pf-cert-zone {
+        border: 1.5px dashed var(--warm-border);
+        border-radius: 4px;
+        padding: 1.25rem;
+        text-align: center;
+        color: var(--charcoal-soft);
+        font-size: 0.83rem;
+        margin-bottom: 0.5rem;
+        background: var(--warm-muted);
+    }
+
+    /* ── Roadmap timeline ────────────────────────────────────────────────────── */
+    .pf-timeline-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid var(--warm-border);
+    }
+    .pf-timeline-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+        font-family: var(--sans);
+    }
+
+    /* ── Dashboard stats ─────────────────────────────────────────────────────── */
+    .pf-stat {
+        text-align: center;
+        padding: 1.35rem;
+        background: var(--white);
+        border: 1px solid var(--warm-border);
+        border-radius: 4px;
+        box-shadow: 0 1px 4px rgba(44,44,44,.04);
+    }
+    .pf-stat-num {
+        font-family: var(--serif) !important;
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: var(--copper) !important;
+    }
+    .pf-stat-label {
+        font-family: var(--sans);
+        font-size: 0.75rem;
+        color: var(--charcoal-soft) !important;
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* ── Plan card — selected state ──────────────────────────────────────────── */
+    .pf-plan-selected {
+        border: 2px solid var(--copper) !important;
+        box-shadow: 0 4px 16px rgba(161,127,62,.18) !important;
+    }
+
+    /* ── Streamlit native component overrides ────────────────────────────────── */
+
+    /* Labels */
+    .stTextInput > label,
+    .stSelectbox > label,
+    .stTextArea > label,
+    .stFileUploader > label,
+    .stNumberInput > label,
+    .stSlider > label {
+        font-family: var(--sans) !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        color: var(--charcoal-mid) !important;
+    }
+
+    /* Input fields */
+    .stTextInput input,
+    .stTextArea textarea,
+    [data-baseweb="input"] input,
+    [data-baseweb="textarea"] textarea {
+        border-radius: 3px !important;
+        border: 1px solid var(--warm-border) !important;
+        background: var(--white) !important;
+        color: var(--charcoal) !important;
+        font-family: var(--sans) !important;
+        font-size: 0.88rem !important;
+    }
+    .stTextInput input:focus,
+    .stTextArea textarea:focus {
+        border-color: var(--copper) !important;
+        box-shadow: 0 0 0 2px rgba(161,127,62,.14) !important;
+    }
+
+    /* Selectbox */
+    [data-baseweb="select"] > div {
+        border-radius: 3px !important;
+        border: 1px solid var(--warm-border) !important;
+        background: var(--white) !important;
+        font-family: var(--sans) !important;
+        font-size: 0.88rem !important;
+    }
+
+    /* Progress bar — copper/gold gradient */
+    div[data-testid="stProgress"] > div {
+        background: var(--warm-border) !important;
+        border-radius: 9999px !important;
+        height: 5px !important;
+    }
+    div[data-testid="stProgress"] > div > div {
+        background: linear-gradient(90deg, var(--copper), var(--gold)) !important;
+        border-radius: 9999px !important;
+    }
+
+    /* Primary buttons → gold solid */
+    .stButton > button[kind="primary"] {
+        font-family: var(--sans) !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.04em !important;
+        border-radius: 3px !important;
+        background: var(--gold) !important;
+        border: 1px solid var(--copper) !important;
+        color: var(--white) !important;
+        padding: 0.55rem 1.4rem !important;
+        transition: background 0.2s, box-shadow 0.2s !important;
+    }
+    .stButton > button[kind="primary"]:hover {
+        background: var(--copper) !important;
+        border-color: var(--copper-dark) !important;
+        box-shadow: 0 3px 10px rgba(161,127,62,.3) !important;
+    }
+
+    /* Secondary buttons → outlined charcoal */
+    .stButton > button[kind="secondary"] {
+        font-family: var(--sans) !important;
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        border-radius: 3px !important;
+        background: var(--white) !important;
+        border: 1px solid var(--warm-border) !important;
+        color: var(--charcoal-mid) !important;
+        transition: border-color 0.2s, color 0.2s !important;
+    }
+    .stButton > button[kind="secondary"]:hover {
+        border-color: var(--copper) !important;
+        color: var(--copper) !important;
+    }
+
+    /* Tertiary / default buttons */
+    .stButton > button:not([kind]) {
+        font-family: var(--sans) !important;
+        border-radius: 3px !important;
+        background: var(--white) !important;
+        border: 1px solid var(--warm-border) !important;
+        color: var(--charcoal-mid) !important;
+    }
+
+    /* Slider thumb & track */
+    .stSlider [data-testid="stSlider"] > div > div > div {
+        background: var(--copper) !important;
+    }
+
+    /* Link buttons */
+    .stLinkButton a {
+        font-family: var(--sans) !important;
+        border-radius: 3px !important;
+        border: 1px solid var(--warm-border) !important;
+        color: var(--charcoal-mid) !important;
+        font-size: 0.83rem !important;
+    }
+    .stLinkButton a:hover {
+        border-color: var(--copper) !important;
+        color: var(--copper) !important;
+        background: var(--gold-pale) !important;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        border-bottom: 2px solid var(--warm-border) !important;
+        gap: 0 !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-family: var(--sans) !important;
+        font-size: 0.83rem !important;
+        font-weight: 500 !important;
+        color: var(--charcoal-soft) !important;
+        padding: 0.55rem 1.25rem !important;
+        border-radius: 0 !important;
+        letter-spacing: 0.02em !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: var(--copper) !important;
+        border-bottom: 2px solid var(--copper) !important;
+        font-weight: 600 !important;
+    }
+
+    /* Expander */
+    .streamlit-expanderHeader {
+        font-family: var(--sans) !important;
+        font-size: 0.83rem !important;
+        font-weight: 600 !important;
+        color: var(--charcoal-mid) !important;
+    }
+
+    /* Success / info / warning alerts */
+    [data-testid="stAlert"] {
+        border-radius: 3px !important;
+        font-family: var(--sans) !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* st.metric */
+    [data-testid="stMetricValue"] {
+        font-family: var(--serif) !important;
+        color: var(--copper) !important;
+        font-weight: 700 !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-family: var(--sans) !important;
+        font-size: 0.72rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.07em !important;
+        color: var(--charcoal-soft) !important;
+    }
+
+    /* Headings that Streamlit renders */
+    h1, h2, h3 {
+        font-family: var(--serif) !important;
+        color: var(--copper) !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.01em;
+    }
+    h4, h5, h6 {
+        font-family: var(--sans) !important;
+        color: var(--charcoal) !important;
+        font-weight: 600 !important;
+    }
+    p, li, span, div {
+        color: var(--charcoal) !important;
+    }
+
+    /* ── Hide Streamlit chrome ───────────────────────────────────────────────── */
+    #MainMenu, footer, [data-testid="stToolbar"],
+    [data-testid="stDecoration"], .stDeployButton {
+        display: none !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -595,7 +971,12 @@ def _render_topbar():
         steps_html += f'<div class="{cls}">{label}</div>'
     st.markdown(f"""
     <div class="pf-topbar">
-        <div class="pf-logo">Path<span>finder</span></div>
+        <div class="pf-logo">Path<span>finder</span>
+          <span style="font-size:.65rem;font-weight:400;color:#9A8060;
+                       letter-spacing:.12em;text-transform:uppercase;
+                       font-family:'Inter',sans-serif;margin-left:.6rem;
+                       vertical-align:middle;">Career Intelligence</span>
+        </div>
         <div class="pf-steps">{steps_html}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -800,10 +1181,10 @@ def _render_results():
             card_cls = "pf-card pf-card-gold" if is_best else "pf-card"
             st.markdown(f"""
             <div class="{card_cls}" style="padding:1rem;">
-              <div style="font-size:1.05rem;font-weight:700;color:#111827;margin-bottom:0.25rem;">
+              <div style="font-size:1.05rem;font-weight:700;color:#2C2C2C;margin-bottom:0.25rem;">
                 {match.get('title','')}
               </div>
-              <div style="font-size:0.75rem;color:#6b7280;">{soc}</div>
+              <div style="font-size:0.75rem;color:#6B6B6B;">{soc}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -844,7 +1225,7 @@ def _render_results():
         <div class="pf-card pf-card-dashed" style="text-align:center;padding:2rem 1rem;">
           <div style="font-size:2.5rem;">＋</div>
           <div style="font-weight:600;color:#374151;margin-bottom:0.25rem;">Add Profession</div>
-          <div style="font-size:0.8rem;color:#9ca3af;">Browse O*NET roles to compare</div>
+          <div style="font-size:0.8rem;color:#9A8060;">Browse O*NET roles to compare</div>
         </div>
         """, unsafe_allow_html=True)
         all_onet = get_all_onet_titles()
@@ -985,9 +1366,9 @@ def _render_choose_plan():
             <div class="{card_cls}" style="text-align:center;padding:1.5rem;">
               <div style="font-size:2.5rem;">{plan['icon']}</div>
               <div style="font-size:1.1rem;font-weight:700;margin:0.5rem 0;">{plan['name']}</div>
-              <div style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">{plan['desc']}</div>
-              <div style="font-size:1.8rem;font-weight:800;color:#2563eb;">{weeks} wks</div>
-              <div style="font-size:0.8rem;color:#9ca3af;">
+              <div style="font-size:0.85rem;color:#6B6B6B;margin-bottom:1rem;">{plan['desc']}</div>
+              <div style="font-size:1.8rem;font-weight:800;color:#A17F3E;">{weeks} wks</div>
+              <div style="font-size:0.8rem;color:#9A8060;">
                 {plan['days']} days/wk · {hours_pd}h/day · done by {end_date}
               </div>
             </div>
@@ -1104,8 +1485,8 @@ def _render_roadmap():
             verified = cv_map.get(cid, {}).get("verified", False)
             done     = cid in done_set or title in done_set
 
-            dot_bg    = "#d1fae5" if (done or verified) else "#dbeafe"
-            dot_color = "#059669" if (done or verified) else "#2563eb"
+            dot_bg    = "#D8F3DC" if (done or verified) else "#F5EDD8"
+            dot_color = "#2D6A4F" if (done or verified) else "#A17F3E"
 
             # ── Timeline row ──
             st.markdown(f"""
@@ -1114,12 +1495,12 @@ def _render_roadmap():
                 {'✓' if (done or verified) else i+1}
               </div>
               <div style="flex:1;">
-                <div style="font-weight:600;color:#111827;">{title}</div>
-                <div style="font-size:0.8rem;color:#6b7280;">
+                <div style="font-weight:600;color:#2C2C2C;">{title}</div>
+                <div style="font-size:0.8rem;color:#6B6B6B;">
                   {course.get('provider','')} &nbsp;·&nbsp; {int(hrs)}h &nbsp;·&nbsp;
                   ~{days_n} days (starts day {cumday+1})
                 </div>
-                {('<div style="font-size:0.75rem;color:#059669;margin-top:0.2rem;">✓ Certificate submitted</div>' if verified else '')}
+                {('<div style="font-size:0.75rem;color:#2D6A4F;margin-top:0.2rem;">✓ Certificate submitted</div>' if verified else '')}
               </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1207,9 +1588,9 @@ def _study_planner_dialog():
             st.markdown(f"**{title}**  \n_{course.get('provider','')}_")
         with col_icon:
             icon_html = (
-                '<span style="font-size:1.4rem;color:#059669;">✅</span>'
+                '<span style="font-size:1.4rem;color:#2D6A4F;">✅</span>'
                 if v_state["verified"] else
-                '<span style="font-size:1.4rem;color:#dc2626;">✗</span>'
+                '<span style="font-size:1.4rem;color:#9B2335;">✗</span>'
             )
             st.markdown(icon_html, unsafe_allow_html=True)
 
@@ -1301,13 +1682,13 @@ def _render_dashboard():
         elif done:
             badge = '<span class="pf-badge pf-badge-blue">✓ Completed</span>'
         else:
-            badge = '<span class="pf-badge" style="background:#f3f4f6;color:#6b7280;">Pending</span>'
+            badge = '<span class="pf-badge" style="background:#F2EDE6;color:#6B6B6B;">Pending</span>'
         st.markdown(f"""
         <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:0.6rem 0;border-bottom:1px solid #f3f4f6;">
+                    padding:0.6rem 0;border-bottom:1px solid #E8E0D5;">
           <div>
-            <span style="font-weight:500;color:#111827;">{course.get('title','')}</span>
-            <span style="font-size:0.75rem;color:#9ca3af;margin-left:0.5rem;">
+            <span style="font-weight:500;color:#2C2C2C;">{course.get('title','')}</span>
+            <span style="font-size:0.75rem;color:#9A8060;margin-left:0.5rem;">
               {course.get('provider','')} · {int(course.get('hours',0))}h
             </span>
           </div>
@@ -1400,6 +1781,9 @@ def _render_upload():
 def _render_landing():
     st.markdown("""
     <div class="pf-hero">
+      <div style="font-family:'Inter',sans-serif;font-size:.68rem;font-weight:700;
+                  letter-spacing:.15em;text-transform:uppercase;color:#A17F3E;
+                  margin-bottom:.9rem;">Powered by Gemini AI &nbsp;&middot;&nbsp; O*NET &nbsp;&middot;&nbsp; SKKNI</div>
       <h1>Find Your <span>Career Path</span></h1>
       <p>AI-powered career guidance tailored for Indonesian students — mapped to O*NET and SKKNI competency standards.</p>
     </div>
@@ -1407,20 +1791,22 @@ def _render_landing():
 
     f1, f2, f3 = st.columns(3, gap="large")
     features = [
-        ("🤖", "AI Analysis",
+        ("✶", "AI Analysis",
          "Gemini AI analyzes your profile against global O*NET taxonomy and Indonesian SKKNI frameworks."),
-        ("🎯", "Career Matching",
+        ("◈", "Career Matching",
          "Get 3 personalized career matches ranked by compatibility score with detailed skill gap breakdown."),
-        ("📚", "Verified Roadmap",
+        ("▦", "Verified Roadmap",
          "Course links come exclusively from our verified database — no hallucinated URLs, ever."),
     ]
     for col, (icon, title, desc) in zip([f1, f2, f3], features):
         with col:
             st.markdown(f"""
-            <div class="pf-card" style="text-align:center;padding:1.5rem;">
-              <div style="font-size:2.2rem;margin-bottom:0.5rem;">{icon}</div>
-              <div style="font-weight:700;font-size:1rem;margin-bottom:0.4rem;">{title}</div>
-              <div style="font-size:0.85rem;color:#6b7280;">{desc}</div>
+            <div class="pf-card" style="text-align:center;padding:1.75rem 1.5rem;">
+              <div style="font-size:1.6rem;color:#A17F3E;margin-bottom:.65rem;line-height:1;">{icon}</div>
+              <div style="font-family:'Playfair Display',Georgia,serif;font-weight:600;
+                          font-size:1rem;margin-bottom:.5rem;color:#2C2C2C;
+                          letter-spacing:.01em;">{title}</div>
+              <div style="font-size:.83rem;color:#6B6B6B;line-height:1.65;">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
 
