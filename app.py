@@ -1,11 +1,27 @@
 import streamlit as st
 import os
+import html
 import io
 import json
 import re
+import uuid
+import datetime
 
 import pdfplumber
 from anthropic import Anthropic
+
+from database import (
+    init_db,
+    get_courses_for_onet,
+    get_total_hours_for_onet,
+    upsert_user_profile,
+    upsert_user_skills,
+    verify_user_skill,
+    get_user_skills,
+)
+
+# ── Phase 1: initialise database (idempotent) ─────────────────────────────
+init_db()
 
 st.set_page_config(
     page_title="Pathfinder — AI Career Mapping",
@@ -20,21 +36,111 @@ st.markdown("""
 .block-container { padding: 0 !important; max-width: 100% !important; }
 [data-testid="stAppViewContainer"] { padding: 0 !important; }
 
-/* ── Real "Upload Document" / "Enter Manually" engine ──────────────
-   The preview above is a sandboxed iframe (st.components.v1.html) with
-   no channel back to Python, so its tabs can only ever be a mockup —
-   real file bytes can only reach this server through native Streamlit
-   widgets. This block IS those same two input modes, for real, with
-   results flowing into the very results screen shown in the preview. */
-[data-testid="stExpander"] { max-width: 1200px; margin: 16px auto; }
-[data-testid="stExpander"] summary { font-family: 'Inter', sans-serif; font-weight: 600; }
-[data-testid="stExpander"] [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid #E2E8F0; }
-[data-testid="stExpander"] [aria-selected="true"] { color: #B48E4B !important; }
-[data-testid="stExpander"] [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #F8FAFC; }
-[data-testid="stExpander"] [data-testid="stWidgetLabel"] p { font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #64748B; }
-[data-testid="stExpander"] [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
-[data-testid="stExpander"] [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
-.pf-real-engine-intro p { font-size: 13px; color: #64748B; margin: 0 0 12px; line-height: 1.5; }
+/* ── Native Landing → Upload Profile → Results steps ───────────────
+   These three steps need real input/output, which a sandboxed
+   st.components.v1.html iframe structurally cannot provide (no channel
+   back to Python for clicks, files, or typed text). So they're rendered
+   natively — ONE set of controls each, genuinely wired end to end — and
+   styled to read as a continuation of Pathfinder's gold/navy/cream
+   identity. Only "demo" (the illustrative Skill Gap → Roadmap tour,
+   which never needed real data) still uses the polished preview. */
+.pf-native-navbar { max-width: 1200px; margin: 0 auto; padding: 18px 48px; font-family: 'Playfair Display', serif; font-weight: 700; font-size: 19px; color: #0F172A; letter-spacing: 1px; border-bottom: 1px solid #E2E8F0; }
+.pf-native-hero { max-width: 760px; margin: 0 auto; padding: 56px 48px 8px; text-align: center; font-family: 'Inter', sans-serif; }
+.pf-native-hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #B48E4B; margin: 0 0 12px; }
+.pf-native-hero h1 { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700; color: #0F172A; line-height: 1.25; margin: 0 0 16px; }
+.pf-native-hero h1 span { color: #B48E4B; }
+.pf-native-hero p { font-size: 15px; color: #64748B; line-height: 1.6; max-width: 540px; margin: 0 auto 8px; }
+.pf-native-hero .micro { font-size: 12px; color: #94A3B8; margin-top: 14px; }
+.pf-step-cta-wrap { max-width: 1200px; margin: 12px auto 32px; padding: 0 48px; text-align: center; }
+.pf-step-cta-wrap [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; padding: 10px 28px; }
+.pf-step-cta-wrap [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
+.pf-native-howit { max-width: 1080px; margin: 28px auto; padding: 0 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.pf-native-howit-card { text-align: center; padding: 20px 16px; border: 1px solid #E2E8F0; border-radius: 12px; background: #FAFAF7; font-family: 'Inter', sans-serif; }
+.pf-native-howit-card .num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #B48E4B; color: #fff; font-weight: 700; font-size: 12px; margin-bottom: 10px; }
+.pf-native-howit-card h4 { font-size: 13px; font-weight: 700; color: #0F172A; margin: 0 0 6px; }
+.pf-native-howit-card p { font-size: 12px; color: #64748B; line-height: 1.5; margin: 0; }
+.pf-native-stats { max-width: 640px; margin: 8px auto 48px; padding: 0 48px; display: flex; justify-content: space-around; text-align: center; font-family: 'Inter', sans-serif; }
+.pf-native-stats .num { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #0F172A; }
+.pf-native-stats .label { font-size: 12px; color: #64748B; }
+.pf-native-results-head { max-width: 1200px; margin: 36px auto 0; padding: 0 48px; font-family: 'Inter', sans-serif; }
+.pf-native-results-head h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: #0F172A; margin: 0 0 6px; }
+.pf-native-results-head p { font-size: 14px; color: #64748B; margin: 0 0 16px; }
+.pf-native-skills-row { max-width: 1200px; margin: 0 auto 28px; padding: 0 48px; display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-native-skill-chip { font-size: 12px; font-weight: 600; color: #9C7A40; background: #FBF1E0; border: 1px solid #F1E3C8; border-radius: 99px; padding: 6px 14px; }
+.pf-native-match-card { border: 1px solid #E2E8F0; border-radius: 12px; padding: 22px; background: #fff; box-shadow: 0 4px 20px rgba(15,23,42,0.05); font-family: 'Inter', sans-serif; margin-bottom: 12px; }
+.pf-native-match-card.best { border-color: #B48E4B; box-shadow: 0 8px 28px rgba(180,142,75,0.18); }
+.pf-native-match-badge { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; background: #B48E4B; border-radius: 99px; padding: 3px 10px; margin-bottom: 10px; }
+.pf-native-match-card h3 { font-size: 18px; font-weight: 700; color: #0F172A; margin: 0 0 4px; }
+.pf-native-match-onet { font-size: 11px; font-weight: 600; color: #94A3B8; letter-spacing: .4px; margin-bottom: 8px; }
+.pf-native-match-desc { font-size: 13px; color: #64748B; line-height: 1.5; margin-bottom: 14px; min-height: 60px; }
+.pf-native-match-bar-wrap { background: #E2E8F0; border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 6px; }
+.pf-native-match-bar-fill { background: #B48E4B; height: 100%; border-radius: 99px; }
+.pf-native-match-stats { display: flex; justify-content: space-between; font-size: 12px; color: #64748B; }
+.pf-native-match-meta { font-size: 12px; color: #94A3B8; margin-bottom: 10px; }
+/* Match-card Select buttons — container key has an index suffix (pf_match_col_0 etc.)
+   so we use [class*=] to match all variants */
+[class*="st-key-pf_match_col"] [data-testid="stBaseButton-primary"],
+[class*="st-key-pf_match_col"] [data-testid="stBaseButton-secondary"] { border-radius: 8px; font-weight: 600; }
+[class*="st-key-pf_match_col"] [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; }
+[class*="st-key-pf_match_col"] [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
+.pf-native-heading { max-width: 1200px; margin: 36px auto 0; padding: 0 48px; font-family: 'Inter', sans-serif; text-align: center; }
+.pf-native-heading h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: #0F172A; margin: 0 0 6px; }
+.pf-native-heading p { font-size: 14px; color: #64748B; margin: 0 0 22px; }
+.pf-native-progress { max-width: 620px; margin: 0 auto 28px; display: flex; justify-content: space-between; gap: 8px; font-family: 'Inter', sans-serif; }
+.pf-native-step { flex: 1; text-align: center; font-size: 12px; font-weight: 600; color: #94A3B8; padding: 7px 10px; border-radius: 99px; background: #F1F5F9; }
+.pf-native-step.current { color: #FFFFFF; background: #B48E4B; }
+.pf-native-step.done { color: #B48E4B; background: #FBF1E0; }
+.st-key-pf_upload_page { max-width: 1100px; margin: 0 auto 12px; padding: 0 48px; }
+.st-key-pf_upload_page [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid #E2E8F0; }
+.st-key-pf_upload_page [aria-selected="true"] { color: #B48E4B !important; }
+.st-key-pf_upload_page [data-testid="stFileUploaderDropzone"] { border-radius: 10px; border-color: #CBD5E1; background: #F8FAFC; }
+.st-key-pf_upload_page [data-testid="stWidgetLabel"] p { font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #64748B; }
+.st-key-pf_upload_page [data-testid="stBaseButton-primary"] { background: #B48E4B; border-color: #B48E4B; border-radius: 8px; font-weight: 600; }
+.st-key-pf_upload_page [data-testid="stBaseButton-primary"]:hover { background: #9C7A4A; border-color: #9C7A4A; }
+.pf-upload-back-wrap { max-width: 1100px; margin: 0 auto 32px; padding: 0 48px; }
+
+/* ── Phase 3: Loading animation ─────────────────────────────────── */
+.pf-loading-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 48px; text-align:center; font-family:'Inter',sans-serif; background:#F8F6F0; min-height:420px; }
+.pf-loading-ring { position:relative; width:80px; height:80px; margin-bottom:28px; }
+.pf-loading-ring-track { position:absolute; inset:0; border:3px solid #F1E3C8; border-radius:50%; }
+.pf-loading-ring-spin { position:absolute; inset:0; border:3px solid transparent; border-top-color:#B48E4B; border-radius:50%; animation:pf-spin 0.9s linear infinite; }
+.pf-loading-ring-pulse { position:absolute; inset:12px; background:#B48E4B; border-radius:50%; opacity:0.12; animation:pf-pulse 1.6s ease-in-out infinite; }
+@keyframes pf-spin { to { transform:rotate(360deg); } }
+@keyframes pf-pulse { 0%,100% { opacity:0.12; transform:scale(0.85); } 50% { opacity:0.28; transform:scale(1); } }
+.pf-loading-main-text { font-size:17px; font-weight:700; color:#0F172A; min-height:26px; animation:pf-fade-in 0.3s ease; }
+@keyframes pf-fade-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+.pf-loading-sub-text { font-size:13px; color:#64748B; margin-top:6px; }
+.pf-loading-steps { display:flex; gap:6px; margin-top:28px; }
+.pf-loading-dot { width:8px; height:8px; border-radius:50%; background:#E2E8F0; }
+.pf-loading-dot.active { background:#B48E4B; animation:pf-dot-pulse 1s ease-in-out infinite; }
+@keyframes pf-dot-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.4); } }
+
+/* ── Phase 4: 4-column results ──────────────────────────────────── */
+.pf-add-profession-card { border:2px dashed #CBD5E1; border-radius:12px; padding:22px; background:#F8FAFC; height:100%; box-sizing:border-box; font-family:'Inter',sans-serif; }
+.pf-add-profession-card h3 { font-size:15px; font-weight:700; color:#0F172A; margin:0 0 6px; }
+.pf-add-profession-card p { font-size:12px; color:#64748B; margin:0 0 14px; line-height:1.5; }
+.pf-match-card-hours { font-size:12px; color:#B48E4B; font-weight:600; margin-top:4px; }
+.pf-match-card-courses { margin:12px 0 0; }
+.pf-match-card-courses-label { font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.pf-course-row { display:flex; align-items:center; gap:8px; font-size:12px; color:#64748B; margin-bottom:5px; }
+.pf-course-provider { font-size:10px; font-weight:700; color:#B48E4B; background:#FBF1E0; border-radius:4px; padding:1px 6px; white-space:nowrap; }
+.pf-gap-skills-wrap { margin:10px 0 4px; display:flex; flex-wrap:wrap; gap:4px; }
+.pf-gap-skill-chip { font-size:11px; font-weight:600; color:#DC2626; background:#FEF2F2; border:1px solid #FECACA; border-radius:99px; padding:3px 9px; }
+
+/* ── Phase 5: Study planner + Certificate verification ─────────── */
+.pf-planner-metric { text-align:center; padding:20px 16px; border:1px solid #E2E8F0; border-radius:12px; background:#FAFAF7; }
+.pf-planner-metric .pf-pm-val { font-family:'Playfair Display',serif; font-size:36px; font-weight:700; color:#B48E4B; line-height:1; }
+.pf-planner-metric .pf-pm-lbl { font-size:12px; color:#64748B; margin-top:4px; }
+.pf-cert-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid #E2E8F0; border-radius:10px; background:#fff; margin-bottom:10px; font-family:'Inter',sans-serif; }
+.pf-cert-row.verified { border-color:#16A34A; background:#F0FDF4; }
+.pf-cert-status-icon { font-size:18px; flex-shrink:0; }
+.pf-cert-title { font-size:13px; font-weight:600; color:#0F172A; }
+.pf-cert-provider { font-size:11px; color:#94A3B8; margin-top:2px; }
+.pf-cert-hours { font-size:11px; color:#B48E4B; font-weight:600; white-space:nowrap; }
+.pf-section-divider { max-width:1200px; margin:32px auto; padding:0 48px; }
+.pf-section-divider hr { border:none; border-top:1px solid #E2E8F0; }
+.pf-section-heading { font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:#0F172A; margin:0 0 4px; }
+.pf-section-subheading { font-size:13px; color:#64748B; margin:0 0 16px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -62,28 +168,35 @@ def load_file(path):
 # ────────────────────────────────────────────────────────────────────
 
 ANALYZE_SYSTEM_PROMPT = (
-    "You are an expert career data encoder. Analyze the provided raw CV text. \n"
-    "1. Extract all technical hard skills and cross-functional soft skills. \n"
-    "2. Map these skills directly to official O*NET \"Technology Skills\" or \"Knowledge\" "
-    "categories, and assign the closest Indonesian SKKNI competency unit code.\n"
-    "3. Query your internal database of O*NET Standard Occupational Classifications (SOC) to "
-    "find the top 3 closest profession titles that match the user's background. If the user has "
-    "a Mathematics and Python background, you must output tech/analytical roles (e.g., Data "
-    "Scientist, Operations Research Analyst) rather than finance roles.\n"
-    "4. Calculate the absolute match ratio: matched_skills divided by total_required_skills for "
-    "that specific profession.\n\n"
-    "Respond with ONLY a single raw JSON object — no markdown code fences, no commentary, no "
-    "leading or trailing text — matching exactly this schema:\n"
+    "You are an expert career data encoder. Analyse the provided raw CV text.\n"
+    "1. Extract ALL technical hard skills and cross-functional soft skills present.\n"
+    "2. Map these skills to official O*NET 'Technology Skills' or 'Knowledge' categories and "
+    "assign the closest Indonesian SKKNI competency unit code where applicable.\n"
+    "3. Identify the top 3 closest O*NET Standard Occupational Classification (SOC) profession "
+    "titles that match the candidate's actual background. Prioritise domain alignment: a "
+    "Mathematics/Python background → Data Scientist / Operations Research Analyst, not Finance.\n"
+    "4. For each matched profession:\n"
+    "   a. matched_count = number of extracted skills that directly satisfy that profession's "
+    "requirements.\n"
+    "   b. total_required = total skills that profession standardly requires.\n"
+    "   c. gap_count = total_required − matched_count (never negative).\n"
+    "   d. gap_skills = list of specific skill names the candidate is MISSING for that profession "
+    "(maximum 8, most impactful first).\n"
+    "   e. estimated_days = realistic days to close the gap at 2 hrs/day study pace.\n"
+    "5. Calculate the ABSOLUTE match ratio (matched_count / total_required) — do NOT apply "
+    "arbitrary weighting.\n\n"
+    "Respond with ONLY a single raw JSON object — no markdown fences, no commentary:\n"
     "{\n"
     '  "detected_skills": ["string"],\n'
     '  "top_matches": [\n'
     "    {\n"
     '      "title": "string",\n'
-    '      "onet_code": "string",\n'
-    '      "description": "string",\n'
+    '      "onet_code": "string (O*NET-SOC code, e.g. 15-2051.00)",\n'
+    '      "description": "string (1–2 sentence profession description)",\n'
     '      "matched_count": number,\n'
     '      "total_required": number,\n'
     '      "gap_count": number,\n'
+    '      "gap_skills": ["string"],\n'
     '      "estimated_days": number\n'
     "    }\n"
     "  ]\n"
@@ -105,11 +218,13 @@ def extract_pdf_text(file_bytes: bytes) -> str:
 
 
 def _coerce_match_record(raw):
-    """Normalize one top_matches entry from the LLM into the exact numeric/string contract."""
+    """Normalise one top_matches entry from the LLM into the exact numeric/string contract."""
     matched = int(raw.get("matched_count", 0) or 0)
     total = int(raw.get("total_required", 0) or 0)
     gap = raw.get("gap_count")
     gap = int(gap) if gap is not None else max(total - matched, 0)
+    raw_gap_skills = raw.get("gap_skills", [])
+    gap_skills = [str(s).strip() for s in (raw_gap_skills or []) if str(s).strip()][:8]
     return {
         "title": str(raw.get("title", "")).strip(),
         "onet_code": str(raw.get("onet_code", "")).strip(),
@@ -117,6 +232,7 @@ def _coerce_match_record(raw):
         "matched_count": matched,
         "total_required": total,
         "gap_count": gap,
+        "gap_skills": gap_skills,
         "estimated_days": int(raw.get("estimated_days", 0) or 0),
     }
 
@@ -199,15 +315,132 @@ CSS = load_file("assets/styles.css")
 JS  = load_file("assets/script.js")
 
 
+# ────────────────────────────────────────────────────────────────────
+# Flow control — "pf_step" decides which Pathfinder step Python renders:
+#   landing → upload → results → demo
+# A sandboxed st.components.v1.html() iframe has NO channel to send real
+# data (a file, typed text, a button click) back to Python — so any step
+# that needs real input/output (Landing's CTA, Upload Profile, Results)
+# is rendered NATIVELY: one set of controls, genuinely wired end to end,
+# no mockup duplicate sitting next to it. Only "demo" — the illustrative
+# Skill Gap → Choose Plan → Roadmap → Dashboard tour, which never needed
+# real data — still uses the polished HTML/CSS/JS preview, opened
+# straight on its first screen.
+# ────────────────────────────────────────────────────────────────────
+st.session_state.setdefault("pf_step", "landing")
 st.session_state.setdefault("analysis_result", None)
 st.session_state.setdefault("analysis_error", None)
+st.session_state.setdefault("session_id", str(uuid.uuid4()))
+st.session_state.setdefault("pf_show_planner", False)
+st.session_state.setdefault("pf_selected_match", None)
+st.session_state.setdefault("pf_cert_states", {})   # {course_id: {"url": str, "verified": bool}}
 
-# RESULTS_DATA only depends on session_state (persists across Streamlit
-# reruns), so it can be computed here — before the iframe — even though
-# the actual upload control that produces it renders further down.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 5 — Study Planner modal  (@st.dialog requires Streamlit ≥ 1.36)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@st.dialog("📅 Study Planner", width="large")
+def _study_planner_dialog():
+    match = st.session_state.get("pf_selected_match") or {}
+    onet_code = match.get("onet_code", "")
+    title = match.get("title", "your chosen profession")
+
+    total_hours = match.get("total_course_hours") or get_total_hours_for_onet(onet_code) or max(
+        match.get("estimated_days", 60) * 2, 40
+    )
+
+    st.markdown(
+        f"<p style='font-family:Inter,sans-serif;font-size:15px;color:#64748B;margin:0 0 20px'>"
+        f"Personalise your learning timeline for <strong style='color:#0F172A'>{html.escape(title)}</strong> "
+        f"— <strong style='color:#B48E4B'>{total_hours} total course hours</strong> to complete.</p>",
+        unsafe_allow_html=True,
+    )
+
+    mode = st.radio(
+        "Plan by:", ["⏱ Hours per day", "📅 Target completion date"],
+        horizontal=True, key="pf_planner_mode", label_visibility="collapsed",
+    )
+
+    st.divider()
+
+    if mode == "⏱ Hours per day":
+        hrs = st.slider("Hours you can study per day", min_value=1, max_value=12, value=2,
+                        step=1, key="pf_planner_hrs")
+        days_needed = max(1, round(total_hours / hrs))
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown(
+                f'<div class="pf-planner-metric"><div class="pf-pm-val">{days_needed}</div>'
+                f'<div class="pf-pm-lbl">Estimated days to complete</div></div>',
+                unsafe_allow_html=True,
+            )
+        with col_b:
+            finish = datetime.date.today() + datetime.timedelta(days=days_needed)
+            st.markdown(
+                f'<div class="pf-planner-metric"><div class="pf-pm-val" style="font-size:22px">'
+                f'{finish.strftime("%d %b %Y")}</div>'
+                f'<div class="pf-pm-lbl">Estimated finish date</div></div>',
+                unsafe_allow_html=True,
+            )
+    else:
+        target = st.date_input(
+            "Target completion date", value=datetime.date.today() + datetime.timedelta(days=90),
+            min_value=datetime.date.today() + datetime.timedelta(days=1),
+            key="pf_planner_date",
+        )
+        days_available = max(1, (target - datetime.date.today()).days)
+        hrs_daily = round(total_hours / days_available, 1)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown(
+                f'<div class="pf-planner-metric"><div class="pf-pm-val">{days_available}</div>'
+                f'<div class="pf-pm-lbl">Days until target</div></div>',
+                unsafe_allow_html=True,
+            )
+        with col_b:
+            st.markdown(
+                f'<div class="pf-planner-metric"><div class="pf-pm-val">{hrs_daily}</div>'
+                f'<div class="pf-pm-lbl">Hours to study daily</div></div>',
+                unsafe_allow_html=True,
+            )
+
+    st.divider()
+
+    courses = get_courses_for_onet(onet_code)
+    if courses:
+        st.markdown(
+            "<p style='font-size:13px;font-weight:700;color:#0F172A;margin:0 0 8px'>"
+            "Recommended courses for this plan</p>",
+            unsafe_allow_html=True,
+        )
+        for crs in courses[:4]:
+            st.markdown(
+                f'<div class="pf-cert-row">'
+                f'<div><div class="pf-cert-title">{html.escape(crs["title"])}</div>'
+                f'<div class="pf-cert-provider">{crs["provider"]}</div></div>'
+                f'<div class="pf-cert-hours">{crs["total_hours"]} hrs</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.divider()
+    if st.button("🚀 Start My Journey — View Demo Roadmap", type="primary", use_container_width=True,
+                 key="pf_planner_start"):
+        st.session_state["pf_show_planner"] = False
+        st.session_state["pf_step"] = "demo"
+        st.rerun()
+
+
+PF_STEP = st.session_state["pf_step"]
+
+# Trigger study-planner dialog (must be called before any other rendering)
+if st.session_state.get("pf_show_planner"):
+    _study_planner_dialog()
+
 _analysis_result = st.session_state.get("analysis_result")
 RESULTS_DATA_JSON = json.dumps(_analysis_result) if _analysis_result else "null"
-JUMP_TO_RESULTS_JS = "true" if _analysis_result else "false"
+INITIAL_SCREEN_JS = "'screen-4'" if PF_STEP == "demo" else "'screen-1'"
 
 
 HTML = f"""<!DOCTYPE html>
@@ -1715,13 +1948,12 @@ function addCertFiles(fileList, listEl) {{
 
 // ── PROFESSION MATCH RESULTS ────────────────────────────────
 // RESULTS_DATA is injected directly from Python — it is the LIVE output
-// of run_profile_analysis() (PDF text extraction → Claude structured
-// O*NET/SKKNI skill mapping), or `null` until the user uploads a CV via
-// the "Run it for real" panel below this preview. There
-// is no mock/static fallback: until real data exists, this screen shows
-// an explicit empty state instead of fabricated professions.
+// of run_profile_analysis() / analyze_profile_with_claude() (the native
+// "Upload Profile" step's real PDF/text → Claude → O*NET/SKKNI pipeline).
+// Python only opens this screen once that step has produced real data
+// (see PF_STEP / INITIAL_SCREEN_JS), but the empty state below stays as
+// a defensive fallback — there is still no mock/static data here.
 const RESULTS_DATA = {RESULTS_DATA_JSON};
-const JUMP_TO_RESULTS_ON_LOAD = {JUMP_TO_RESULTS_JS};
 
 function escHtml(value) {{
   const div = document.createElement('div');
@@ -1874,11 +2106,10 @@ window.addEventListener('scroll', () => {{
 }});
 
 // ── INIT ────────────────────────────────────────────────────
-// If a real analysis result was just produced (the user uploaded a CV via
-// the live-analysis panel and the page rerendered with RESULTS_DATA
-// populated), jump straight to the results screen so they see their real
-// matches immediately instead of having to navigate the demo flow again.
-showScreen(JUMP_TO_RESULTS_ON_LOAD ? 'screen-3' : 'screen-1');
+// Python decides which screen to open based on the current Pathfinder
+// step (INITIAL_SCREEN_JS): the landing screen for "landing", or the
+// results screen — populated with real RESULTS_DATA — for "results".
+showScreen({INITIAL_SCREEN_JS});
 initSlider();
 initDropZone();
 initCertDropZone('cert-drop-zone-doc', 'cert-file-input-doc', 'cert-file-list-doc');
@@ -1887,66 +2118,408 @@ initCertDropZone('cert-drop-zone-manual', 'cert-file-input-manual', 'cert-file-l
 </body>
 </html>"""
 
-st.components.v1.html(HTML, height=900, scrolling=True)
-
-# ────────────────────────────────────────────────────────────────────
-# REAL "Upload Document" / "Enter Manually" — the live input for the
-# preview's Upload Profile step. The preview is a single sandboxed-iframe
-# SPA with no return channel to Python (and no signal telling Python which
-# of its 7 internal screens is showing), so this can't conditionally
-# appear "only on the upload step" — it's collapsed by default and tucked
-# into one expander so it reads as a tool you open when you're ready,
-# not a block competing for space on every screen of the preview.
-# ────────────────────────────────────────────────────────────────────
-_engine_open = bool(st.session_state.get("analysis_result") or st.session_state.get("analysis_error"))
-with st.expander("🔍  Run it for real — Upload Document / Enter Manually (live AI analysis)", expanded=_engine_open):
+if PF_STEP == "landing":
+    # Native landing — ONE real "Get Started" CTA (no mockup duplicate
+    # sitting beside it). Visuals are hand-styled to match Pathfinder's
+    # gold/navy/cream identity rather than imported wholesale from the
+    # preview's stylesheet (which resets body/h1-h6/etc. globally and
+    # would break Streamlit's own chrome if loaded outside the iframe).
+    st.markdown('<div class="pf-native-navbar">PATHFINDER</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="pf-real-engine-intro">'
-        '<p>The screen above is a live preview. To generate <strong>your</strong> actual matches, use either '
-        'input mode below — upload your CV or type your profile in — and the preview\'s results screen will '
-        're-render with your real, AI-generated O*NET / SKKNI matches.</p>'
+        '<div class="pf-native-hero">'
+        '<p class="eyebrow">AI-Powered Career Mapping</p>'
+        '<h1>Discover Your Career<br><span>Path Today</span></h1>'
+        '<p>Know exactly what skills you need for your dream career. Pathfinder compares your CV with '
+        'global industry standards — using a real AI pipeline against O*NET and SKKNI — to build your '
+        'personalized learning roadmap.</p>'
+        '<p class="micro">PDF or DOCX. 100% Free &amp; Secure.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown('<div class="pf-step-cta-wrap">', unsafe_allow_html=True)
+    if st.button("🚀  Analyze My CV — Get Started", type="primary", key="pf_get_started"):
+        st.session_state["pf_step"] = "upload"
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="pf-native-howit">'
+        '<div class="pf-native-howit-card"><div class="num">1</div><h4>Upload CV or fill in your data</h4>'
+        '<p>Upload your CV or describe your profile to start your analysis.</p></div>'
+        '<div class="pf-native-howit-card"><div class="num">2</div><h4>AI analyzes your profile</h4>'
+        '<p>Claude maps your real skills against O*NET and SKKNI standardized professions.</p></div>'
+        '<div class="pf-native-howit-card"><div class="num">3</div><h4>See your matches &amp; gaps</h4>'
+        '<p>Get your top profession matches with an honest, computed skill-match ratio.</p></div>'
+        '<div class="pf-native-howit-card"><div class="num">4</div><h4>Explore your roadmap</h4>'
+        '<p>Tour Pathfinder\'s learning roadmap, plans, and dashboard experience.</p></div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="pf-native-stats">'
+        '<div><div class="num">1,000+</div><div class="label">O*NET Professions</div></div>'
+        '<div><div class="num">500+</div><div class="label">Certified Courses</div></div>'
+        '<div><div class="num">SKKNI</div><div class="label">Standardized</div></div>'
         '</div>',
         unsafe_allow_html=True,
     )
 
-    tab_doc, tab_manual = st.tabs(["📄  Upload Document", "✍️  Enter Manually"])
+elif PF_STEP == "upload":
+    # ── Phase 3 loading helper ────────────────────────────────────────────
+    _LOADING_MSGS = [
+        "Extracting document…",
+        "Mapping to O*NET &amp; SKKNI…",
+        "Calculating absolute skill gaps…",
+        "Building your career profile…",
+    ]
+    _LOADING_HTML = (
+        '<div class="pf-loading-wrap">'
+        '<div class="pf-loading-ring">'
+        '<div class="pf-loading-ring-track"></div>'
+        '<div class="pf-loading-ring-spin"></div>'
+        '<div class="pf-loading-ring-pulse"></div>'
+        '</div>'
+        '<div class="pf-loading-main-text" id="pf-lt">Extracting document…</div>'
+        '<div class="pf-loading-sub-text">AI pipeline · O*NET · SKKNI</div>'
+        '<div class="pf-loading-steps">'
+        + ''.join(
+            f'<div class="pf-loading-dot{" active" if i == 0 else ""}" id="pf-dot-{i}"></div>'
+            for i in range(4)
+        )
+        + '</div>'
+        '<script>'
+        'var _pfMsgs=['
+        + ",".join(f'"{m}"' for m in _LOADING_MSGS)
+        + '];'
+        'var _pfIdx=0;'
+        'function _pfTick(){'
+        '  var el=document.getElementById("pf-lt");'
+        '  if(!el)return;'
+        '  el.style.opacity="0";'
+        '  setTimeout(function(){'
+        '    _pfIdx=(_pfIdx+1)%_pfMsgs.length;'
+        '    el.innerHTML=_pfMsgs[_pfIdx];'
+        '    el.style.opacity="1";'
+        '    document.querySelectorAll(".pf-loading-dot").forEach(function(d,i){'
+        '      d.classList.toggle("active",i===_pfIdx);'
+        '    });'
+        '  },280);'
+        '}'
+        'setInterval(_pfTick,1900);'
+        '</script>'
+        '</div>'
+    )
 
-    with tab_doc:
-        cv_pdf_file = st.file_uploader("Upload CV / Resume (PDF)", type=["pdf"], key="pf_cv_pdf")
-        if st.button("🔍  Analyze My CV", type="primary", key="pf_analyze_doc", disabled=cv_pdf_file is None):
-            st.session_state["analysis_error"] = None
-            st.session_state["analysis_result"] = None
-            try:
-                with st.spinner("Extracting your CV and matching it against O*NET / SKKNI standards…"):
-                    st.session_state["analysis_result"] = run_profile_analysis(cv_pdf_file.getvalue())
-            except Exception as exc:
-                st.session_state["analysis_error"] = str(exc)
+    def _run_analysis_with_loading(fn, *args):
+        """Show premium loading animation while blocking analysis runs, then return result."""
+        _placeholder = st.empty()
+        _placeholder.markdown(_LOADING_HTML, unsafe_allow_html=True)
+        try:
+            _result = fn(*args)
+        finally:
+            _placeholder.empty()
+        return _result
+
+    # ────────────────────────────────────────────────────────────────────
+    # THE real "Upload Profile" step — rendered natively (not inside the
+    # iframe) so its "Upload Document" / "Enter Manually" tabs are genuine
+    # working inputs. Whatever is submitted here runs through the real
+    # PDF-extraction → Claude → O*NET/SKKNI pipeline.
+    # ────────────────────────────────────────────────────────────────────
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step current">1 · Upload Profile</div>'
+        '<div class="pf-native-step">2 · Results</div>'
+        '<div class="pf-native-step">3 · Skill Gap</div>'
+        '<div class="pf-native-step">4 · Choose Plan</div>'
+        '<div class="pf-native-step">5 · Roadmap</div>'
+        '</div>'
+        '<div class="pf-native-heading">'
+        '<h2>Start with your profile</h2>'
+        '<p>Pathfinder will automatically read your skills, experience, and education</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.container(key="pf_upload_page"):
+        tab_doc, tab_manual = st.tabs(["📄  Upload Document", "✍️  Enter Manually"])
+
+        with tab_doc:
+            cv_pdf_file = st.file_uploader("Upload CV / Resume (PDF)", type=["pdf"], key="pf_cv_pdf")
+            if st.button("Analyze Now", type="primary", key="pf_analyze_doc", disabled=cv_pdf_file is None):
+                st.session_state["analysis_error"] = None
+                st.session_state["analysis_result"] = None
+                try:
+                    result = _run_analysis_with_loading(run_profile_analysis, cv_pdf_file.getvalue())
+                    st.session_state["analysis_result"] = result
+                    # Persist CV text + skills to DB
+                    upsert_user_profile(st.session_state["session_id"],
+                                        extract_pdf_text(cv_pdf_file.getvalue()))
+                    upsert_user_skills(st.session_state["session_id"],
+                                       result.get("detected_skills", []),
+                                       result.get("top_matches", [{}])[0].get("onet_code"))
+                    st.session_state["pf_step"] = "results"
+                except Exception as exc:
+                    st.session_state["analysis_error"] = str(exc)
+                st.rerun()
+
+        with tab_manual:
+            manual_profile_text = st.text_area(
+                "Describe your profile — education, work experience, and skills",
+                placeholder=(
+                    "e.g. Bachelor's in Mathematics from ITB, 2 years as a data analyst building "
+                    "Python/SQL dashboards. Skills: statistics, machine learning basics, Excel, SQL…"
+                ),
+                height=180, key="pf_manual_text",
+            )
+            if st.button("Analyze Now", type="primary", key="pf_analyze_manual",
+                         disabled=not manual_profile_text.strip()):
+                st.session_state["analysis_error"] = None
+                st.session_state["analysis_result"] = None
+                try:
+                    result = _run_analysis_with_loading(analyze_profile_with_claude,
+                                                        manual_profile_text.strip())
+                    st.session_state["analysis_result"] = result
+                    upsert_user_profile(st.session_state["session_id"], manual_profile_text.strip())
+                    upsert_user_skills(st.session_state["session_id"],
+                                       result.get("detected_skills", []),
+                                       result.get("top_matches", [{}])[0].get("onet_code"))
+                    st.session_state["pf_step"] = "results"
+                except Exception as exc:
+                    st.session_state["analysis_error"] = str(exc)
+                st.rerun()
+
+        if st.session_state.get("analysis_error"):
+            st.error(f"Analysis failed: {st.session_state['analysis_error']}")
+
+    st.markdown('<div class="pf-upload-back-wrap">', unsafe_allow_html=True)
+    if st.button("← Back", key="pf_upload_back"):
+        st.session_state["pf_step"] = "landing"
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif PF_STEP == "results":
+    # ── Phase 4 — Native 4-column results ─────────────────────────────────
+    # Columns 1-3: real AI matches with O*NET code, absolute match ratio,
+    # gap skills, and DB-sourced course recommendations.
+    # Column 4: manual "add a target profession" input.
+    # ──────────────────────────────────────────────────────────────────────
+    _result = st.session_state.get("analysis_result") or {"detected_skills": [], "top_matches": []}
+    _skills = _result.get("detected_skills", [])
+    _matches = _result.get("top_matches", [])
+
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step done">✓ Upload Profile</div>'
+        '<div class="pf-native-step current">2 · Results</div>'
+        '<div class="pf-native-step">3 · Skill Gap</div>'
+        '<div class="pf-native-step">4 · Choose Plan</div>'
+        '<div class="pf-native-step">5 · Roadmap</div>'
+        '</div>'
+        '<div class="pf-native-results-head">'
+        '<h2>Professions most suited for you</h2>'
+        '<p>Based on the skills Claude detected in your profile, matched against O*NET / SKKNI standards.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Extracted skills chips (✓) ────────────────────────────────────────
+    if _skills:
+        chips = "".join(
+            f'<span class="pf-native-skill-chip">✓ {html.escape(s)}</span>' for s in _skills
+        )
+        st.markdown(f'<div class="pf-native-skills-row">{chips}</div>', unsafe_allow_html=True)
+
+    # ── 4-column grid: 3 AI matches + 1 manual input ──────────────────────
+    _padded_matches = (_matches + [{}, {}, {}])[:3]   # always exactly 3 slots
+    cols = st.columns(4, gap="medium")
+
+    for i, match in enumerate(_padded_matches):
+        if not match:
+            continue
+        ratio = (
+            round((match["matched_count"] / match["total_required"]) * 100)
+            if match.get("total_required") else 0
+        )
+        is_best = i == 0
+
+        # Enrich with DB data (Phase 1 + Phase 2 query)
+        onet_code = match.get("onet_code", "")
+        db_courses = get_courses_for_onet(onet_code, limit=3)
+        total_course_hrs = get_total_hours_for_onet(onet_code)
+
+        # Build gap-skills chips HTML
+        gap_skills = match.get("gap_skills", [])
+        gap_html = ""
+        if gap_skills:
+            gap_chips = "".join(
+                f'<span class="pf-gap-skill-chip">{html.escape(g)}</span>' for g in gap_skills[:4]
+            )
+            gap_html = f'<div class="pf-gap-skills-wrap">{gap_chips}</div>'
+
+        # Build course rows HTML
+        courses_html = ""
+        if db_courses:
+            rows = "".join(
+                f'<div class="pf-course-row">'
+                f'<span class="pf-course-provider">{c["provider"]}</span>'
+                f'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{html.escape(c["title"])}</span>'
+                f'<span style="white-space:nowrap;color:#B48E4B;font-weight:600">{c["total_hours"]}h</span>'
+                f'</div>'
+                for c in db_courses
+            )
+            courses_html = (
+                f'<div class="pf-match-card-courses">'
+                f'<div class="pf-match-card-courses-label">Recommended Courses</div>'
+                f'{rows}'
+                f'</div>'
+            )
+
+        hours_html = (
+            f'<div class="pf-match-card-hours">⏱ {total_course_hrs} hrs total course content</div>'
+            if total_course_hrs else ""
+        )
+
+        with cols[i]:
+            st.markdown(
+                f'<div class="pf-native-match-card{" best" if is_best else ""}">'
+                + ('<span class="pf-native-match-badge">Best Match</span>' if is_best else '')
+                + f'<h3>{html.escape(match["title"])}</h3>'
+                + f'<div class="pf-native-match-onet">O*NET-SOC {html.escape(onet_code)}</div>'
+                + f'<div class="pf-native-match-desc">{html.escape(match.get("description", ""))}</div>'
+                + '<div class="pf-native-match-stats"><span>Skill Match</span>'
+                + f'<span style="color:#B48E4B;font-weight:700">{ratio}%</span></div>'
+                + f'<div class="pf-native-match-bar-wrap"><div class="pf-native-match-bar-fill" style="width:{ratio}%"></div></div>'
+                + f'<div class="pf-native-match-meta">{match.get("matched_count",0)} of {match.get("total_required",0)} skills matched'
+                + f' · Gap: {match.get("gap_count",0)} · Roadmap: {match.get("estimated_days",0)} days</div>'
+                + gap_html
+                + hours_html
+                + courses_html
+                + '</div>',
+                unsafe_allow_html=True,
+            )
+            with st.container(key=f"pf_match_col_{i}"):
+                if st.button(
+                    "Select & Plan Study →" if is_best else "Select this profession",
+                    type="primary" if is_best else "secondary",
+                    key=f"pf_select_match_{i}",
+                    use_container_width=True,
+                ):
+                    st.session_state["pf_selected_match"] = {**match, "total_course_hours": total_course_hrs}
+                    st.session_state["pf_show_planner"] = True
+                    st.rerun()
+
+    # ── Column 4 — manual profession target ───────────────────────────────
+    with cols[3]:
+        st.markdown(
+            '<div class="pf-add-profession-card">'
+            '<h3>Add a target profession</h3>'
+            '<p>Even without a strong AI match, Pathfinder will build you a complete '
+            'roadmap for any profession you aspire to.</p>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        custom_prof = st.text_input("Search profession…", key="pf_custom_prof_input",
+                                    placeholder="e.g. UX Designer, Product Manager…",
+                                    label_visibility="collapsed")
+        if st.button("Get Roadmap →", key="pf_custom_prof_btn",
+                     disabled=not (custom_prof or "").strip(), use_container_width=True):
+            st.session_state["pf_selected_match"] = {
+                "title": custom_prof.strip(),
+                "onet_code": "",
+                "description": "Custom profession target selected by user.",
+                "matched_count": 0, "total_required": 0, "gap_count": 0,
+                "gap_skills": [], "estimated_days": 60,
+                "total_course_hours": 0,
+            }
+            st.session_state["pf_show_planner"] = True
             st.rerun()
 
-    with tab_manual:
-        manual_profile_text = st.text_area(
-            "Describe your profile — education, work experience, and skills",
-            placeholder="e.g. Bachelor's in Mathematics from ITB, 2 years as a data analyst building Python/SQL "
-                        "dashboards. Skills: statistics, machine learning basics, Excel, SQL...",
-            height=180, key="pf_manual_text",
-        )
-        if st.button("🔍  Analyze My Profile", type="primary", key="pf_analyze_manual",
-                     disabled=not manual_profile_text.strip()):
-            st.session_state["analysis_error"] = None
-            st.session_state["analysis_result"] = None
-            try:
-                with st.spinner("Matching your profile against O*NET / SKKNI standards…"):
-                    st.session_state["analysis_result"] = analyze_profile_with_claude(manual_profile_text.strip())
-            except Exception as exc:
-                st.session_state["analysis_error"] = str(exc)
-            st.rerun()
+    # ── Phase 5: Certificate verification ─────────────────────────────────
+    st.markdown(
+        '<div class="pf-section-divider"><hr></div>'
+        '<div style="max-width:1200px;margin:0 auto;padding:0 48px">'
+        '<p class="pf-section-heading">🎓 Verify Your Skills with Certificates</p>'
+        '<p class="pf-section-subheading">Upload certificate URLs to mark skills as verified — '
+        'they turn green (✓) instantly and are stored in your session profile.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-    if st.session_state.get("analysis_error"):
-        st.error(f"Analysis failed: {st.session_state['analysis_error']}")
-    elif st.session_state.get("analysis_result"):
-        _result = st.session_state["analysis_result"]
-        st.success(
-            f"✓ Analysis complete — {len(_result['detected_skills'])} skills detected, "
-            f"{len(_result['top_matches'])} profession matches found. The preview above now shows "
-            f"your real results screen."
-        )
+    # Build a combined list from the top match's courses + detected skills
+    _top_match = _matches[0] if _matches else {}
+    _top_onet = _top_match.get("onet_code", "")
+    _verify_courses = get_courses_for_onet(_top_onet, limit=6) if _top_onet else []
+    _cert_states = st.session_state.get("pf_cert_states", {})
+
+    if _verify_courses:
+        st.markdown('<div style="max-width:1200px;margin:0 auto 8px;padding:0 48px">', unsafe_allow_html=True)
+        for crs in _verify_courses:
+            cid = crs["course_id"]
+            is_verified = _cert_states.get(cid, {}).get("verified", False)
+            row_class = "pf-cert-row verified" if is_verified else "pf-cert-row"
+            status_icon = "✅" if is_verified else "❌"
+            st.markdown(
+                f'<div class="{row_class}">'
+                f'<span class="pf-cert-status-icon">{status_icon}</span>'
+                f'<div style="flex:1">'
+                f'<div class="pf-cert-title">{html.escape(crs["title"])}</div>'
+                f'<div class="pf-cert-provider">{crs["provider"]}</div>'
+                f'</div>'
+                f'<div class="pf-cert-hours">{crs["total_hours"]} hrs</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            if not is_verified:
+                with st.expander(f"Upload certificate for: {crs['title'][:50]}…", expanded=False):
+                    cert_url = st.text_input(
+                        "Certificate URL (e.g. Coursera, LinkedIn Learning URL)",
+                        key=f"pf_cert_url_{cid}",
+                        placeholder="https://coursera.org/verify/...",
+                        label_visibility="visible",
+                    )
+                    if st.button("✓ Verify Certificate", key=f"pf_cert_btn_{cid}",
+                                 disabled=not (cert_url or "").strip(), type="primary"):
+                        ok = verify_user_skill(st.session_state["session_id"],
+                                               crs["title"], cert_url.strip())
+                        if ok:
+                            _cert_states[cid] = {"url": cert_url.strip(), "verified": True}
+                            st.session_state["pf_cert_states"] = _cert_states
+                            st.success(f"✓ Verified: {crs['title']}")
+                            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.info("Run the analysis to see recommended courses and certificate verification here.")
+
+    # ── Bottom actions ─────────────────────────────────────────────────────
+    st.markdown('<div class="pf-step-cta-wrap">', unsafe_allow_html=True)
+    if st.button("↺  Run a New Analysis", key="pf_new_analysis"):
+        st.session_state["pf_step"] = "upload"
+        st.session_state["analysis_result"] = None
+        st.session_state["analysis_error"] = None
+        st.session_state["pf_cert_states"] = {}
+        st.session_state["pf_selected_match"] = None
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+else:  # PF_STEP == "demo"
+    # Illustrative tour of Skill Gap → Choose Plan → Roadmap → Dashboard —
+    # these screens never depended on real CV data (they're a fixed demo
+    # walkthrough), so the polished HTML/CSS/JS preview is a faithful,
+    # honest way to show them — opened straight on the Skill Gap screen.
+    _sel = st.session_state.get("pf_selected_match")
+    _demo_label = f"← Back to results for {_sel['title']}" if _sel else "← Back to my results"
+    st.markdown(
+        '<div class="pf-native-progress">'
+        '<div class="pf-native-step done">✓ Upload Profile</div>'
+        '<div class="pf-native-step done">✓ Results</div>'
+        '<div class="pf-native-step current">3 · Skill Gap → Dashboard</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown('<div class="pf-step-cta-wrap">', unsafe_allow_html=True)
+    if st.button(_demo_label, key="pf_back_to_results"):
+        st.session_state["pf_step"] = "results"
+        st.session_state["pf_show_planner"] = False
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.components.v1.html(HTML, height=900, scrolling=True)
