@@ -74,24 +74,32 @@ _Session = sessionmaker(bind=_engine)
 # ── Logo helper ───────────────────────────────────────────────────────────────
 def _logo_tag() -> str:
     """
-    Return an <img> or <svg> HTML tag for the logo.
-    Priority: pathfinder_logo.png > pathfinder_logo.svg > empty string.
+    Return an <img> tag for the logo embedded as base64.
+    Priority: .jpeg/.jpg (uploaded brand logo) > .png > .svg > empty string.
     """
     assets = Path(__file__).parent / "assets"
-    png = assets / "pathfinder_logo.png"
-    svg = assets / "pathfinder_logo.svg"
 
-    if png.exists():
-        b64 = base64.b64encode(png.read_bytes()).decode()
-        return (
-            f'<img src="data:image/png;base64,{b64}" '
-            f'style="height:40px;vertical-align:middle;margin-right:4px;">'
-        )
+    # Check raster candidates in priority order
+    candidates = [
+        (assets / "pathfinder_logo.jpeg", "image/jpeg"),
+        (assets / "pathfinder_logo.jpg",  "image/jpeg"),
+        (assets / "pathfinder_logo.png",  "image/png"),
+    ]
+    for path, mime in candidates:
+        if path.exists():
+            b64 = base64.b64encode(path.read_bytes()).decode()
+            return (
+                f'<img src="data:{mime};base64,{b64}" '
+                f'style="height:38px;vertical-align:middle;margin-right:6px;'
+                f'object-fit:contain;">'
+            )
+
+    svg = assets / "pathfinder_logo.svg"
     if svg.exists():
         b64 = base64.b64encode(svg.read_bytes()).decode()
         return (
             f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'style="height:40px;vertical-align:middle;margin-right:4px;">'
+            f'style="height:38px;vertical-align:middle;margin-right:6px;">'
         )
     return ""
 
