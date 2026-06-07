@@ -237,7 +237,7 @@ def verify_user_skill(session_id: str, skill_name: str, url: str) -> None:
 # GEMINI BACKEND
 # ══════════════════════════════════════════════════════════════════════════════
 
-ANALYZE_MODEL = "gemini-2.5-pro"
+ANALYZE_MODEL = "gemini-2.5-flash"
 
 ANALYZE_SYSTEM_PROMPT = """
 You are an expert career counselor and labor-market analyst specializing in the Indonesian job market and international standards (O*NET SOC codes, SKKNI).
