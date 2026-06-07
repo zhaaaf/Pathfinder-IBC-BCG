@@ -90,7 +90,7 @@ def _logo_tag() -> str:
             b64 = base64.b64encode(path.read_bytes()).decode()
             return (
                 f'<img src="data:{mime};base64,{b64}" '
-                f'style="height:114px;vertical-align:middle;margin-right:10px;'
+                f'style="height:36px;vertical-align:middle;margin-right:8px;'
                 f'object-fit:contain;">'
             )
 
@@ -99,7 +99,7 @@ def _logo_tag() -> str:
         b64 = base64.b64encode(svg.read_bytes()).decode()
         return (
             f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'style="height:114px;vertical-align:middle;margin-right:10px;">'
+            f'style="height:36px;vertical-align:middle;margin-right:8px;">'
         )
     return ""
 
@@ -1101,28 +1101,27 @@ def _inject_css():
         background-color: var(--app-shell) !important;
     }
 
-    /* ── Hide Streamlit's native header bar (replaced by our fixed topbar) ── */
-    [data-testid="stHeader"] {
-        display: none !important;
-        height: 0 !important;
-    }
+    /* ── PHASE 1: Hide Streamlit native chrome ──────────────────────────────── */
+    #MainMenu        { visibility: hidden; }
+    header           { visibility: hidden; }
+    footer           { visibility: hidden; }
+    [data-testid="stHeader"] { visibility: hidden; height: 0 !important; }
 
-    /* ── Main content block ─────────────────────────────────────────────────── */
+    /* ── PHASE 1: Main content block — exact 5.5rem top, 2rem sides ─────────── */
     .main .block-container,
     [data-testid="stMainBlockContainer"] {
         background-color: var(--warm-bg) !important;
-        padding-top: 10rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+        padding-top:   5.5rem !important;
+        padding-left:  2rem   !important;
+        padding-right: 2rem   !important;
         max-width: 100% !important;
-        min-height: 100vh !important;
     }
 
-    /* ── Topbar — fixed at top, full width ─────────────────────────────────── */
+    /* ── PHASE 2: Fixed topbar — ~56px total height ──────────────────────────── */
     .pf-topbar {
         position: fixed;
-        top: 0;
-        left: 0;
+        top:   0;
+        left:  0;
         right: 0;
         width: 100%;
         box-sizing: border-box;
@@ -1130,10 +1129,10 @@ def _inject_css():
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1.25rem 2rem;
-        background: var(--white);
-        border-bottom: 1px solid var(--warm-border);
-        box-shadow: 0 2px 8px rgba(44,44,44,.08);
+        padding: 0.75rem 2rem;
+        background: #FFFFFF;
+        border-bottom: 1px solid #E8E0D5;
+        box-shadow: 0 2px 8px rgba(44,44,44,.05);
     }
     .pf-logo {
         font-family: var(--serif) !important;
@@ -1144,27 +1143,39 @@ def _inject_css():
     }
     .pf-logo span { color: var(--gold) !important; font-style: italic; }
 
-    .pf-steps { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
-    .pf-step {
+    /* ── PHASE 3: Step indicator pills ─────────────────────────────────────── */
+    .pf-steps {
+        display: flex;
+        gap: 0.35rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .step-pending,
+    .step-active,
+    .step-done {
         font-family: var(--sans);
-        font-size: 0.72rem;
-        padding: 0.3rem 0.85rem;
-        border-radius: 2px;
+        font-size: 0.75rem;
         font-weight: 500;
-        background: var(--warm-muted);
-        color: var(--charcoal-soft);
-        letter-spacing: 0.04em;
-        border: 1px solid transparent;
+        letter-spacing: 0.06em;
+        border-radius: 9999px;
+        padding: 4px 12px;
+        line-height: 1.4;
+        white-space: nowrap;
     }
-    .pf-step.active {
-        background: var(--gold);
-        color: var(--white);
-        border-color: var(--gold);
+    .step-pending {
+        background: #F2EDE6;
+        color: #6B6B6B;
+        border: none;
     }
-    .pf-step.done {
-        background: var(--success-bg);
-        color: var(--success);
-        border-color: transparent;
+    .step-active {
+        background: #C09A51;
+        color: #FFFFFF;
+        border: 1px solid #C09A51;
+    }
+    .step-done {
+        background: #D8F3DC;
+        color: #2D6A4F;
+        border: none;
     }
 
     /* ── Card — standard white card ────────────────────────────────────────── */
@@ -1482,25 +1493,31 @@ def _inject_css():
         background: var(--gold-pale) !important;
     }
 
-    /* Tabs */
+    /* ── PHASE 4: Tab strip ─────────────────────────────────────────────────── */
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 2px solid var(--warm-border) !important;
+        border-bottom: 2px solid #E8E0D5 !important;
         gap: 0 !important;
         justify-content: center !important;
+        background: transparent !important;
     }
+    /* Inactive tab */
     .stTabs [data-baseweb="tab"] {
         font-family: var(--sans) !important;
         font-size: 0.83rem !important;
         font-weight: 500 !important;
-        color: var(--charcoal-soft) !important;
-        padding: 0.55rem 1.25rem !important;
+        color: #6B6B6B !important;
+        padding: 0.55rem 1.4rem !important;
         border-radius: 0 !important;
         letter-spacing: 0.02em !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
     }
+    /* Active tab */
     .stTabs [aria-selected="true"] {
-        color: var(--copper-dark) !important;
-        border-bottom: 3px solid var(--copper) !important;
+        color: #7D6130 !important;
         font-weight: 700 !important;
+        border-bottom: 3px solid #A17F3E !important;
         background: rgba(161,127,62,.04) !important;
     }
 
@@ -1670,12 +1687,12 @@ def _render_topbar():
     for i, step in enumerate(_STEPS_ORDER[1:], 1):
         label = _STEP_LABELS[step]
         if i < idx_current:
-            cls = "pf-step done"
+            cls = "step-done"
         elif step == current:
-            cls = "pf-step active"
+            cls = "step-active"
         else:
-            cls = "pf-step"
-        steps_html += f'<div class="{cls}">{label}</div>'
+            cls = "step-pending"
+        steps_html += f'<span class="{cls}">{label}</span>'
 
     logo_img = _logo_tag()
     if logo_img:
