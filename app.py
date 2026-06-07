@@ -1,10 +1,10 @@
 """
-PATHFINDER — AI-powered career guidance for Indonesian students
+PATHFINDER - AI-powered career guidance for ASEAN students
 Production-ready single-file app (Streamlit + SQLAlchemy + google-genai + pypdf)
 """
 
 import streamlit as st
-import os, io, json, re, uuid, datetime, math
+import os, io, json, re, uuid, datetime, math, base64
 from pathlib import Path
 
 # ── PDF ────────────────────────────────────────────────────────────────────────
@@ -71,41 +71,245 @@ DB_PATH = Path(__file__).parent / "pathfinder.db"
 _engine  = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
 _Session = sessionmaker(bind=_engine)
 
+# ── Logo helper ───────────────────────────────────────────────────────────────
+def _logo_tag() -> str:
+    """
+    Return an <img> or <svg> HTML tag for the logo.
+    Priority: pathfinder_logo.png > pathfinder_logo.svg > empty string.
+    """
+    assets = Path(__file__).parent / "assets"
+    png = assets / "pathfinder_logo.png"
+    svg = assets / "pathfinder_logo.svg"
+
+    if png.exists():
+        b64 = base64.b64encode(png.read_bytes()).decode()
+        return (
+            f'<img src="data:image/png;base64,{b64}" '
+            f'style="height:40px;vertical-align:middle;margin-right:4px;">'
+        )
+    if svg.exists():
+        b64 = base64.b64encode(svg.read_bytes()).decode()
+        return (
+            f'<img src="data:image/svg+xml;base64,{b64}" '
+            f'style="height:40px;vertical-align:middle;margin-right:4px;">'
+        )
+    return ""
+
+
+# Keep old name for any residual callers
+def _logo_b64() -> str:
+    assets = Path(__file__).parent / "assets"
+    for name, mime in [("pathfinder_logo.png", "image/png"),
+                       ("pathfinder_logo.svg", "image/svg+xml")]:
+        p = assets / name
+        if p.exists():
+            return base64.b64encode(p.read_bytes()).decode()
+    return ""
+
+# ── Comprehensive skill list for autocomplete ─────────────────────────────────
+_ALL_SKILLS = [
+    # Programming
+    "Python","JavaScript","TypeScript","Java","C++","C#","R","Go","Swift","Kotlin",
+    "PHP","Ruby","Rust","Scala","MATLAB","Bash/Shell",
+    # Web
+    "HTML/CSS","React","Vue.js","Angular","Node.js","Django","Flask","Spring Boot",
+    "REST APIs","GraphQL","WordPress","Next.js",
+    # Data & AI
+    "SQL","PostgreSQL","MySQL","MongoDB","Excel","Tableau","Power BI",
+    "Google Analytics","Pandas","NumPy","TensorFlow","PyTorch","Scikit-learn",
+    "Machine Learning","Deep Learning","NLP","Computer Vision","Data Visualization",
+    "Statistical Analysis","A/B Testing","R Programming",
+    # Cloud & DevOps
+    "AWS","Azure","Google Cloud","Docker","Kubernetes","Terraform","CI/CD","Git",
+    "Linux","Agile/Scrum","DevOps","Microservices","Jenkins",
+    # Business & Finance
+    "Financial Modeling","Budgeting","Financial Analysis","Forecasting",
+    "Risk Management","Accounting (GAAP)","Auditing","Tax Compliance",
+    "Business Analysis","Process Improvement","Six Sigma","Lean",
+    "Project Management","Stakeholder Management","Change Management","SAP","ERP Systems",
+    # Marketing & Sales
+    "Digital Marketing","SEO/SEM","Content Marketing","Social Media Marketing",
+    "Email Marketing","Brand Management","CRM","Salesforce","HubSpot",
+    "Copywriting","Market Research","Lead Generation","Sales Strategy",
+    "Google Ads","Facebook Ads","E-commerce",
+    # Design & Creative
+    "Adobe Photoshop","Adobe Illustrator","Adobe InDesign","Figma","Sketch",
+    "UI/UX Design","Wireframing","Prototyping","Typography","Brand Identity",
+    "Video Editing","Adobe Premiere Pro","After Effects","Blender","Cinema 4D",
+    # Soft Skills
+    "Public Speaking","Presentation Skills","Technical Writing","Business Writing",
+    "Negotiation","Leadership","Team Management","Critical Thinking",
+    "Problem Solving","Time Management","Conflict Resolution","Emotional Intelligence",
+    # Engineering Tools
+    "AutoCAD","SolidWorks","MATLAB/Simulink","Circuit Design","PLC Programming",
+    "Structural Analysis","HYSYS/Aspen Plus",
+    # Healthcare
+    "Patient Care","Clinical Assessment","Electronic Health Records",
+    "Medical Procedures","Pharmacology","First Aid","Nutrition Assessment",
+    # Languages
+    "English (Professional)","Bahasa Indonesia","Mandarin Chinese","Japanese",
+    "Korean","French","German","Arabic",
+    # Productivity & Collaboration
+    "Microsoft Office Suite","Google Workspace","Slack","Jira","Notion",
+    "Asana","Trello","Zoom","Power Automate",
+]
+
 # ── Seed data ──────────────────────────────────────────────────────────────────
 _MAJORS = [
-    "Teknik Informatika", "Sistem Informasi", "Ilmu Komputer", "Teknik Elektro",
-    "Manajemen", "Akuntansi", "Ekonomi", "Bisnis Internasional",
-    "Ilmu Komunikasi", "Hubungan Internasional", "Psikologi", "Sosiologi",
-    "Teknik Industri", "Teknik Mesin", "Teknik Sipil", "Arsitektur",
-    "Kedokteran", "Keperawatan", "Farmasi", "Kesehatan Masyarakat",
-    "Hukum", "Pendidikan", "Matematika", "Statistika", "Fisika", "Kimia",
-    "Biologi", "Agribisnis", "Pertanian", "Perikanan", "Kehutanan",
-    "Desain Komunikasi Visual", "Desain Interior", "Seni Rupa",
-    "Sastra Inggris", "Sastra Indonesia", "Bahasa dan Sastra Asing",
-    "Ilmu Politik", "Administrasi Publik", "Administrasi Bisnis",
+    # Computing & IT
+    "Computer Science", "Information Technology", "Information Systems",
+    "Software Engineering", "Computer Engineering", "Cybersecurity & Information Security",
+    "Data Science & Analytics", "Artificial Intelligence & Machine Learning",
+    "Game Development & Design", "Network Engineering", "Cloud Computing",
+    "Mobile Application Development", "Web Development", "Database Administration",
+    "Digital Forensics",
+    # Engineering
+    "Electrical Engineering", "Mechanical Engineering", "Civil Engineering",
+    "Industrial Engineering", "Chemical Engineering", "Aerospace Engineering",
+    "Biomedical Engineering", "Environmental Engineering", "Petroleum Engineering",
+    "Mining Engineering", "Materials Science & Engineering",
+    "Telecommunications Engineering", "Automotive Engineering", "Marine Engineering",
+    "Electronics Engineering", "Control Systems Engineering",
+    # Business & Economics
+    "Business Administration", "Management", "Accounting", "Finance", "Economics",
+    "International Business", "Marketing", "Human Resource Management",
+    "Supply Chain Management & Logistics", "Entrepreneurship & Innovation",
+    "Banking & Finance", "Taxation", "Business Analytics & Intelligence",
+    "Operations Management", "Project Management", "E-Commerce & Digital Business",
+    "Retail Management",
+    # Social Sciences & Humanities
+    "International Relations", "Political Science", "Sociology", "Anthropology",
+    "History", "Philosophy", "English Literature & Linguistics",
+    "Indonesian Literature", "Japanese Studies", "Chinese Studies", "Korean Studies",
+    "Communication Studies", "Journalism & Media Studies", "Broadcasting",
+    "Public Relations", "Library & Information Science", "Geography", "Urban Studies",
+    # Psychology & Social Work
+    "Psychology", "Clinical Psychology", "Industrial & Organizational Psychology",
+    "Counseling", "Social Work",
+    # Law & Governance
+    "Law", "International Law", "Business Law", "Constitutional Law", "Criminal Law",
+    "Notary Studies", "Public Administration", "Government Science",
+    # Medicine & Health Sciences
+    "Medicine (MD)", "Dentistry", "Pharmacy", "Nursing", "Public Health",
+    "Nutrition & Dietetics", "Physiotherapy", "Occupational Therapy",
+    "Medical Laboratory Technology", "Radiology", "Optometry", "Midwifery",
+    "Veterinary Medicine", "Biomedical Science", "Health Information Management",
+    "Hospital Management",
+    # Natural Sciences
+    "Mathematics", "Statistics & Actuarial Science", "Physics", "Chemistry",
+    "Biology", "Biochemistry", "Earth Science & Geology", "Environmental Science",
+    "Marine Science", "Astronomy",
+    # Agriculture & Natural Resources
+    "Agribusiness", "Agriculture Science", "Animal Husbandry",
+    "Aquaculture & Fisheries", "Forestry & Wood Technology",
+    "Food Technology & Science", "Agricultural Engineering", "Plantation Science",
+    "Agronomy", "Horticulture", "Agricultural Biotechnology",
+    # Arts & Design
+    "Graphic Design & Visual Communication", "Interior Design",
+    "Industrial & Product Design", "Fashion Design", "Fine Arts",
+    "Animation & Multimedia", "Architecture", "Film & Television Production",
+    "Photography", "Theatre & Performing Arts", "Music",
+    # Education
+    "Primary Education", "Secondary Education", "Early Childhood Education",
+    "Special Education", "Mathematics Education", "Science Education",
+    "English Language Education", "Physical Education & Sports",
+    "Educational Technology",
+    # Tourism & Hospitality
+    "Hospitality Management", "Tourism Management", "Hotel & Resort Management",
+    "Culinary Arts", "Event Management", "Travel & Tourism Management",
+    # Transportation & Logistics
+    "Transportation Management", "Logistics & Supply Chain",
+    "Maritime Studies & Technology", "Aviation Management",
+    "Port & Shipping Management",
+    # Creative & Media
+    "Digital Media & Content Creation", "Advertising", "Creative Writing",
+    "Music Production",
+    # Diploma Programs
+    "Diploma in Accounting", "Diploma in Computer Science",
+    "Diploma in Business Administration", "Diploma in Nursing",
+    "Diploma in Hospitality", "Diploma in Engineering Technology",
+    "Diploma in Graphic Design",
 ]
 
 _OCCUPATIONS = [
+    # Computing & IT
     ("15-1252.00", "Software Developer", "Design, build, and maintain software systems and applications."),
-    ("15-1211.00", "Computer Systems Analyst", "Analyze IT requirements and recommend solutions."),
-    ("15-2051.00", "Data Scientist", "Use statistical methods and ML to analyze large data sets."),
+    ("15-1255.00", "Web Developer", "Design, create, and modify websites and web applications."),
+    ("15-1211.00", "Computer Systems Analyst", "Analyze IT requirements and recommend technology solutions."),
+    ("15-2051.00", "Data Scientist", "Use statistical methods and machine learning to analyze large data sets."),
+    ("15-2061.00", "Data Engineer", "Design and build pipelines that transform raw data into usable formats."),
+    ("15-1243.00", "Database Administrator", "Coordinate changes to computer databases and ensure system availability."),
     ("15-1244.00", "Network and Computer Systems Administrator", "Install and maintain networking hardware and software."),
-    ("15-1221.00", "Computer and Information Research Scientist", "Invent and design new approaches to computing technology."),
-    ("13-2011.00", "Accountant", "Examine and prepare financial records and ensure accuracy."),
-    ("13-1111.00", "Management Analyst", "Propose ways to improve organizational efficiency."),
-    ("11-2021.00", "Marketing Manager", "Plan programs to generate interest in products or services."),
-    ("41-3099.00", "Sales Representative", "Sell products and services to businesses or individuals."),
-    ("13-1151.00", "Training and Development Specialist", "Help plan, conduct, and administer programs for training."),
-    ("27-3031.00", "Public Relations Specialist", "Create and maintain a favorable public image for an organization."),
-    ("11-3031.00", "Financial Manager", "Direct financial activities of an organization."),
-    ("15-1299.00", "AI/ML Engineer", "Develop machine learning models and AI systems."),
     ("15-1231.00", "Computer Network Architect", "Design and build data communication networks."),
-    ("11-1021.00", "General and Operations Manager", "Oversee day-to-day operations and plan organizational goals."),
+    ("15-1241.00", "Network Support Specialist", "Analyze, test, and evaluate network systems."),
+    ("15-1232.00", "Computer User Support Specialist", "Provide technical assistance to computer users."),
+    ("15-1221.00", "Computer and Information Research Scientist", "Invent and design new approaches to computing technology."),
+    ("15-1299.00", "AI/ML Engineer", "Develop machine learning models and AI systems for production."),
+    ("15-1212.00", "Information Security Analyst", "Plan and carry out security measures to protect computer systems."),
+    ("15-2041.00", "Statistician", "Develop and apply mathematical or statistical theory to collect and analyze data."),
+    ("15-2031.00", "Operations Research Analyst", "Use mathematics and logic to examine complex business problems."),
+    ("11-3021.00", "IT Manager", "Direct and coordinate IT department activities and plan technology solutions."),
+    # Business & Finance
+    ("13-2011.00", "Accountant", "Examine and prepare financial records and ensure accuracy."),
     ("13-2051.00", "Financial Analyst", "Assess the performance of investments and provide guidance."),
-    ("15-1212.00", "Information Security Analyst", "Plan and carry out security measures to protect data."),
-    ("27-1024.00", "Graphic Designer", "Create visual concepts to communicate ideas."),
-    ("25-1099.00", "Education Administrator", "Direct activities in educational institutions."),
+    ("13-2041.00", "Credit Analyst", "Analyze credit risk of applicants and make lending recommendations."),
+    ("11-3031.00", "Financial Manager", "Direct financial activities of an organization."),
+    ("13-1111.00", "Management Analyst", "Propose ways to improve organizational efficiency."),
+    ("11-1021.00", "General and Operations Manager", "Oversee day-to-day operations and plan organizational goals."),
+    ("11-2021.00", "Marketing Manager", "Plan programs to generate interest in products or services."),
+    ("11-2011.00", "Advertising and Promotions Manager", "Plan and coordinate advertising campaigns and promotions."),
+    ("13-1161.00", "Market Research Analyst", "Research market conditions to examine sales potential and consumer preferences."),
+    ("41-3099.00", "Sales Representative", "Sell products and services to businesses or individuals."),
+    ("13-1151.00", "Training and Development Specialist", "Help plan, conduct, and administer training programs."),
+    ("13-1071.00", "Human Resources Specialist", "Recruit, screen, and interview job applicants."),
+    ("11-3121.00", "Human Resources Manager", "Plan and coordinate human resources activities."),
+    ("11-9199.00", "Business Development Manager", "Identify and develop new business opportunities and partnerships."),
+    ("11-3051.00", "Industrial Production Manager", "Oversee the daily operations of manufacturing plants."),
+    ("11-3061.00", "Purchasing Manager", "Plan and direct procurement activities."),
+    ("11-3071.00", "Transportation and Distribution Manager", "Direct logistics and distribution operations."),
+    ("13-1081.00", "Logistician", "Analyze and coordinate supply chain activities."),
+    ("43-3031.00", "Bookkeeping and Accounting Clerk", "Compute, classify, and record financial data."),
+    # Engineering
+    ("17-2071.00", "Electrical Engineer", "Design, develop, and test electrical equipment and systems."),
+    ("17-2141.00", "Mechanical Engineer", "Design, develop, build, and test mechanical devices and equipment."),
+    ("17-2051.00", "Civil Engineer", "Design and supervise construction of infrastructure projects."),
+    ("17-2112.00", "Industrial Engineer", "Find efficient ways to eliminate waste in production processes."),
+    ("17-2041.00", "Chemical Engineer", "Apply chemistry and engineering principles in production processes."),
+    ("17-2011.00", "Aerospace Engineer", "Design aircraft, spacecraft, and related components."),
+    ("17-2031.00", "Biomedical Engineer", "Design and develop medical devices and healthcare solutions."),
+    ("17-2081.00", "Environmental Engineer", "Develop solutions to environmental problems using engineering principles."),
+    ("17-2171.00", "Petroleum Engineer", "Design methods for extracting oil and gas from deposits."),
+    ("17-2151.00", "Mining and Geological Engineer", "Design safe and efficient mine operations."),
+    # Media & Creative
+    ("27-3031.00", "Public Relations Specialist", "Create and maintain a favorable public image for organizations."),
+    ("27-1024.00", "Graphic Designer", "Create visual concepts to communicate ideas to inspire and inform."),
+    ("27-1011.00", "Art Director", "Formulate design concepts and presentation approaches for visual media."),
+    ("27-1014.00", "Multimedia Artist and Animator", "Create special effects, animation, or other visual art for media."),
+    ("27-3041.00", "Editor", "Plan, coordinate, and revise material for publication across all media."),
+    ("27-3043.00", "Writer and Author", "Originate and prepare written material including articles and scripts."),
+    ("27-3021.00", "Broadcast News Analyst", "Analyze, interpret, and broadcast news received from various sources."),
+    ("27-2012.00", "Producer and Director", "Produce and direct stage, television, radio, and motion picture productions."),
+    ("11-2031.00", "Public Relations Manager", "Direct and coordinate public relations programs and activities."),
+    # Education
+    ("25-1099.00", "Education Administrator", "Direct activities of education programs in schools and institutions."),
+    ("25-2011.00", "Preschool Teacher", "Teach and care for children below the age of formal schooling."),
+    ("25-2021.00", "Elementary School Teacher", "Teach academic subjects to students in kindergarten through grade 6."),
+    ("25-2031.00", "Secondary School Teacher", "Teach students in public or private secondary schools."),
+    ("25-9031.00", "Instructional Coordinator", "Develop instructional materials and train teachers."),
+    ("25-3011.00", "Adult Literacy Instructor", "Teach basic education and literacy skills to adult learners."),
+    # Healthcare
     ("29-1141.00", "Registered Nurse", "Provide care for patients and coordinate with healthcare workers."),
+    ("29-1051.00", "Pharmacist", "Dispense medications prescribed by physicians and counsel patients."),
+    ("29-1123.00", "Physical Therapist", "Provide services to restore movement and manage pain."),
+    ("29-1031.00", "Dietitian and Nutritionist", "Plan food and nutrition programs and promote healthy eating."),
+    ("29-2011.00", "Medical Laboratory Technologist", "Perform complex laboratory procedures to analyze body fluids."),
+    ("21-1021.00", "Child and Family Social Worker", "Support families in crisis and connect them with community resources."),
+    # Hospitality & Tourism
+    ("11-9051.00", "Food Service Manager", "Plan, direct, and coordinate food service activities."),
+    ("35-1011.00", "Chef and Head Cook", "Direct and participate in the preparation and presentation of meals."),
+    ("11-9081.00", "Lodging Manager", "Plan, direct, or coordinate activities of accommodation facilities."),
+    ("39-7011.00", "Tour Guide and Escort", "Escort individuals or groups on sightseeing tours."),
+    ("41-2011.00", "Retail Sales Associate", "Sell merchandise and assist customers in retail establishments."),
 ]
 
 # ── REAL verified course URLs from major platforms ─────────────────────────────
@@ -201,7 +405,7 @@ _COURSES = [
      "https://www.comptia.org/certifications/network",
      "15-1244.00", 50),
 
-    # Public Relations Specialist (27-3031.00) — 35h total
+    # Public Relations Specialist (27-3031.00)
     ("Strategic Communication & Public Relations", "edX (UC Berkeley)",
      "https://www.edx.org/certificates/professional-certificate/berkeleyx-strategic-communication-and-public-relations",
      "27-3031.00", 20),
@@ -209,26 +413,35 @@ _COURSES = [
      "https://www.coursera.org/learn/introduction-to-public-relations",
      "27-3031.00", 15),
 
-    # Graphic Designer (27-1024.00) — 95h total
+    # Graphic Designer & Art Director (27-1024.00, 27-1011.00)
     ("Google UX Design Professional Certificate", "Coursera (Google)",
      "https://www.coursera.org/professional-certificates/google-ux-design",
      "27-1024.00", 40),
-    ("Graphic Design Specialization", "Coursera (California Institute of the Arts)",
+    ("Graphic Design Specialization", "Coursera (California Institute of Arts)",
      "https://www.coursera.org/specializations/graphic-design",
      "27-1024.00", 35),
     ("Figma UI UX Design Essentials", "Udemy",
      "https://www.udemy.com/course/figma-ux-ui-design-user-experience-tutorial-course/",
      "27-1024.00", 20),
+    ("Interaction Design Specialization", "Interaction Design Foundation (IxDF)",
+     "https://www.interaction-design.org/courses/interaction-design-specialization",
+     "27-1024.00", 50),
+    ("Brand Identity Design on Domestika", "Domestika",
+     "https://www.domestika.org/en/courses/categories/graphic-design",
+     "27-1011.00", 25),
 
-    # Financial Manager (11-3031.00) — 85h total
+    # Financial Manager (11-3031.00)
     ("Financial Management Specialization", "Coursera (University of Illinois)",
      "https://www.coursera.org/specializations/financial-management",
      "11-3031.00", 50),
     ("Corporate Finance Fundamentals", "Corporate Finance Institute",
      "https://corporatefinanceinstitute.com/course/corporate-finance-fundamentals/",
      "11-3031.00", 35),
+    ("CFA Level 1 Exam Prep", "CFA Institute",
+     "https://www.cfainstitute.org/en/programs/cfa",
+     "11-3031.00", 60),
 
-    # Accountant (13-2011.00) — 90h total
+    # Accountant (13-2011.00)
     ("Intuit Academy Bookkeeping Certificate", "Coursera (Intuit)",
      "https://www.coursera.org/professional-certificates/intuit-bookkeeping",
      "13-2011.00", 40),
@@ -238,6 +451,288 @@ _COURSES = [
     ("Accounting Analytics", "Coursera (University of Pennsylvania)",
      "https://www.coursera.org/learn/accounting-analytics",
      "13-2011.00", 20),
+    ("IAI Certified Accountant Program", "Ikatan Akuntan Indonesia (IAI)",
+     "https://iai.or.id/",
+     "13-2011.00", 40),
+
+    # Data Engineer (15-2061.00)
+    ("Data Engineering on Google Cloud", "Google Cloud Skills Boost",
+     "https://www.cloudskillsboost.google/paths/16",
+     "15-2061.00", 45),
+    ("AWS Data Analytics Specialty", "AWS Training and Certification",
+     "https://aws.amazon.com/training/learn-about/analytics/",
+     "15-2061.00", 30),
+    ("DataCamp Data Engineer Career Track", "DataCamp",
+     "https://www.datacamp.com/tracks/data-engineer",
+     "15-2061.00", 60),
+
+    # Web Developer (15-1255.00)
+    ("The Complete Web Development Bootcamp", "Udemy",
+     "https://www.udemy.com/course/the-complete-web-development-bootcamp/",
+     "15-1255.00", 55),
+    ("Learn HTML, CSS, JavaScript", "Codecademy",
+     "https://www.codecademy.com/learn/paths/web-development",
+     "15-1255.00", 25),
+    ("Full Stack Web Development", "Purwadhika Digital Technology School",
+     "https://purwadhika.com/program/web-development",
+     "15-1255.00", 360),
+
+    # Database Administrator (15-1243.00)
+    ("Oracle Database Administration Fundamentals", "Oracle University",
+     "https://education.oracle.com/oracle-database-administration-i/pexam_1Z0-082",
+     "15-1243.00", 30),
+    ("Microsoft SQL Server Administration", "Microsoft Learn",
+     "https://learn.microsoft.com/en-us/training/paths/sql-server-2022/",
+     "15-1243.00", 25),
+
+    # Statistician (15-2041.00)
+    ("Statistics with Python Specialization", "Coursera (University of Michigan)",
+     "https://www.coursera.org/specializations/statistics-with-python",
+     "15-2041.00", 40),
+    ("R Programming", "Coursera (Johns Hopkins University)",
+     "https://www.coursera.org/learn/r-programming",
+     "15-2041.00", 20),
+    ("DataCamp Statistics Fundamentals", "DataCamp",
+     "https://www.datacamp.com/tracks/statistics-fundamentals-with-python",
+     "15-2041.00", 30),
+
+    # IT Manager (11-3021.00)
+    ("IT Management & Leadership", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/topics/it-management",
+     "11-3021.00", 20),
+    ("Agile Leadership Principles", "PMI / Coursera",
+     "https://www.coursera.org/learn/agile-leadership-principles",
+     "11-3021.00", 15),
+
+    # HR Specialist / Manager (13-1071.00, 11-3121.00)
+    ("Human Resource Management Specialization", "Coursera (University of Minnesota)",
+     "https://www.coursera.org/specializations/human-resource-management",
+     "13-1071.00", 45),
+    ("SHRM Certification Prep", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/paths/prepare-for-the-shrm-certification",
+     "11-3121.00", 25),
+
+    # Market Research Analyst (13-1161.00)
+    ("Marketing Analytics", "Coursera (University of Virginia)",
+     "https://www.coursera.org/learn/uva-darden-market-research",
+     "13-1161.00", 20),
+
+    # Logistician / Supply Chain (13-1081.00)
+    ("Supply Chain Principles", "Coursera (Georgia Institute of Technology)",
+     "https://www.coursera.org/learn/supply-chain-principles",
+     "13-1081.00", 25),
+    ("APICS CSCP Certification Prep", "APICS / ASCM",
+     "https://www.ascm.org/learning-development/certifications-credentials/cscp/",
+     "13-1081.00", 40),
+    ("Logistics & Supply Chain Management", "ALFI Institute",
+     "https://alfi.or.id/training/",
+     "13-1081.00", 30),
+
+    # Business Development Manager (11-9199.00)
+    ("Business Development & B2B Sales", "Udemy",
+     "https://www.udemy.com/course/business-development-and-b2b-sales/",
+     "11-9199.00", 20),
+    ("Salesforce Sales Cloud Certification", "Salesforce Trailhead",
+     "https://trailhead.salesforce.com/en/credentials/salesrepresentative",
+     "11-9199.00", 30),
+
+    # Operations Research (15-2031.00)
+    ("Business Analytics Specialization", "Coursera (University of Pennsylvania)",
+     "https://www.coursera.org/specializations/business-analytics",
+     "15-2031.00", 40),
+
+    # Advertising Manager (11-2011.00)
+    ("Digital Advertising on Coursera", "Coursera",
+     "https://www.coursera.org/learn/digital-advertising",
+     "11-2011.00", 20),
+    ("HubSpot Marketing Hub Certification", "HubSpot Academy",
+     "https://academy.hubspot.com/courses/hubspot-marketing-software",
+     "11-2011.00", 12),
+
+    # Civil Engineer (17-2051.00)
+    ("Engineering Project Management Specialization", "Coursera (Rice University)",
+     "https://www.coursera.org/specializations/engineering-project-management",
+     "17-2051.00", 35),
+    ("AutoCAD Civil 3D Fundamentals", "Autodesk University",
+     "https://www.autodesk.com/autodesk-university/",
+     "17-2051.00", 20),
+    ("BIM Fundamentals for Engineers", "BIM Institute Indonesia",
+     "https://www.biminstitute.co.id/",
+     "17-2051.00", 20),
+
+    # Electrical Engineer (17-2071.00)
+    ("Electrical Engineering Fundamentals", "edX (Georgia Tech)",
+     "https://www.edx.org/learn/electrical-engineering",
+     "17-2071.00", 30),
+    ("PLC Programming and Industrial Automation", "Udemy",
+     "https://www.udemy.com/course/plc-programming-ladder-logic/",
+     "17-2071.00", 20),
+
+    # Industrial Engineer (17-2112.00)
+    ("Lean Six Sigma Specialization", "Coursera (University System of Georgia)",
+     "https://www.coursera.org/specializations/six-sigma-fundamentals",
+     "17-2112.00", 40),
+    ("Supply Chain Management Specialization", "Coursera (Rutgers University)",
+     "https://www.coursera.org/specializations/supply-chain-management",
+     "17-2112.00", 30),
+
+    # Editor / Writer (27-3041.00, 27-3043.00)
+    ("English Writing Specialization", "Coursera (Duke University)",
+     "https://www.coursera.org/specializations/english-for-research-publication-purposes",
+     "27-3041.00", 25),
+    ("Freelance Writing for Magazines", "Coursera",
+     "https://www.coursera.org/learn/freelance-writing",
+     "27-3043.00", 15),
+
+    # Multimedia Artist / Animator (27-1014.00)
+    ("Digital Arts & Animation", "Skillshare",
+     "https://www.skillshare.com/en/browse/animation",
+     "27-1014.00", 25),
+    ("Motion Design with After Effects", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/motion-graphics-techniques",
+     "27-1014.00", 20),
+    ("3D Animation with Blender", "CG Master Academy (CGMA)",
+     "https://cgmasteracademy.com/",
+     "27-1014.00", 40),
+
+    # Secondary School Teacher (25-2031.00)
+    ("TESOL Certificate for English Teachers", "TESOL International Association",
+     "https://www.tesol.org/professional-development/certification",
+     "25-2031.00", 40),
+    ("Teaching English Online", "FutureLearn",
+     "https://www.futurelearn.com/courses/teaching-english-online",
+     "25-2031.00", 20),
+    ("Learning & Teaching for Teachers", "Coursera (Hong Kong University)",
+     "https://www.coursera.org/specializations/learning-and-teaching",
+     "25-2031.00", 30),
+
+    # Instructional Coordinator (25-9031.00)
+    ("Instructional Design Foundations", "Coursera (University of Illinois)",
+     "https://www.coursera.org/learn/instructional-design-foundations-applications",
+     "25-9031.00", 20),
+
+    # Registered Nurse (29-1141.00)
+    ("Global Health Delivery", "OpenWHO (WHO)",
+     "https://openwho.org/courses",
+     "29-1141.00", 15),
+    ("Critical Care Nursing Basics", "Coursera",
+     "https://www.coursera.org/learn/critical-care-nursing-basics",
+     "29-1141.00", 20),
+
+    # Physical Therapist (29-1123.00)
+    ("Exercise Prescription for Chronic Disease", "Coursera",
+     "https://www.coursera.org/learn/exercise-prescription",
+     "29-1123.00", 20),
+    ("Sports Science Fundamentals", "FutureLearn",
+     "https://www.futurelearn.com/subjects/sport-and-psychology-courses/sport-science",
+     "29-1123.00", 15),
+    ("NASM Personal Trainer Certification", "NASM",
+     "https://www.nasm.org/personal-trainer-certification",
+     "29-1123.00", 30),
+
+    # Dietitian (29-1031.00)
+    ("Nutrition and Health Specialization", "Coursera (Wageningen University)",
+     "https://www.coursera.org/specializations/nutrition-health-lifestyle",
+     "29-1031.00", 30),
+
+    # Food Service Manager / Chef (11-9051.00, 35-1011.00)
+    ("Professional Cooking Fundamentals", "Rouxbe Culinary RX",
+     "https://rouxbe.com/cooking-school/programs",
+     "11-9051.00", 30),
+    ("Food Safety Management (HACCP)", "Coursera",
+     "https://www.coursera.org/learn/food-safety",
+     "11-9051.00", 15),
+    ("Plant-Based Professional Certificate", "Rouxbe Culinary RX",
+     "https://rouxbe.com/programs/plant-based-professional",
+     "35-1011.00", 25),
+    ("Food & Beverage Service Management", "Typsy",
+     "https://typsy.com/courses",
+     "35-1011.00", 15),
+
+    # Lodging Manager / Tourism (11-9081.00, 39-7011.00)
+    ("Hotel Management: Distribution, Revenue & Demand", "Coursera",
+     "https://www.coursera.org/learn/hotel-management",
+     "11-9081.00", 20),
+    ("IATA Foundation in Travel and Tourism", "IATA Training",
+     "https://www.iata.org/en/training/courses/",
+     "39-7011.00", 20),
+
+    # Indonesian platforms — broad mapping
+    ("Python Programming Basics", "Dicoding Indonesia",
+     "https://www.dicoding.com/academies/86",
+     "15-1252.00", 15),
+    ("Data Analytics Professional Certificate", "MySkill",
+     "https://myskill.id/course/data-analytics",
+     "15-2051.00", 20),
+    ("UI/UX Design Fundamentals", "Binar Academy",
+     "https://binaracademy.com/course/ux-design",
+     "27-1024.00", 30),
+    ("Data Science Bootcamp", "Hacktiv8",
+     "https://hacktiv8.com/fullstack-data-science/",
+     "15-2051.00", 300),
+    ("Digital Marketing Fundamentals", "Skill Academy",
+     "https://skillacademy.com/category/marketing-digital",
+     "11-2021.00", 15),
+    ("Project Management Professional", "Rakamin Academy",
+     "https://www.rakamin.com/master-class/project-management",
+     "13-1111.00", 20),
+    ("Digital Marketing Scholarship", "Digital Talent Scholarship (DTS Kominfo)",
+     "https://digitalent.kominfo.go.id/",
+     "11-2021.00", 40),
+    ("Data Analytics with Python", "Karier.mu",
+     "https://karier.mu/kelas/data-analytics",
+     "15-2051.00", 25),
+    ("Cybersecurity Fundamentals", "Alterra Academy",
+     "https://academy.alterra.id/",
+     "15-1212.00", 30),
+
+    # Cloud certifications
+    ("AWS Cloud Practitioner Essentials", "AWS Training and Certification",
+     "https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/",
+     "15-1244.00", 12),
+    ("Microsoft Azure Fundamentals AZ-900", "Microsoft Learn",
+     "https://learn.microsoft.com/en-us/training/paths/microsoft-azure-fundamentals-describe-cloud-concepts/",
+     "15-1244.00", 15),
+    ("Google Cloud Associate Cloud Engineer", "Google Cloud Skills Boost",
+     "https://www.cloudskillsboost.google/paths/11",
+     "15-1244.00", 50),
+    ("Cisco CCNA Networking Fundamentals", "Cisco Networking Academy",
+     "https://www.netacad.com/courses/networking",
+     "15-1244.00", 70),
+    ("Red Hat Enterprise Linux Administration", "Red Hat Training",
+     "https://www.redhat.com/en/services/training-and-certification",
+     "15-1244.00", 40),
+
+    # Project & Scrum certifications
+    ("PMP Certification Prep", "Project Management Institute (PMI)",
+     "https://www.pmi.org/certifications/project-management-pmp",
+     "13-1111.00", 35),
+    ("Professional Scrum Master I", "Scrum.org",
+     "https://www.scrum.org/assessments/professional-scrum-master-i-certification",
+     "13-1111.00", 16),
+
+    # IBM & global tech
+    ("IBM Data Science Professional Certificate", "Coursera (IBM)",
+     "https://www.coursera.org/professional-certificates/ibm-data-science",
+     "15-2051.00", 130),
+    ("Google Data Analytics Professional Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-data-analytics",
+     "15-2051.00", 160),
+    ("AI For Everyone", "Coursera (DeepLearning.AI)",
+     "https://www.coursera.org/learn/ai-for-everyone",
+     "15-1299.00", 10),
+    ("HarvardX CS50: Introduction to Computer Science", "edX (Harvard University)",
+     "https://cs50.harvard.edu/x/",
+     "15-1252.00", 100),
+    ("Pluralsight DevOps Skills Assessment", "Pluralsight",
+     "https://www.pluralsight.com/product/skills/assessments",
+     "15-1252.00", 20),
+    ("CFA Investment Fundamentals", "CFA Institute",
+     "https://www.cfainstitute.org/",
+     "13-2051.00", 120),
+    ("Financial Modeling & Valuation (Advanced)", "Corporate Finance Institute",
+     "https://corporatefinanceinstitute.com/certifications/financial-modeling-valuation-analyst-fmva-certification/",
+     "13-2051.00", 45),
 ]
 
 # ── Typical skills required per O*NET SOC code ────────────────────────────────
@@ -263,6 +758,55 @@ _ONET_TYPICAL_SKILLS = {
     "29-1141.00": ["Patient Care", "Clinical Assessment", "Electronic Health Records", "Medical Procedures", "HIPAA Compliance", "IV Therapy"],
     "15-1211.00": ["Systems Analysis", "Requirements Gathering", "SQL", "Business Intelligence", "SDLC", "ERP Systems", "Documentation"],
     "15-1221.00": ["Research Methods", "Algorithm Design", "Programming Languages", "Technical Writing", "Academic Publishing", "ML Research"],
+    "15-1243.00": ["SQL Server", "Oracle DB", "PostgreSQL", "MySQL", "Backup & Recovery", "Performance Tuning", "Database Security"],
+    "15-2061.00": ["Python", "Apache Spark", "SQL", "ETL", "Apache Kafka", "Cloud Platforms", "Data Warehousing", "Airflow"],
+    "15-1255.00": ["HTML/CSS", "JavaScript", "React", "Node.js", "Responsive Design", "Git", "WordPress", "SEO Basics"],
+    "15-2041.00": ["R", "Python", "SPSS", "Statistical Analysis", "Regression", "Hypothesis Testing", "Data Visualization"],
+    "15-2031.00": ["Python", "Linear Programming", "Simulation", "Excel", "R", "Operations Research", "Supply Chain Modeling"],
+    "13-1161.00": ["Survey Design", "Data Analysis", "SPSS", "Excel", "Report Writing", "Google Analytics", "Market Segmentation"],
+    "13-1071.00": ["Recruitment", "ATS Systems", "Labor Law", "Performance Management", "HRIS", "Employee Relations"],
+    "11-3121.00": ["HR Strategy", "Organizational Development", "Talent Management", "Labor Relations", "HR Analytics", "Change Management"],
+    "11-9199.00": ["Business Development", "Sales Strategy", "Partnership Management", "Market Analysis", "Negotiation", "CRM"],
+    "11-3021.00": ["IT Governance", "Budgeting", "Vendor Management", "ITIL", "Project Oversight", "Risk Management"],
+    "13-2041.00": ["Credit Analysis", "Financial Statements", "Risk Assessment", "Banking Regulations", "Excel", "Financial Modeling"],
+    "11-2011.00": ["Advertising Strategy", "Media Planning", "Campaign Management", "Creative Direction", "Brand Management", "ROI Analysis"],
+    "11-3051.00": ["Production Planning", "Quality Control", "ERP/MRP", "Lean Manufacturing", "Workforce Management"],
+    "11-3061.00": ["Procurement Strategy", "Supplier Management", "Contract Negotiation", "Spend Analysis", "Category Management"],
+    "11-3071.00": ["Fleet Management", "Route Optimization", "Customs Compliance", "Warehouse Operations", "TMS Software"],
+    "13-1081.00": ["Inventory Management", "ERP Systems", "Warehouse Management", "Demand Planning", "Freight Logistics", "SAP"],
+    "43-3031.00": ["Bookkeeping", "Data Entry", "Payroll Processing", "Accounting Software", "Financial Reporting"],
+    "17-2071.00": ["AutoCAD", "Circuit Design", "Power Systems", "PLC Programming", "Electrical Safety", "MATLAB"],
+    "17-2141.00": ["AutoCAD", "SolidWorks", "Thermodynamics", "Materials Science", "FEA/FEM", "Manufacturing Processes"],
+    "17-2051.00": ["AutoCAD", "Civil 3D", "Structural Analysis", "Project Management", "Building Codes", "ETABS"],
+    "17-2112.00": ["Lean Manufacturing", "Six Sigma", "AutoCAD", "SAP", "Process Improvement", "Statistical Process Control"],
+    "17-2041.00": ["Chemical Process Design", "HYSYS/Aspen Plus", "Safety Protocols", "Process Optimization", "Material Balance"],
+    "17-2011.00": ["Aerodynamics", "Structural Analysis", "Flight Systems", "CAD/CAE Tools", "MATLAB/Simulink"],
+    "17-2031.00": ["Medical Device Design", "FDA Regulations", "Biocompatibility", "Signal Processing", "Clinical Trials"],
+    "17-2081.00": ["Environmental Assessment", "EIA", "Waste Management", "Air Quality Monitoring", "Environmental Law", "GIS"],
+    "27-1011.00": ["Brand Identity", "Typography", "Visual Communication", "Adobe Creative Suite", "Client Management"],
+    "27-1014.00": ["Adobe Premiere", "After Effects", "Cinema 4D", "Blender", "Storyboarding", "Animation Principles"],
+    "27-3041.00": ["Content Writing", "Editing", "SEO Writing", "CMS", "Fact-checking", "Research Skills", "Publishing"],
+    "27-3043.00": ["Creative Writing", "Research", "Content Strategy", "Editing", "Storytelling", "Publishing"],
+    "27-3021.00": ["News Writing", "Research", "Broadcast Journalism", "Social Media", "Video Editing"],
+    "27-2012.00": ["Production Management", "Script Writing", "Budget Management", "Crew Management", "Post-Production"],
+    "11-2031.00": ["PR Strategy", "Media Relations", "Stakeholder Engagement", "Crisis Management", "Brand Reputation"],
+    "25-2031.00": ["Lesson Planning", "Classroom Management", "Assessment Design", "Teaching Methods", "TESOL/TEFL"],
+    "25-9031.00": ["Curriculum Design", "LMS Administration", "Teacher Training", "Instructional Design", "E-learning"],
+    "25-3011.00": ["Adult Education", "Literacy Instruction", "Curriculum Adaptation", "Assessment", "Communication"],
+    "25-2011.00": ["Early Childhood Education", "Child Development", "Play-based Learning", "Parent Communication"],
+    "25-2021.00": ["Elementary Education", "Classroom Management", "Lesson Planning", "Differentiated Instruction"],
+    "29-1051.00": ["Drug Dispensing", "Pharmacology", "Drug Interaction", "Patient Counseling", "Clinical Pharmacy"],
+    "29-1123.00": ["Manual Therapy", "Exercise Prescription", "Anatomy", "Rehabilitation", "Patient Assessment"],
+    "29-1031.00": ["Nutritional Assessment", "Meal Planning", "Clinical Nutrition", "Dietary Guidelines", "Food Science"],
+    "29-2011.00": ["Laboratory Testing", "Blood Analysis", "Microbiology", "Medical Equipment", "Quality Control"],
+    "21-1021.00": ["Case Management", "Social Assessment", "Crisis Intervention", "Community Resources", "Child Development"],
+    "11-9051.00": ["Restaurant Management", "Food Safety (HACCP)", "Cost Control", "Menu Planning", "Staff Management"],
+    "35-1011.00": ["Culinary Arts", "Menu Development", "Food Safety", "Kitchen Management", "Food Presentation"],
+    "11-9081.00": ["Hotel Operations", "Revenue Management", "Guest Relations", "Front Office Management", "Hospitality Software"],
+    "39-7011.00": ["Destination Knowledge", "Language Skills", "Customer Service", "Tour Planning", "Cultural Awareness"],
+    "41-2011.00": ["Point of Sale Systems", "Cash Handling", "Customer Service", "Inventory Tracking", "Retail Software"],
+    "15-1232.00": ["Hardware Troubleshooting", "Windows/macOS/Linux", "Help Desk", "Network Basics", "Remote Support"],
+    "15-1241.00": ["Network Monitoring", "Troubleshooting", "VPN", "Firewalls", "TCP/IP", "Network Documentation"],
 }
 
 def _compute_skill_gaps(soc_code: str, user_skills: list) -> list:
@@ -421,8 +965,8 @@ def _call_gemini(cv_text: str) -> dict:
         api_key = None
     if not api_key or str(api_key).strip() in ("", "PASTE_YOUR_KEY_HERE"):
         raise RuntimeError(
-            "GEMINI_API_KEY belum dikonfigurasi. "
-            "Tambahkan di .streamlit/secrets.toml atau Streamlit Cloud Secrets."
+            "GEMINI_API_KEY is not configured. "
+            "Add it to .streamlit/secrets.toml or the Streamlit Cloud Secrets dashboard."
         )
     client = genai.Client(api_key=api_key)
     full_prompt = ANALYZE_SYSTEM_PROMPT + "\n\n--- BEGIN CV ---\n" + cv_text + "\n--- END CV ---"
@@ -450,11 +994,11 @@ def _call_gemini(cv_text: str) -> dict:
 def _run_with_loading(fn, *args, **kwargs):
     import time
     steps = [
-        ("🔍", "Parsing profile data..."),
-        ("📡", "Scanning O*NET & SKKNI databases..."),
-        ("🗺️", "Mapping career trajectories..."),
-        ("📊", "Calculating skill gap metrics..."),
-        ("✨", "Finalizing recommendations..."),
+        ("◉", "Parsing profile data..."),
+        ("◆", "Scanning O*NET & SKKNI databases..."),
+        ("▲", "Mapping career trajectories..."),
+        ("◈", "Calculating skill gap metrics..."),
+        ("★", "Finalizing recommendations..."),
     ]
     ph = st.empty()
     for i, (icon, step) in enumerate(steps[:-1]):
@@ -937,6 +1481,103 @@ def _inject_css():
         color: var(--charcoal) !important;
     }
 
+    /* ── Sticky topbar ───────────────────────────────────────────────────────── */
+    .pf-topbar {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+    }
+    /* Ensure parent scroll context allows sticky */
+    section[data-testid="stMain"] > div,
+    [data-testid="stMainBlockContainer"] {
+        overflow: visible !important;
+    }
+
+    /* ── Logo wrapper ─────────────────────────────────────────────────────────── */
+    .pf-logo-wrap { display: flex; align-items: center; }
+
+    /* ── Profile card ─────────────────────────────────────────────────────────── */
+    .pf-profile-card {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        background: var(--white);
+        border: 1px solid var(--warm-border);
+        border-radius: 4px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(44,44,44,.05);
+    }
+    .pf-avatar {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: var(--gold-pale);
+        border: 2px solid var(--copper);
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--serif); font-size: 1.5rem;
+        color: var(--copper); font-weight: 700;
+        overflow: hidden; flex-shrink: 0;
+    }
+    .pf-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .pf-profile-name {
+        font-family: var(--serif); font-size: 1.15rem;
+        font-weight: 700; color: var(--charcoal);
+    }
+    .pf-profile-role {
+        font-size: 0.78rem; color: var(--copper);
+        font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.06em; margin-top: 0.1rem;
+    }
+    .pf-achievement-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
+    .pf-achievement {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        background: var(--gold-pale); border: 1px solid var(--gold-border);
+        border-radius: 2px; padding: 0.18rem 0.55rem;
+        font-size: 0.68rem; font-weight: 600; color: var(--copper-dark);
+        text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    /* ── Equal-height result columns ──────────────────────────────────────────── */
+    [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .pf-result-card {
+        flex: 1;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ── Compact upload zone ──────────────────────────────────────────────────── */
+    .pf-cert-zone {
+        border: 1.5px dashed var(--warm-border);
+        border-radius: 4px;
+        padding: 0.6rem 1rem;
+        text-align: center;
+        color: var(--charcoal-soft);
+        font-size: 0.78rem;
+        background: var(--warm-muted);
+    }
+
+    /* ── Required asterisk ────────────────────────────────────────────────────── */
+    .pf-req { color: #C0392B; font-weight: 700; margin-left: 2px; }
+
+    /* ── Roadmap provider badge ───────────────────────────────────────────────── */
+    .provider-badge {
+        display: inline-block;
+        background: #F1F5F9; color: #334155;
+        font-size: 0.72rem; font-weight: 700;
+        padding: 3px 8px; border-radius: 3px;
+        margin-bottom: 0.3rem;
+    }
+    .roadmap-card {
+        background: var(--white);
+        border-left: 4px solid var(--copper);
+        padding: 1rem; border-radius: 4px;
+        margin-bottom: 0; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+
     /* ── Hide Streamlit chrome ───────────────────────────────────────────────── */
     #MainMenu, footer, [data-testid="stToolbar"],
     [data-testid="stDecoration"], .stDeployButton {
@@ -949,15 +1590,21 @@ def _inject_css():
 # TOPBAR
 # ══════════════════════════════════════════════════════════════════════════════
 
-_STEPS_ORDER = ["landing", "upload", "results", "skill_gap", "choose_plan", "roadmap", "dashboard"]
+_STEPS_ORDER = ["landing", "upload", "results", "skill_gap", "roadmap", "dashboard"]
 _STEP_LABELS = {
-    "landing": "Home", "upload": "Upload CV", "results": "Matches",
-    "skill_gap": "Skill Gap", "choose_plan": "Study Plan",
-    "roadmap": "Roadmap", "dashboard": "Dashboard",
+    "landing":   "Home",
+    "upload":    "Upload CV",
+    "results":   "Matches",
+    "skill_gap": "Skill Gap & Plan",
+    "roadmap":   "Roadmap",
+    "dashboard": "Dashboard",
 }
 
 def _render_topbar():
     current = st.session_state.get("pf_step", "landing")
+    # treat choose_plan as skill_gap for nav highlighting
+    if current == "choose_plan":
+        current = "skill_gap"
     idx_current = _STEPS_ORDER.index(current) if current in _STEPS_ORDER else 0
     steps_html = ""
     for i, step in enumerate(_STEPS_ORDER[1:], 1):
@@ -969,14 +1616,22 @@ def _render_topbar():
         else:
             cls = "pf-step"
         steps_html += f'<div class="{cls}">{label}</div>'
+
+    logo_img = _logo_tag()
+    if logo_img:
+        logo_html = f'<div class="pf-logo-wrap">{logo_img}</div>'
+    else:
+        logo_html = (
+            '<div class="pf-logo">Path<span>finder</span>'
+            '<span style="font-size:.65rem;font-weight:400;color:#9A8060;'
+            'letter-spacing:.12em;text-transform:uppercase;'
+            'font-family:\'Inter\',sans-serif;margin-left:.6rem;'
+            'vertical-align:middle;">Career Intelligence</span></div>'
+        )
+
     st.markdown(f"""
     <div class="pf-topbar">
-        <div class="pf-logo">Path<span>finder</span>
-          <span style="font-size:.65rem;font-weight:400;color:#9A8060;
-                       letter-spacing:.12em;text-transform:uppercase;
-                       font-family:'Inter',sans-serif;margin-left:.6rem;
-                       vertical-align:middle;">Career Intelligence</span>
-        </div>
+        {logo_html}
         <div class="pf-steps">{steps_html}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -987,18 +1642,20 @@ def _render_topbar():
 
 def _init_session():
     defaults = {
-        "pf_step": "landing",
-        "pf_session_id": str(uuid.uuid4()),
-        "pf_analysis": None,
-        "pf_selected_match": None,
-        "pf_selected_plan": None,
+        "pf_step":                "landing",
+        "pf_session_id":          str(uuid.uuid4()),
+        "pf_analysis":            None,
+        "pf_selected_match":      None,
+        "pf_selected_plan":       None,
         "pf_study_hours_per_day": 2,
-        "pf_days_per_week": 5,          # NEW — plan = days/week
-        "pf_roadmap_courses": [],
-        "pf_completed_courses": set(),
-        "pf_cert_verify": {},            # course_id -> {"url": str, "verified": bool}
-        "pf_work_entries": [{"id": 0}],
-        "pf_work_counter": 1,
+        "pf_days_per_week":       5,
+        "pf_roadmap_courses":     [],
+        "pf_completed_courses":   set(),
+        "pf_cert_verify":         {},
+        "pf_work_entries":        [{"id": 0}],
+        "pf_work_counter":        1,
+        "pf_profile_photo_b64":   "",
+        "pf_manual_skills_sel":   [],
     }
     for k, v in defaults.items():
         st.session_state.setdefault(k, v)
@@ -1008,105 +1665,177 @@ def _init_session():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _render_manual_form():
-    all_majors = ["(Select or type below)"] + get_all_majors() + ["Other"]
-    all_titles = ["(Select or type below)"] + get_all_onet_titles() + ["Other"]
+    all_majors = ["-- Select Major --"] + get_all_majors()
+    all_titles = ["-- Select Role --"] + get_all_onet_titles() + ["Other"]
 
     col_edu, col_work, col_skills = st.columns([1, 1.2, 1], gap="large")
 
     # ── Col 1: Education ──────────────────────────────────────────────────────
     with col_edu:
-        st.markdown('<div class="pf-section-header">🎓 Education</div>', unsafe_allow_html=True)
-        full_name = st.text_input("Full Name", placeholder="e.g. Budi Santoso", key="pf_manual_name")
-        edu_options = ["SMA/SMK", "D3", "S1 (Bachelor's)", "S2 (Master's)", "S3 (PhD)", "Other"]
-        edu_level   = st.selectbox("Education Level", edu_options, key="pf_manual_edu")
-        major_choice = st.selectbox("Major / Field of Study", all_majors, key="pf_manual_major_sel")
-        if major_choice in ("(Select or type below)", "Other"):
-            major = st.text_input("Specify Major", placeholder="e.g. Teknik Informatika",
-                                  key="pf_manual_major_txt")
-        else:
-            major = major_choice
-        institution = st.text_input("Institution Name", placeholder="e.g. Universitas Padjadjaran",
-                                    key="pf_manual_inst")
-        grad_year   = st.selectbox("Graduation Year",
-                                   ["—"] + [str(y) for y in range(2030, 1985, -1)],
-                                   key="pf_manual_grad")
+        st.markdown('<div class="pf-section-header">Education</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
+            'letter-spacing:.08em;color:#4A4A4A;">Full Name</span>'
+            '<span class="pf-req">*</span>',
+            unsafe_allow_html=True
+        )
+        full_name = st.text_input(
+            "Full Name", placeholder="e.g. John Smith",
+            key="pf_manual_name", label_visibility="collapsed"
+        )
+        st.markdown(
+            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
+            'letter-spacing:.08em;color:#4A4A4A;">Education Level</span>'
+            '<span class="pf-req">*</span>',
+            unsafe_allow_html=True
+        )
+        edu_options = [
+            "Junior High School", "Senior High School / Vocational",
+            "Diploma (D1/D2)", "Associate Degree (D3)",
+            "Bachelor's Degree (S1)", "Master's Degree (S2)",
+            "Doctoral Degree (PhD / S3)", "Professional Degree",
+            "Non-Degree / Other",
+        ]
+        edu_level = st.selectbox(
+            "Education Level", edu_options,
+            key="pf_manual_edu", label_visibility="collapsed"
+        )
+        st.markdown(
+            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
+            'letter-spacing:.08em;color:#4A4A4A;">Major / Field of Study</span>'
+            '<span class="pf-req">*</span>',
+            unsafe_allow_html=True
+        )
+        major_choice = st.selectbox(
+            "Major", all_majors,
+            key="pf_manual_major_sel", label_visibility="collapsed"
+        )
+        major = "" if major_choice == "-- Select Major --" else major_choice
+
+        institution = st.text_input(
+            "Institution / University", placeholder="e.g. University of Indonesia",
+            key="pf_manual_inst"
+        )
+        grad_year = st.selectbox(
+            "Graduation Year",
+            ["--"] + [str(y) for y in range(2030, 1985, -1)],
+            key="pf_manual_grad"
+        )
 
     # ── Col 2: Work Experience ────────────────────────────────────────────────
     with col_work:
-        st.markdown('<div class="pf-section-header">💼 Work Experience</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pf-section-header">Work Experience</div>',
+                    unsafe_allow_html=True)
         entries = st.session_state["pf_work_entries"]
         for idx, entry in enumerate(entries):
             eid = entry["id"]
             st.markdown('<div class="pf-work-card">', unsafe_allow_html=True)
-            job_choice = st.selectbox(f"Job Title #{idx+1}", all_titles,
-                                      key=f"pf_job_title_sel_{eid}")
-            if job_choice in ("(Select or type below)", "Other"):
-                st.text_input("Specify Title", key=f"pf_job_title_txt_{eid}",
-                              placeholder="e.g. Data Analyst")
-            company = st.text_input("Company / Organization", key=f"pf_company_{eid}",
-                                    placeholder="e.g. PT Tokopedia")
+            job_choice = st.selectbox(
+                f"Job Title #{idx+1}", all_titles, key=f"pf_job_title_sel_{eid}"
+            )
+            if job_choice in ("-- Select Role --", "Other"):
+                st.text_input(
+                    "Custom Title", key=f"pf_job_title_txt_{eid}",
+                    placeholder="e.g. Data Analyst"
+                )
+            st.text_input(
+                "Company / Organization", key=f"pf_company_{eid}",
+                placeholder="e.g. PT Tokopedia"
+            )
             dc1, dc2 = st.columns(2)
             with dc1:
-                st.selectbox("Start Year",
-                             ["—"] + [str(y) for y in range(2030, 1980, -1)],
-                             key=f"pf_start_{eid}")
+                st.selectbox(
+                    "Start Year",
+                    ["--"] + [str(y) for y in range(2030, 1980, -1)],
+                    key=f"pf_start_{eid}"
+                )
             with dc2:
-                st.selectbox("End Year",
-                             ["—", "Present"] + [str(y) for y in range(2030, 1980, -1)],
-                             key=f"pf_end_{eid}")
+                st.selectbox(
+                    "End Year",
+                    ["--", "Present"] + [str(y) for y in range(2030, 1980, -1)],
+                    key=f"pf_end_{eid}"
+                )
             st.markdown('</div>', unsafe_allow_html=True)
             if len(entries) > 1:
-                if st.button("✕ Remove", key=f"pf_remove_{eid}", use_container_width=True):
-                    st.session_state["pf_work_entries"] = [e for e in entries if e["id"] != eid]
+                if st.button("Remove", key=f"pf_remove_{eid}", use_container_width=True):
+                    st.session_state["pf_work_entries"] = [
+                        e for e in entries if e["id"] != eid
+                    ]
                     st.rerun()
-        if st.button("＋ Add Another Experience", use_container_width=True):
-            new_id = st.session_state["pf_work_counter"]
-            st.session_state["pf_work_entries"].append({"id": new_id})
+        if st.button("+ Add Experience", use_container_width=True):
+            nid = st.session_state["pf_work_counter"]
+            st.session_state["pf_work_entries"].append({"id": nid})
             st.session_state["pf_work_counter"] += 1
             st.rerun()
 
     # ── Col 3: Skills & Certs ─────────────────────────────────────────────────
     with col_skills:
-        st.markdown('<div class="pf-section-header">🛠️ Skills & Certifications</div>',
+        st.markdown('<div class="pf-section-header">Skills & Certifications</div>',
                     unsafe_allow_html=True)
-        raw_skills = st.text_area(
-            "Technical & Soft Skills",
-            placeholder="Python, SQL, Project Management, Communication, ...\n(comma-separated)",
-            height=120, key="pf_manual_skills_raw"
+        st.markdown(
+            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
+            'letter-spacing:.08em;color:#4A4A4A;">Technical & Soft Skills</span>'
+            '<span class="pf-req">*</span>',
+            unsafe_allow_html=True
         )
-        if raw_skills.strip():
-            pills = [s.strip() for s in raw_skills.split(",") if s.strip()]
-            pills_html = " ".join(f'<span class="pf-pill">{p}</span>' for p in pills)
+        selected_skills = st.multiselect(
+            "Skills (type to search)",
+            options=_ALL_SKILLS,
+            default=st.session_state.get("pf_manual_skills_sel", []),
+            key="pf_manual_skills_sel",
+            placeholder="Type to search skills...",
+            label_visibility="collapsed",
+        )
+        extra_skills = st.text_input(
+            "Add unlisted skills (comma-separated)",
+            placeholder="e.g. QGIS, Revit, Tableau...",
+            key="pf_extra_skills"
+        )
+        extra_list = [s.strip() for s in extra_skills.split(",") if s.strip()]
+        all_user_skills = list(selected_skills) + extra_list
+        if all_user_skills:
+            pills_html = " ".join(
+                f'<span class="pf-pill">{s}</span>' for s in all_user_skills
+            )
             st.markdown(pills_html, unsafe_allow_html=True)
-            st.caption(f"{len(pills)} skill(s) detected")
+            st.caption(f"{len(all_user_skills)} skill(s) selected")
 
         st.markdown("---")
-        st.markdown("**Certifications / Licenses**")
-        st.markdown('<div class="pf-cert-zone">📎 Drop certificate files here (PDF/PNG/JPG)</div>',
-                    unsafe_allow_html=True)
+        st.markdown(
+            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
+            'letter-spacing:.08em;color:#4A4A4A;">Certifications / Licenses</span>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="pf-cert-zone">Drop certificate files here (PDF / PNG / JPG)</div>',
+            unsafe_allow_html=True
+        )
         cert_files = st.file_uploader(
-            "Upload Certificates", type=["pdf", "png", "jpg", "jpeg"],
+            "Certificates", type=["pdf", "png", "jpg", "jpeg"],
             accept_multiple_files=True, label_visibility="collapsed",
             key="pf_cert_files"
         )
         if cert_files:
             for cf in cert_files:
-                st.markdown(f'<span class="pf-badge pf-badge-green">✓ {cf.name}</span>',
-                            unsafe_allow_html=True)
+                st.markdown(
+                    f'<span class="pf-badge pf-badge-green">Uploaded: {cf.name}</span>',
+                    unsafe_allow_html=True
+                )
         cert_text = st.text_area(
             "Or list certifications manually",
             placeholder="AWS Certified Developer (2023)\nGoogle Data Analytics Certificate",
-            height=80, key="pf_cert_text"
+            height=70, key="pf_cert_text"
         )
 
     return {
-        "full_name": full_name,
-        "edu_level": edu_level,
-        "major": major,
-        "institution": institution,
-        "grad_year": grad_year,
-        "raw_skills": raw_skills,
-        "cert_text": cert_text,
+        "full_name":       full_name,
+        "edu_level":       edu_level,
+        "major":           major,
+        "institution":     institution,
+        "grad_year":       grad_year,
+        "selected_skills": all_user_skills,
+        "raw_skills":      ", ".join(all_user_skills),
+        "cert_text":       cert_text,
     }
 
 def _build_cv_text(form_data: dict) -> str:
@@ -1125,14 +1854,14 @@ def _build_cv_text(form_data: dict) -> str:
         else:
             job_title = job_sel
         company = st.session_state.get(f"pf_company_{eid}", "")
-        start   = st.session_state.get(f"pf_start_{eid}", "—")
-        end     = st.session_state.get(f"pf_end_{eid}", "—")
+        start   = st.session_state.get(f"pf_start_{eid}", "--")
+        end     = st.session_state.get(f"pf_end_{eid}", "--")
         if job_title and job_title not in ("(Select or type below)", ""):
             lines.append(f"  - {job_title} at {company} ({start}–{end})")
     lines += ["", "Skills:"]
-    for sk in form_data.get("raw_skills", "").split(","):
-        if sk.strip():
-            lines.append(f"  - {sk.strip()}")
+    for sk in form_data.get("selected_skills", []) or [s.strip() for s in form_data.get("raw_skills","").split(",") if s.strip()]:
+        if sk:
+            lines.append(f"  - {sk}")
     lines += ["", "Certifications:"]
     for line in form_data.get("cert_text", "").splitlines():
         if line.strip():
@@ -1154,9 +1883,21 @@ def _render_results():
     detected_skills = analysis.get("detected_skills", [])
 
     st.markdown(f"### Career Matches for **{candidate}**")
-    st.caption("Based on your profile, O*NET taxonomy, and SKKNI competency framework.")
+    st.caption("Matched against O*NET taxonomy and SKKNI competency framework. Study hours estimate based on Regular plan (5 days/week, 2 hours/day).")
 
     result_cols = st.columns(4, gap="medium")
+
+    # Fixed-reference plan for hours estimate on this card (Regular: 5d x 2h = 10h/wk)
+    _REF_HPW = 10  # 5 days x 2 hours
+
+    def _fmt_duration(total_hrs: float) -> str:
+        if not total_hrs:
+            return "N/A"
+        wks = math.ceil(total_hrs / _REF_HPW)
+        if wks == 0:
+            days = math.ceil(total_hrs / 2)
+            return f"{days} day(s)"
+        return f"~{wks} wk(s)"
 
     for i, match in enumerate(matches[:3]):
         col      = result_cols[i]
@@ -1167,29 +1908,31 @@ def _render_results():
 
         # Ensure total_course_hours is populated from DB (fixes 0h bug)
         total_hrs = match.get("total_course_hours") or get_total_hours(soc)
+        if not total_hrs and match.get("courses"):
+            total_hrs = sum(c.get("hours", 0) for c in match["courses"])
         match["total_course_hours"] = total_hrs
 
-        hours_pd  = st.session_state.get("pf_study_hours_per_day", 2)
-        dpw       = st.session_state.get("pf_days_per_week", 5)
-        eff_hrs_wk = hours_pd * dpw
-        weeks     = math.ceil(total_hrs / eff_hrs_wk) if (total_hrs and eff_hrs_wk) else 0
-
         with col:
+            # Badge row — always present (keeps columns aligned)
             if is_best:
-                st.markdown('<span class="pf-badge pf-badge-gold">⭐ Best Match</span>',
+                st.markdown('<span class="pf-badge pf-badge-gold">Best Match</span>',
                             unsafe_allow_html=True)
+            else:
+                st.markdown('<span style="display:inline-block;height:1.4rem;"></span>',
+                            unsafe_allow_html=True)
+
             card_cls = "pf-card pf-card-gold" if is_best else "pf-card"
             st.markdown(f"""
-            <div class="{card_cls}" style="padding:1rem;">
-              <div style="font-size:1.05rem;font-weight:700;color:#2C2C2C;margin-bottom:0.25rem;">
+            <div class="{card_cls}" style="padding:1rem;min-height:72px;">
+              <div style="font-size:1.05rem;font-weight:700;color:#2C2C2C;margin-bottom:0.2rem;">
                 {match.get('title','')}
               </div>
-              <div style="font-size:0.75rem;color:#6B6B6B;">{soc}</div>
+              <div style="font-size:0.72rem;color:#6B6B6B;font-family:'Inter',sans-serif;">{soc}</div>
             </div>
             """, unsafe_allow_html=True)
 
             st.progress(score / 100)
-            st.caption(f"**{score}%** match · {gap_count} skill gaps")
+            st.caption(f"**{score}%** match · {gap_count} gap(s)")
 
             with st.expander("Why this role?"):
                 st.write(match.get("description", ""))
@@ -1200,14 +1943,17 @@ def _render_results():
                     pills = " ".join(f'<span class="pf-pill">{g}</span>' for g in gaps)
                     st.markdown(pills, unsafe_allow_html=True)
                 else:
-                    st.success("No major gaps!")
+                    st.success("No major gaps detected.")
 
-            st.metric("Study Hours", f"{int(total_hrs)}h", f"~{weeks} wks")
+            st.metric(
+                "Total Study Hours",
+                f"{int(total_hrs)}h" if total_hrs else "N/A",
+                _fmt_duration(total_hrs)
+            )
 
             if st.button("Select This Career", key=f"pf_sel_{i}",
                          use_container_width=True,
                          type="primary" if is_best else "secondary"):
-                # Make sure courses from DB are attached
                 courses = match.get("courses") or get_courses_for_onet(soc)
                 st.session_state["pf_selected_match"] = {
                     **match,
@@ -1221,25 +1967,34 @@ def _render_results():
 
     # ── 4th column: Add Profession ────────────────────────────────────────────
     with result_cols[3]:
+        st.markdown(
+            '<span style="display:inline-block;height:1.4rem;"></span>',
+            unsafe_allow_html=True
+        )
         st.markdown("""
-        <div class="pf-card pf-card-dashed" style="text-align:center;padding:2rem 1rem;">
-          <div style="font-size:2.5rem;">＋</div>
-          <div style="font-weight:600;color:#374151;margin-bottom:0.25rem;">Add Profession</div>
-          <div style="font-size:0.8rem;color:#9A8060;">Browse O*NET roles to compare</div>
+        <div class="pf-card pf-card-dashed" style="text-align:center;padding:1.5rem 1rem;min-height:72px;">
+          <div style="font-size:1.8rem;color:#A17F3E;">+</div>
+          <div style="font-weight:600;color:#2C2C2C;font-size:0.95rem;">Add Profession</div>
+          <div style="font-size:0.75rem;color:#9A8060;margin-top:0.2rem;">Browse all O*NET roles</div>
         </div>
         """, unsafe_allow_html=True)
         all_onet = get_all_onet_titles()
-        custom_t = st.selectbox("Browse O*NET Roles", ["—"] + all_onet, key="pf_custom_onet")
-        if custom_t and custom_t != "—":
+        custom_t = st.selectbox(
+            "Search O*NET Roles", ["--"] + all_onet, key="pf_custom_onet"
+        )
+        if custom_t and custom_t != "--":
             soc = get_soc_for_title(custom_t)
             if soc:
                 hrs     = get_total_hours(soc)
                 courses = get_courses_for_onet(soc)
-                st.metric("Study Hours", f"{int(hrs)}h")
-                if st.button("Add & Select", key="pf_add_custom", use_container_width=True):
-                    # Compute skill gaps from O*NET typical skills vs detected skills
-                    user_skills = detected_skills or []
-                    gaps = _compute_skill_gaps(soc, user_skills)
+                st.metric(
+                    "Total Study Hours",
+                    f"{int(hrs)}h" if hrs else "N/A",
+                    _fmt_duration(hrs)
+                )
+                if st.button("Add & Select", key="pf_add_custom",
+                             use_container_width=True, type="primary"):
+                    gaps = _compute_skill_gaps(soc, detected_skills or [])
                     st.session_state["pf_selected_match"] = {
                         "soc_code": soc,
                         "title": custom_t,
@@ -1256,7 +2011,7 @@ def _render_results():
                     st.rerun()
 
     st.markdown("---")
-    if st.button("← Retake Analysis"):
+    if st.button("Retake Analysis"):
         st.session_state["pf_step"] = "upload"
         st.session_state["pf_analysis"] = None
         st.rerun()
@@ -1266,121 +2021,134 @@ def _render_results():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _render_skill_gap():
+    """Merged Skill Gap Analysis + Study Plan page."""
     match    = st.session_state.get("pf_selected_match", {})
     analysis = st.session_state.get("pf_analysis", {})
     if not match:
         st.session_state["pf_step"] = "results"
         st.rerun()
 
+    soc      = match.get("soc_code", "")
     detected = analysis.get("detected_skills", []) if analysis else []
     gaps     = match.get("skill_gaps", [])
     score    = match.get("match_score", 50)
-
-    st.markdown("## Skill Gap Analysis")
-    st.markdown(f"**Target Role:** {match.get('title','')}")
-
-    col_have, col_gap = st.columns(2, gap="large")
-    with col_have:
-        st.markdown("#### ✅ Skills You Have")
-        if detected:
-            for sk in detected:
-                st.markdown(f'<span class="pf-badge pf-badge-green">{sk}</span>',
-                            unsafe_allow_html=True)
-        else:
-            st.info("No skills detected — fill in the manual form to show your skills here.")
-    with col_gap:
-        st.markdown("#### 🔴 Skills to Acquire")
-        if gaps:
-            for sk in gaps:
-                st.markdown(f'<span class="pf-badge pf-badge-red">{sk}</span>',
-                            unsafe_allow_html=True)
-        else:
-            st.success("No significant skill gaps detected!")
-
-    st.markdown("---")
-    st.markdown(f"**Overall Match Score:** `{score}%`")
-    st.progress(score / 100)
-
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("← Back to Matches", use_container_width=True):
-            st.session_state["pf_step"] = "results"
-            st.rerun()
-    with c2:
-        if st.button("Create Study Plan →", type="primary", use_container_width=True):
-            st.session_state["pf_step"] = "choose_plan"
-            st.rerun()
-
-# ══════════════════════════════════════════════════════════════════════════════
-# CHOOSE PLAN PAGE  (user sets hours/day; plans = days/week commitment)
-# ══════════════════════════════════════════════════════════════════════════════
-
-def _render_choose_plan():
-    match = st.session_state.get("pf_selected_match", {})
-    if not match:
-        st.session_state["pf_step"] = "results"
-        st.rerun()
-
-    soc       = match.get("soc_code", "")
     total_hrs = match.get("total_course_hours") or get_total_hours(soc)
-    # Fallback: if still 0, re-query with matched courses
     if not total_hrs and match.get("courses"):
         total_hrs = sum(c.get("hours", 0) for c in match["courses"])
 
-    st.markdown("## Choose Your Study Plan")
+    # ── Section 1: Skill Gap Analysis ─────────────────────────────────────────
+    st.markdown(f"## Skill Gap & Study Plan")
+    st.markdown(f"**Target Role:** {match.get('title','')} &nbsp;|&nbsp; Match Score: **{score}%**")
+    st.progress(score / 100)
+    st.markdown("")
 
-    # ── User sets their own hours/day ─────────────────────────────────────────
-    st.markdown("#### ⏱️ How many hours per day can you commit?")
+    st.markdown(
+        '<div class="pf-section-header">Competency Assessment</div>',
+        unsafe_allow_html=True
+    )
+    st.caption(
+        "Skill requirements are sourced from the O*NET database (U.S. Department of Labor) "
+        "and cross-referenced with Indonesian SKKNI competency standards."
+    )
+
+    col_have, col_gap = st.columns(2, gap="large")
+    with col_have:
+        st.markdown(
+            '<div style="font-family:\'Playfair Display\',serif;font-size:1rem;'
+            'font-weight:700;color:#2D6A4F;margin-bottom:0.6rem;">'
+            '&#9679; Skills You Have</div>',
+            unsafe_allow_html=True
+        )
+        if detected:
+            pills = " ".join(
+                f'<span class="pf-badge pf-badge-green">{sk}</span>' for sk in detected
+            )
+            st.markdown(pills, unsafe_allow_html=True)
+            st.caption(f"{len(detected)} verified skill(s) from your profile")
+        else:
+            st.info("No skills detected. Fill in the manual form to show your skills here.")
+
+    with col_gap:
+        st.markdown(
+            '<div style="font-family:\'Playfair Display\',serif;font-size:1rem;'
+            'font-weight:700;color:#9B2335;margin-bottom:0.6rem;">'
+            '&#9679; Skills to Acquire</div>',
+            unsafe_allow_html=True
+        )
+        if gaps:
+            pills = " ".join(
+                f'<span class="pf-badge pf-badge-red">{sk}</span>' for sk in gaps
+            )
+            st.markdown(pills, unsafe_allow_html=True)
+            st.caption(f"{len(gaps)} gap(s) based on O*NET role requirements")
+        else:
+            st.success("No significant skill gaps detected for this role.")
+
+    st.markdown("---")
+
+    # ── Section 2: Study Plan ─────────────────────────────────────────────────
+    st.markdown(
+        '<div class="pf-section-header">Study Plan</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown("**How many hours per day can you commit?**")
     hours_pd = st.slider(
         "Hours per day", min_value=1, max_value=8,
         value=st.session_state.get("pf_study_hours_per_day", 2),
         step=1, key="pf_hours_slider",
-        help="Set your daily study commitment. The plan cards below will update automatically."
+        help="Adjust your daily hours. Plan cards update automatically."
     )
     st.session_state["pf_study_hours_per_day"] = hours_pd
-
-    st.markdown("#### 📅 How many days per week will you study?")
-    st.caption("Choose a study cadence that fits your lifestyle.")
-    st.markdown("")
+    st.markdown("**Select a study cadence:**")
 
     plans = [
-        {"id": "intensive", "name": "Fast Track",  "days": 7, "icon": "🔥",
-         "desc": "Every day — maximum speed, minimum breaks"},
-        {"id": "balanced",  "name": "Regular",     "days": 5, "icon": "⚖️",
-         "desc": "Weekdays only — sustainable & recommended"},
-        {"id": "casual",    "name": "Flexible",    "days": 3, "icon": "🌱",
-         "desc": "3 days/week — at your own relaxed pace"},
+        {"id": "intensive", "name": "Fast Track",  "days": 7,
+         "icon": "◆", "desc": "Every day, maximum pace"},
+        {"id": "balanced",  "name": "Regular",     "days": 5,
+         "icon": "◈", "desc": "Weekdays only, recommended"},
+        {"id": "casual",    "name": "Flexible",    "days": 3,
+         "icon": "◦", "desc": "3 days per week, relaxed pace"},
     ]
+
+    def _duration_label(hrs, days_per_wk, hpd):
+        if not hrs or not days_per_wk or not hpd:
+            return "N/A"
+        total_days = math.ceil(hrs / hpd)
+        wks = math.ceil(hrs / (hpd * days_per_wk))
+        if wks == 0:
+            return f"{total_days} day(s)"
+        return f"{wks} week(s)"
 
     cols = st.columns(3, gap="large")
     for plan, col in zip(plans, cols):
         weekly_hrs = hours_pd * plan["days"]
-        weeks      = math.ceil(total_hrs / weekly_hrs) if (total_hrs and weekly_hrs) else 0
-        days_total = weeks * plan["days"]
-        end_date   = (datetime.date.today() + datetime.timedelta(weeks=weeks)).strftime("%b %Y")
-        sel        = st.session_state.get("pf_selected_plan") == plan["id"]
-        card_cls   = "pf-card pf-plan-selected" if sel else "pf-card"
+        wks  = math.ceil(total_hrs / weekly_hrs) if (total_hrs and weekly_hrs) else 0
+        dur  = _duration_label(total_hrs, plan["days"], hours_pd)
+        end_date = (
+            datetime.date.today() + datetime.timedelta(weeks=wks)
+        ).strftime("%b %Y") if wks else "--"
+        sel      = st.session_state.get("pf_selected_plan") == plan["id"]
+        card_cls = "pf-card pf-plan-selected" if sel else "pf-card"
 
         with col:
             st.markdown(f"""
             <div class="{card_cls}" style="text-align:center;padding:1.5rem;">
-              <div style="font-size:2.5rem;">{plan['icon']}</div>
-              <div style="font-size:1.1rem;font-weight:700;margin:0.5rem 0;">{plan['name']}</div>
-              <div style="font-size:0.85rem;color:#6B6B6B;margin-bottom:1rem;">{plan['desc']}</div>
-              <div style="font-size:1.8rem;font-weight:800;color:#A17F3E;">{weeks} wks</div>
-              <div style="font-size:0.8rem;color:#9A8060;">
-                {plan['days']} days/wk · {hours_pd}h/day · done by {end_date}
+              <div style="font-size:2rem;color:#A17F3E;font-weight:700;">{plan['icon']}</div>
+              <div style="font-size:1.05rem;font-weight:700;margin:0.5rem 0;">{plan['name']}</div>
+              <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:0.8rem;">{plan['desc']}</div>
+              <div style="font-size:1.7rem;font-weight:800;color:#A17F3E;font-family:'Playfair Display',serif;">{dur}</div>
+              <div style="font-size:0.75rem;color:#9A8060;margin-top:0.3rem;">
+                {plan['days']} days/wk &middot; {hours_pd}h/day &middot; finish {end_date}
               </div>
             </div>
             """, unsafe_allow_html=True)
             btn_type = "primary" if sel else "secondary"
-            label    = f"{'✓ Selected' if sel else 'Choose'} {plan['name']}"
+            label    = ("Selected: " if sel else "Choose ") + plan["name"]
             if st.button(label, key=f"pf_plan_{plan['id']}",
                          use_container_width=True, type=btn_type):
                 st.session_state["pf_selected_plan"]       = plan["id"]
                 st.session_state["pf_days_per_week"]       = plan["days"]
                 st.session_state["pf_study_hours_per_day"] = hours_pd
-                # Load courses from DB into roadmap
                 st.session_state["pf_roadmap_courses"] = generate_verified_roadmap(
                     [soc], plan["id"]
                 )
@@ -1389,14 +2157,22 @@ def _render_choose_plan():
     st.markdown("---")
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("← Back", use_container_width=True):
-            st.session_state["pf_step"] = "skill_gap"
+        if st.button("Back to Matches", use_container_width=True):
+            st.session_state["pf_step"] = "results"
             st.rerun()
     with c2:
         if st.session_state.get("pf_selected_plan"):
-            if st.button("View Roadmap →", type="primary", use_container_width=True):
+            if st.button("View Roadmap", type="primary", use_container_width=True):
                 st.session_state["pf_step"] = "roadmap"
                 st.rerun()
+        else:
+            st.info("Select a plan above to continue.")
+
+
+def _render_choose_plan():
+    """Legacy redirect — now merged into skill_gap."""
+    st.session_state["pf_step"] = "skill_gap"
+    st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Certificate Verification Dialog (Phase 3 — event handler)
@@ -1442,40 +2218,51 @@ def _verify_dialog(course: dict):
 def _render_roadmap():
     match    = st.session_state.get("pf_selected_match", {})
     hours_pd = st.session_state.get("pf_study_hours_per_day", 2)
-    dpw      = st.session_state.get("pf_days_per_week", 5)
     done_set = st.session_state.get("pf_completed_courses", set())
     cv_map   = st.session_state.get("pf_cert_verify", {})
 
     if not match:
-        st.session_state["pf_step"] = "choose_plan"
+        st.session_state["pf_step"] = "skill_gap"
         st.rerun()
 
     soc = match.get("soc_code", "")
-    # Always pull courses from DB to guarantee real URLs
     courses = st.session_state.get("pf_roadmap_courses") or generate_verified_roadmap([soc])
     if not courses:
         courses = get_courses_for_onet(soc)
-    # Persist for other pages
     st.session_state["pf_roadmap_courses"] = courses
 
-    st.markdown(f"## Your Custom Learning Roadmap — {match.get('title','')}")
-    st.caption("All course links are pulled from our verified database — no AI-generated URLs.")
+    st.markdown(f"## Learning Roadmap")
+    st.markdown(
+        f"**Target Role:** {match.get('title','')}",
+    )
+    st.caption("All course links are sourced exclusively from our verified catalog. No AI-generated URLs.")
 
     if not courses:
-        st.info("No courses found for this role. Please choose a plan first.")
+        st.markdown("""
+        <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;
+                    padding:1.5rem;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">&#128196;</div>
+          <div style="font-weight:600;color:#92400E;">No courses found for this role.</div>
+          <div style="font-size:0.83rem;color:#92400E;margin-top:0.25rem;">
+            Please go back and select a study plan.
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
         total_hrs = sum(c.get("hours", 0) for c in courses)
-        done_hrs  = sum(c.get("hours", 0) for c in courses
-                        if str(c.get("course_id", c.get("title",""))) in done_set
-                        or c.get("title","") in done_set)
+        done_hrs  = sum(
+            c.get("hours", 0) for c in courses
+            if str(c.get("course_id", c.get("title",""))) in done_set
+            or c.get("title","") in done_set
+        )
         pct = int(done_hrs / total_hrs * 100) if total_hrs else 0
 
-        st.markdown(f"**Progress:** {pct}% — {int(done_hrs)}/{int(total_hrs)} hours")
+        st.markdown(f"**Progress:** {pct}% ({int(done_hrs)}/{int(total_hrs)} hours completed)")
         st.progress(pct / 100)
         st.markdown("---")
 
-        cumday = 0
-        eff_hpd = hours_pd if hours_pd else 2   # fallback
+        eff_hpd = hours_pd if hours_pd else 2
+        cumday  = 0
 
         for i, course in enumerate(courses):
             cid      = str(course.get("course_id", course.get("title", i)))
@@ -1484,58 +2271,74 @@ def _render_roadmap():
             days_n   = math.ceil(hrs / eff_hpd) if eff_hpd else 0
             verified = cv_map.get(cid, {}).get("verified", False)
             done     = cid in done_set or title in done_set
+            real_url = course.get("url", "")
 
-            dot_bg    = "#D8F3DC" if (done or verified) else "#F5EDD8"
-            dot_color = "#2D6A4F" if (done or verified) else "#A17F3E"
+            with st.container():
+                col_info, col_action = st.columns([3, 1])
 
-            # ── Timeline row ──
-            st.markdown(f"""
-            <div class="pf-timeline-item">
-              <div class="pf-timeline-dot" style="background:{dot_bg};color:{dot_color};">
-                {'✓' if (done or verified) else i+1}
-              </div>
-              <div style="flex:1;">
-                <div style="font-weight:600;color:#2C2C2C;">{title}</div>
-                <div style="font-size:0.8rem;color:#6B6B6B;">
-                  {course.get('provider','')} &nbsp;·&nbsp; {int(hrs)}h &nbsp;·&nbsp;
-                  ~{days_n} days (starts day {cumday+1})
-                </div>
-                {('<div style="font-size:0.75rem;color:#2D6A4F;margin-top:0.2rem;">✓ Certificate submitted</div>' if verified else '')}
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
+                with col_info:
+                    dot_bg    = "#D8F3DC" if (done or verified) else "#F5EDD8"
+                    dot_color = "#2D6A4F" if (done or verified) else "#A17F3E"
+                    check_mark = "&#10003;" if (done or verified) else str(i + 1)
+                    cert_line = (
+                        '<div style="font-size:0.73rem;color:#2D6A4F;margin-top:0.2rem;">'
+                        'Certificate submitted</div>'
+                        if verified else ""
+                    )
+                    st.markdown(f"""
+                    <div class="roadmap-card">
+                      <div style="display:flex;align-items:flex-start;gap:0.85rem;">
+                        <div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
+                                    background:{dot_bg};color:{dot_color};display:flex;
+                                    align-items:center;justify-content:center;
+                                    font-size:0.75rem;font-weight:700;">{check_mark}</div>
+                        <div style="flex:1;">
+                          <div style="font-weight:700;font-size:0.95rem;color:#2C2C2C;
+                                      margin-bottom:0.2rem;">{title}</div>
+                          <span class="provider-badge">{course.get('provider','')}</span>
+                          <div style="font-size:0.78rem;color:#6B6B6B;margin-top:0.3rem;">
+                            {int(hrs)}h &nbsp;&middot;&nbsp; ~{days_n} day(s)
+                            &nbsp;&middot;&nbsp; starts day {cumday + 1}
+                          </div>
+                          {cert_line}
+                        </div>
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            # ── Action buttons ──
-            ca, cb, cc = st.columns([3, 1, 1])
-            with cb:
-                real_url = course.get("url", "")
-                if real_url and not verified:
-                    st.link_button("Go to Course →", real_url, use_container_width=True)
-            with cc:
-                if verified:
-                    st.markdown('<span class="pf-badge pf-badge-green" style="font-size:0.85rem;">✓ Verified</span>',
-                                unsafe_allow_html=True)
-                elif done:
-                    if st.button("Verify Cert", key=f"pf_vbtn_{i}", use_container_width=True):
-                        _verify_dialog(course)
-                else:
-                    label = "✓ Done" if done else "Mark Done"
-                    if st.button(label, key=f"pf_done_{i}", use_container_width=True):
-                        done_set.add(cid)
-                        done_set.add(title)
-                        st.session_state["pf_completed_courses"] = done_set
-                        st.rerun()
+                with col_action:
+                    st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
+                    if real_url and not verified:
+                        st.link_button(
+                            "Go to Course", real_url, use_container_width=True
+                        )
+                    if verified:
+                        st.markdown(
+                            '<span class="pf-badge pf-badge-green">Verified</span>',
+                            unsafe_allow_html=True
+                        )
+                    elif done:
+                        if st.button("Verify Cert", key=f"pf_vbtn_{i}",
+                                     use_container_width=True):
+                            _verify_dialog(course)
+                    else:
+                        if st.button("Mark Done", key=f"pf_done_{i}",
+                                     use_container_width=True):
+                            done_set.add(cid)
+                            done_set.add(title)
+                            st.session_state["pf_completed_courses"] = done_set
+                            st.rerun()
 
             cumday += days_n
 
     st.markdown("---")
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("← Choose Plan", use_container_width=True):
-            st.session_state["pf_step"] = "choose_plan"
+        if st.button("Back to Plan", use_container_width=True):
+            st.session_state["pf_step"] = "skill_gap"
             st.rerun()
     with c2:
-        if st.button("Dashboard →", type="primary", use_container_width=True):
+        if st.button("Dashboard", type="primary", use_container_width=True):
             st.session_state["pf_step"] = "dashboard"
             st.rerun()
 
@@ -1634,62 +2437,114 @@ def _render_dashboard():
     hours_pd = st.session_state.get("pf_study_hours_per_day", 2)
     dpw      = st.session_state.get("pf_days_per_week", 5)
     cv_map   = st.session_state.get("pf_cert_verify", {})
+    analysis = st.session_state.get("pf_analysis", {}) or {}
 
     if not match:
         st.session_state["pf_step"] = "results"
         st.rerun()
 
-    soc       = match.get("soc_code", "")
-    total_hrs = match.get("total_course_hours") or sum(c.get("hours", 0) for c in courses) or get_total_hours(soc)
-    done_hrs  = sum(c.get("hours", 0) for c in courses
-                    if str(c.get("course_id", c.get("title",""))) in done_set
-                    or c.get("title","") in done_set)
-    remain    = max(0, total_hrs - done_hrs)
-    pct       = int(done_hrs / total_hrs * 100) if total_hrs else 0
-    weekly_h  = hours_pd * dpw
-    wks_left  = math.ceil(remain / weekly_h) if (remain and weekly_h) else 0
+    soc        = match.get("soc_code", "")
+    total_hrs  = match.get("total_course_hours") or sum(c.get("hours",0) for c in courses) or get_total_hours(soc)
+    done_hrs   = sum(c.get("hours",0) for c in courses
+                     if str(c.get("course_id", c.get("title",""))) in done_set
+                     or c.get("title","") in done_set)
+    remain     = max(0, total_hrs - done_hrs)
+    pct        = int(done_hrs / total_hrs * 100) if total_hrs else 0
+    weekly_h   = hours_pd * dpw
+    wks_left   = math.ceil(remain / weekly_h) if (remain and weekly_h) else 0
     verified_n = sum(1 for v in cv_map.values() if v.get("verified"))
+    done_n     = sum(1 for c in courses
+                     if str(c.get("course_id", c.get("title",""))) in done_set
+                     or c.get("title","") in done_set)
 
-    st.markdown(f"## Dashboard — {match.get('title','')}")
+    candidate_name = analysis.get("candidate_name", "") or ""
 
+    st.markdown("## Career Dashboard")
+
+    # ── Profile Card ──────────────────────────────────────────────────────────
+    profile_photo = st.session_state.get("pf_profile_photo_b64", "")
+    if profile_photo:
+        avatar_inner = f'<img src="data:image/png;base64,{profile_photo}">'
+    else:
+        initials = "".join(w[0].upper() for w in candidate_name.split()[:2]) if candidate_name else "U"
+        avatar_inner = initials
+
+    achievements = []
+    if done_n > 0:
+        achievements.append(f"{done_n} Course(s) Completed")
+    if verified_n > 0:
+        achievements.append(f"{verified_n} Certificate(s) Verified")
+    if pct >= 50:
+        achievements.append("Halfway There")
+    if pct == 100:
+        achievements.append("Roadmap Complete")
+
+    ach_html = "".join(
+        f'<span class="pf-achievement">{a}</span>' for a in achievements
+    ) if achievements else '<span style="font-size:0.75rem;color:#9A8060;">No achievements yet. Start completing courses!</span>'
+
+    st.markdown(f"""
+    <div class="pf-profile-card">
+      <div class="pf-avatar">{avatar_inner}</div>
+      <div style="flex:1;">
+        <div class="pf-profile-name">{candidate_name or "Your Profile"}</div>
+        <div class="pf-profile-role">{match.get('title','')}</div>
+        <div class="pf-achievement-row">{ach_html}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Photo upload ─────────────────────────────────────────────────────────
+    with st.expander("Upload / Change Profile Photo"):
+        photo_f = st.file_uploader(
+            "Profile photo (JPG/PNG)", type=["jpg","jpeg","png"],
+            label_visibility="collapsed", key="pf_photo_upload"
+        )
+        if photo_f:
+            b64 = base64.b64encode(photo_f.read()).decode()
+            st.session_state["pf_profile_photo_b64"] = b64
+            st.rerun()
+
+    # ── Stats ─────────────────────────────────────────────────────────────────
     s1, s2, s3, s4 = st.columns(4)
     for col, num, label in [
         (s1, f"{pct}%",           "Overall Progress"),
         (s2, f"{int(done_hrs)}h", "Hours Completed"),
         (s3, f"{wks_left}w",      "Weeks Remaining"),
-        (s4, str(verified_n),     "Certs Verified"),
+        (s4, str(verified_n),     "Certificates Verified"),
     ]:
         with col:
             st.markdown(f"""
             <div class="pf-stat">
               <div class="pf-stat-num">{num}</div>
               <div class="pf-stat-label">{label}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("")
     st.progress(pct / 100)
-    st.caption(f"{pct}% complete — {int(done_hrs)}/{int(total_hrs)} hours")
+    st.caption(f"{pct}% complete ({int(done_hrs)}/{int(total_hrs)} hours)")
     st.markdown("---")
-    st.markdown("#### Course Status")
 
+    # ── Course Status ─────────────────────────────────────────────────────────
+    st.markdown('<div class="pf-section-header">Course Status</div>', unsafe_allow_html=True)
     for course in courses:
         cid      = str(course.get("course_id", course.get("title","")))
         done     = cid in done_set or course.get("title","") in done_set
         verified = cv_map.get(cid, {}).get("verified", False)
+        hrs      = int(course.get("hours", 0))
         if verified:
-            badge = '<span class="pf-badge pf-badge-green">✅ Verified</span>'
+            badge = '<span class="pf-badge pf-badge-green">Verified</span>'
         elif done:
-            badge = '<span class="pf-badge pf-badge-blue">✓ Completed</span>'
+            badge = '<span class="pf-badge pf-badge-blue">Completed</span>'
         else:
             badge = '<span class="pf-badge" style="background:#F2EDE6;color:#6B6B6B;">Pending</span>'
         st.markdown(f"""
         <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:0.6rem 0;border-bottom:1px solid #E8E0D5;">
+                    padding:0.65rem 0;border-bottom:1px solid #E8E0D5;">
           <div>
-            <span style="font-weight:500;color:#2C2C2C;">{course.get('title','')}</span>
-            <span style="font-size:0.75rem;color:#9A8060;margin-left:0.5rem;">
-              {course.get('provider','')} · {int(course.get('hours',0))}h
+            <span style="font-weight:600;color:#2C2C2C;font-size:0.88rem;">{course.get('title','')}</span>
+            <span style="font-size:0.72rem;color:#9A8060;margin-left:0.5rem;">
+              {course.get('provider','')} &middot; {hrs}h
             </span>
           </div>
           {badge}
@@ -1699,14 +2554,14 @@ def _render_dashboard():
     st.markdown("---")
     c1, c2, c3 = st.columns(3)
     with c1:
-        if st.button("← Roadmap", use_container_width=True):
+        if st.button("Back to Roadmap", use_container_width=True):
             st.session_state["pf_step"] = "roadmap"
             st.rerun()
     with c2:
-        if st.button("📅 Open Study Planner", use_container_width=True, type="primary"):
+        if st.button("Open Study Planner", use_container_width=True, type="primary"):
             _study_planner_dialog()
     with c3:
-        if st.button("🔄 Start Over", use_container_width=True):
+        if st.button("Start Over", use_container_width=True):
             for k in list(st.session_state.keys()):
                 if k.startswith("pf_"):
                     del st.session_state[k]
@@ -1718,59 +2573,100 @@ def _render_dashboard():
 
 def _render_upload():
     st.markdown("## Analyze Your Profile")
-    st.caption("Upload your CV or fill in the form — analyzed by Gemini AI against O*NET & SKKNI.")
+    st.caption("Upload your CV and certificates or fill in the form manually. Analyzed by Gemini AI against O*NET and SKKNI.")
 
-    tab_pdf, tab_manual = st.tabs(["📄 Upload PDF", "✏️ Enter Manually"])
+    tab_upload, tab_manual = st.tabs(["Upload CV & Certificate", "Enter Manually"])
 
-    with tab_pdf:
-        uploaded = st.file_uploader("Upload your CV (PDF)", type=["pdf"],
-                                    key="pf_pdf_upload", label_visibility="collapsed")
-        if uploaded:
-            st.success(f"✓ {uploaded.name} loaded")
-            if st.button("Analyze CV", type="primary", use_container_width=True, key="pf_analyze_pdf"):
-                try:
-                    cv_text = extract_pdf_text(uploaded.read())
-                    if not cv_text.strip():
-                        st.error("Could not extract text from PDF. Try the manual form.")
-                    else:
-                        result = _run_with_loading(_call_gemini, cv_text)
-                        st.session_state["pf_analysis"] = result
-                        upsert_user_profile(st.session_state["pf_session_id"], cv_text=cv_text)
-                        st.session_state["pf_step"] = "results"
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"Analysis failed: {e}")
+    # ── Tab 1: Upload CV & Certificate ────────────────────────────────────────
+    with tab_upload:
+        sub_cv, sub_cert = st.tabs(["CV / Resume", "Certificates & Licenses"])
 
+        with sub_cv:
+            st.markdown(
+                '<div style="font-size:0.78rem;color:#6B6B6B;margin-bottom:0.75rem;">'
+                'Upload your CV or resume in PDF format. Text will be extracted and analyzed by AI.</div>',
+                unsafe_allow_html=True
+            )
+            uploaded = st.file_uploader(
+                "Upload CV (PDF)", type=["pdf"],
+                key="pf_pdf_upload", label_visibility="collapsed"
+            )
+            if uploaded:
+                st.success(f"Loaded: {uploaded.name}")
+                if st.button("Analyze CV", type="primary",
+                             use_container_width=True, key="pf_analyze_pdf"):
+                    try:
+                        cv_text = extract_pdf_text(uploaded.read())
+                        if not cv_text.strip():
+                            st.error("Could not extract text. Try the manual form instead.")
+                        else:
+                            result = _run_with_loading(_call_gemini, cv_text)
+                            st.session_state["pf_analysis"] = result
+                            upsert_user_profile(
+                                st.session_state["pf_session_id"], cv_text=cv_text
+                            )
+                            st.session_state["pf_step"] = "results"
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Analysis failed: {e}")
+
+        with sub_cert:
+            st.markdown(
+                '<div style="font-size:0.78rem;color:#6B6B6B;margin-bottom:0.75rem;">'
+                'Upload certificates or licenses. These will be attached to your profile.</div>',
+                unsafe_allow_html=True
+            )
+            cert_files = st.file_uploader(
+                "Upload Certificates", type=["pdf", "png", "jpg", "jpeg"],
+                accept_multiple_files=True, label_visibility="collapsed",
+                key="pf_cert_files_upload"
+            )
+            if cert_files:
+                for cf in cert_files:
+                    st.markdown(
+                        f'<span class="pf-badge pf-badge-green">Uploaded: {cf.name}</span>',
+                        unsafe_allow_html=True
+                    )
+            cert_list_text = st.text_area(
+                "Or list certificates manually (one per line)",
+                placeholder="AWS Certified Developer (2023)\nGoogle Data Analytics Certificate",
+                height=100, key="pf_cert_upload_text"
+            )
+            if cert_list_text.strip():
+                st.caption(f"{len([l for l in cert_list_text.splitlines() if l.strip()])} certificate(s) listed")
+
+    # ── Tab 2: Enter Manually ──────────────────────────────────────────────────
     with tab_manual:
         form_data = _render_manual_form()
         st.markdown("")
-        if st.button("🔍 Analyze Now", type="primary", use_container_width=True,
-                     key="pf_analyze_manual"):
+        if st.button("Analyze Profile", type="primary",
+                     use_container_width=True, key="pf_analyze_manual"):
             if not form_data["full_name"].strip():
-                st.warning("Please enter your full name.")
-            elif not form_data["raw_skills"].strip():
-                st.warning("Please enter at least one skill.")
+                st.warning("Full name is required.")
+            elif not form_data["selected_skills"]:
+                st.warning("Please select or enter at least one skill.")
             else:
                 cv_text = _build_cv_text(form_data)
                 try:
                     result = _run_with_loading(_call_gemini, cv_text)
                     st.session_state["pf_analysis"] = result
-                    session_id  = st.session_state["pf_session_id"]
-                    skills_list = [s.strip() for s in form_data["raw_skills"].split(",") if s.strip()]
-                    upsert_user_profile(session_id,
-                                        full_name=form_data["full_name"],
-                                        education=form_data["edu_level"],
-                                        major=form_data["major"],
-                                        institution=form_data["institution"],
-                                        cv_text=cv_text)
-                    upsert_user_skills(session_id, skills_list)
+                    session_id = st.session_state["pf_session_id"]
+                    upsert_user_profile(
+                        session_id,
+                        full_name=form_data["full_name"],
+                        education=form_data["edu_level"],
+                        major=form_data["major"],
+                        institution=form_data["institution"],
+                        cv_text=cv_text,
+                    )
+                    upsert_user_skills(session_id, form_data["selected_skills"])
                     st.session_state["pf_step"] = "results"
                     st.rerun()
                 except Exception as e:
                     st.error(f"Analysis failed: {e}")
 
     st.markdown("---")
-    if st.button("← Back to Home"):
+    if st.button("Back to Home"):
         st.session_state["pf_step"] = "landing"
         st.rerun()
 
@@ -1784,8 +2680,8 @@ def _render_landing():
       <div style="font-family:'Inter',sans-serif;font-size:.68rem;font-weight:700;
                   letter-spacing:.15em;text-transform:uppercase;color:#A17F3E;
                   margin-bottom:.9rem;">Powered by Gemini AI &nbsp;&middot;&nbsp; O*NET &nbsp;&middot;&nbsp; SKKNI</div>
-      <h1>Find Your <span>Career Path</span></h1>
-      <p>AI-powered career guidance tailored for Indonesian students — mapped to O*NET and SKKNI competency standards.</p>
+      <h1>From Career Confusion to an <span>Actionable, Adaptive Career Route</span></h1>
+      <p>AI-powered career guidance for ASEAN students, mapped to global O*NET standards and Indonesian SKKNI competency frameworks.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1796,7 +2692,7 @@ def _render_landing():
         ("◈", "Career Matching",
          "Get 3 personalized career matches ranked by compatibility score with detailed skill gap breakdown."),
         ("▦", "Verified Roadmap",
-         "Course links come exclusively from our verified database — no hallucinated URLs, ever."),
+         "Course links come exclusively from our verified database. No hallucinated URLs, ever."),
     ]
     for col, (icon, title, desc) in zip([f1, f2, f3], features):
         with col:

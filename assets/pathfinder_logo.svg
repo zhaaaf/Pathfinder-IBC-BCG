@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 88" width="320" height="88">
+  <!-- Icon mark: stylised P with path/door element -->
+  <g transform="translate(6,8)">
+    <!-- Vertical stem of P -->
+    <rect x="0" y="0" width="15" height="70" rx="3" fill="#1A3354"/>
+    <!-- Top crossbar of P bowl -->
+    <rect x="0" y="0" width="46" height="15" rx="3" fill="#1A3354"/>
+    <!-- Mid crossbar of P bowl -->
+    <rect x="0" y="30" width="46" height="15" rx="3" fill="#1A3354"/>
+    <!-- Right curve of P bowl -->
+    <rect x="31" y="0" width="15" height="45" rx="3" fill="#1A3354"/>
+    <!-- Light-blue diagonal path/door element inside the P counter -->
+    <polygon points="17,48  30,30  30,62  17,70" fill="#7BBFD6" opacity="0.90"/>
+  </g>
+  <!-- "PathFinder" wordmark -->
+  <text
+    x="78" y="57"
+    font-family="'Segoe UI Black','Arial Black',Arial,sans-serif"
+    font-weight="900"
+    font-size="36"
+    letter-spacing="-0.5"
+    fill="#1A1A1A">PathFinder</text>
+</svg>
