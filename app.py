@@ -301,7 +301,7 @@ ANALYZE_SYSTEM_PROMPT = (
     "}"
 )
 
-ANALYZE_MODEL = "gemini-1.5-flash"   # free tier: 15 RPM, 1M tokens/day
+ANALYZE_MODEL = "gemini-3.5-flash"   # free tier: 15 RPM, 1M tokens/day
 
 
 def extract_pdf_text(file_bytes: bytes) -> str:
@@ -336,7 +336,7 @@ def _coerce_match_record(raw):
 
 
 def analyze_profile_with_gemini(cv_text: str) -> dict:
-    """Step 2 — send extracted CV text to Gemini 1.5 Flash (free tier) and parse structured output."""
+    """Step 2 — send extracted CV text to Gemini 3.5 Flash (free tier) and parse structured output."""
     try:
         api_key = st.secrets.get("GEMINI_API_KEY")
     except Exception:
