@@ -75,22 +75,24 @@ _Session = sessionmaker(bind=_engine)
 def _logo_tag() -> str:
     """
     Return an <img> tag for the logo embedded as base64.
-    Priority: .jpeg/.jpg (uploaded brand logo) > .png > .svg > empty string.
+    Priority: spaced-name new logo > underscore variants > .png > .svg.
     """
     assets = Path(__file__).parent / "assets"
 
-    # Check raster candidates in priority order
+    # Check raster candidates in priority order (space-name first = newest upload)
     candidates = [
-        (assets / "pathfinder_logo.jpeg", "image/jpeg"),
-        (assets / "pathfinder_logo.jpg",  "image/jpeg"),
-        (assets / "pathfinder_logo.png",  "image/png"),
+        (assets / "pathfinder logo.jpeg",  "image/jpeg"),
+        (assets / "pathfinder logo.jpg",   "image/jpeg"),
+        (assets / "pathfinder_logo.jpeg",  "image/jpeg"),
+        (assets / "pathfinder_logo.jpg",   "image/jpeg"),
+        (assets / "pathfinder_logo.png",   "image/png"),
     ]
     for path, mime in candidates:
         if path.exists():
             b64 = base64.b64encode(path.read_bytes()).decode()
             return (
                 f'<img src="data:{mime};base64,{b64}" '
-                f'style="height:108px;vertical-align:middle;margin-right:10px;'
+                f'style="height:36px;vertical-align:middle;margin-right:8px;'
                 f'object-fit:contain;">'
             )
 
@@ -99,7 +101,7 @@ def _logo_tag() -> str:
         b64 = base64.b64encode(svg.read_bytes()).decode()
         return (
             f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'style="height:108px;vertical-align:middle;margin-right:10px;">'
+            f'style="height:36px;vertical-align:middle;margin-right:8px;">'
         )
     return ""
 
@@ -1111,7 +1113,7 @@ def _inject_css():
     .main .block-container,
     [data-testid="stMainBlockContainer"] {
         background-color: var(--warm-bg) !important;
-        padding-top:   9rem   !important;
+        padding-top:   5.5rem !important;
         padding-left:  2rem   !important;
         padding-right: 2rem   !important;
         max-width: 100% !important;
@@ -1624,19 +1626,21 @@ def _inject_css():
         flex-direction: column !important;
     }
 
-    /* ── Equal-height bordered containers (upload CV / Certs side-by-side) ──── */
+    /* ── Equal-height bordered containers (CV / Certs side-by-side) ────────── */
+    /* Make columns in a row all stretch to the tallest sibling */
     [data-testid="stHorizontalBlock"] {
         align-items: stretch !important;
     }
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        height: 100% !important;
+    /* Each column vertical block fills the row height */
+    [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {
         display: flex !important;
         flex-direction: column !important;
     }
-    [data-testid="stVerticalBlockBorderWrapper"] > div {
+    /* The border wrapper (st.container border=True) fills its column */
+    [data-testid="stVerticalBlockBorderWrapper"] {
         flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
+        height: 100% !important;
+        box-sizing: border-box !important;
     }
     .pf-result-card {
         flex: 1;
