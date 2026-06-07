@@ -9,7 +9,8 @@ import datetime
 import math
 
 import pdfplumber
-import google.generativeai as genai
+from google import genai
+from google.genai import types as genai_types
 
 from database import (
     init_db,
@@ -338,10 +339,10 @@ def _coerce_match_record(raw):
 def analyze_profile_with_gemini(cv_text: str) -> dict:
     """Step 2 — send extracted CV text to Gemini 3.5 Flash (free tier) and parse structured output."""
     try:
-        api_key = st.secrets.get("GEMINI_API_KEY")
-    except Exception:
+        api_key = st.secrets["GEMINI_API_KEY"]
+    except (KeyError, FileNotFoundError, Exception):
         api_key = None
-    if not api_key:
+    if not api_key or str(api_key).strip() in ("", "PASTE_YOUR_KEY_HERE"):
         raise RuntimeError(
             "GEMINI_API_KEY belum dikonfigurasi. "
             "Dapatkan key GRATIS di aistudio.google.com/apikey "
@@ -349,14 +350,7 @@ def analyze_profile_with_gemini(cv_text: str) -> dict:
             'GEMINI_API_KEY = "AIzaSy..."'
         )
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name=ANALYZE_MODEL,
-        generation_config=genai.GenerationConfig(
-            response_mime_type="application/json",
-            temperature=0.1,
-        ),
-    )
+    client = genai.Client(api_key=api_key)
 
     full_prompt = (
         ANALYZE_SYSTEM_PROMPT
@@ -367,7 +361,14 @@ def analyze_profile_with_gemini(cv_text: str) -> dict:
         + "\n--- END CV TEXT ---"
     )
 
-    response = model.generate_content(full_prompt)
+    response = client.models.generate_content(
+        model=ANALYZE_MODEL,
+        contents=full_prompt,
+        config=genai_types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.1,
+        ),
+    )
     raw_text = response.text.strip()
 
     # Defensive: strip markdown fences if model wraps despite mime-type hint
@@ -2946,26 +2947,168 @@ elif PF_STEP == "upload":
                 st.rerun()
 
         with tab_manual:
-            manual_profile_text = st.text_area(
-                "Describe your profile — education, work experience, and skills",
-                placeholder=(
-                    "e.g. Bachelor's in Mathematics from ITB, 2 years as a data analyst building "
-                    "Python/SQL dashboards. Skills: statistics, machine learning basics, Excel, SQL…"
-                ),
-                height=180, key="pf_manual_text",
+            # ── session state for dynamic work experience entries ──────────
+            st.session_state.setdefault("pf_work_entries", [{"id": 0}])
+            st.session_state.setdefault("pf_work_counter", 1)
+
+            def _section(icon, title):
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px;">'
+                    f'<span style="font-size:16px">{icon}</span>'
+                    f'<span style="font-family:Inter,sans-serif;font-size:12px;font-weight:700;'
+                    f'text-transform:uppercase;letter-spacing:1px;color:#94A3B8;">{title}</span>'
+                    f'<div style="flex:1;height:1px;background:#E2E8F0;margin-left:6px;"></div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+            col_edu, col_work, col_skills = st.columns([1, 1.2, 1], gap="large")
+
+            # ── COLUMN 1: Personal & Education ────────────────────────────
+            with col_edu:
+                _section("🎓", "Education")
+                full_name = st.text_input("Full Name", placeholder="e.g. Budi Santoso",
+                                          key="pf_m_name")
+                edu_level = st.selectbox(
+                    "Education Level", key="pf_m_edu_level",
+                    options=["High School / SMA", "Diploma (D1–D3)", "Bachelor's Degree (S1)",
+                             "Master's Degree (S2)", "Doctoral Degree (S3)", "Vocational / SMK"],
+                )
+                major = st.text_input("Major / Field of Study",
+                                      placeholder="e.g. Computer Science, Accounting",
+                                      key="pf_m_major")
+                institution = st.text_input("Institution Name",
+                                            placeholder="e.g. Universitas Padjadjaran",
+                                            key="pf_m_institution")
+                grad_year = st.text_input("Graduation Year (optional)",
+                                          placeholder="e.g. 2023", key="pf_m_grad_year")
+
+            # ── COLUMN 2: Work Experience (dynamic) ───────────────────────
+            with col_work:
+                _section("💼", "Work Experience")
+                work_entries = st.session_state["pf_work_entries"]
+                collected_work = []
+
+                for idx, entry in enumerate(work_entries):
+                    eid = entry["id"]
+                    if idx > 0:
+                        st.markdown(
+                            '<div style="border-top:1px dashed #E2E8F0;margin:10px 0 12px;"></div>',
+                            unsafe_allow_html=True,
+                        )
+                    c1, c2 = st.columns([3, 1])
+                    with c1:
+                        jt = st.text_input("Job Title", placeholder="e.g. Finance Staff",
+                                           key=f"pf_m_jt_{eid}")
+                    with c2:
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        if idx > 0 and st.button("✕ Remove", key=f"pf_m_rm_{eid}"):
+                            st.session_state["pf_work_entries"] = [
+                                e for e in work_entries if e["id"] != eid
+                            ]
+                            st.rerun()
+                    company = st.text_input("Company Name", placeholder="e.g. PT ABC Indonesia",
+                                            key=f"pf_m_co_{eid}")
+                    duration = st.selectbox(
+                        "Duration", key=f"pf_m_dur_{eid}",
+                        options=["Less than 1 year", "1–2 years", "2–3 years",
+                                 "3–5 years", "5–10 years", "10+ years"],
+                    )
+                    resp = st.text_area("Key Responsibilities", height=80,
+                                        placeholder="Describe your main responsibilities and achievements…",
+                                        key=f"pf_m_resp_{eid}", label_visibility="visible")
+                    collected_work.append({
+                        "title": jt, "company": company,
+                        "duration": duration, "responsibilities": resp,
+                    })
+
+                if st.button("＋ Add Another Experience", key="pf_m_add_work"):
+                    new_id = st.session_state["pf_work_counter"]
+                    st.session_state["pf_work_entries"].append({"id": new_id})
+                    st.session_state["pf_work_counter"] = new_id + 1
+                    st.rerun()
+
+            # ── COLUMN 3: Skills & Certs ───────────────────────────────────
+            with col_skills:
+                _section("⚡", "Skills You Have")
+                skills_raw = st.text_input(
+                    "Skills",
+                    placeholder="Python, SQL, Excel, Communication…",
+                    key="pf_m_skills",
+                    help="Pisahkan dengan koma",
+                )
+                skills_list = [s.strip() for s in skills_raw.split(",") if s.strip()]
+                if skills_list:
+                    chips = "".join(
+                        f'<span style="display:inline-block;background:#FBF1E0;color:#B48E4B;'
+                        f'font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;'
+                        f'margin:3px 3px 0 0;">{html.escape(s)}</span>'
+                        for s in skills_list
+                    )
+                    st.markdown(
+                        f'<div style="margin:6px 0 14px;line-height:1.9;">{chips}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                _section("🏅", "Certifications (Optional)")
+                cert_notes = st.text_area(
+                    "Certificates / Awards",
+                    placeholder="e.g. Google Data Analytics, AWS Cloud Practitioner, Brevet A/B",
+                    height=90, key="pf_m_certs", label_visibility="collapsed",
+                )
+
+            # ── Compile → CV text → Gemini / O*NET / SKKNI pipeline ────────
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            def _build_cv_text() -> str:
+                lines = []
+                if full_name.strip():
+                    lines.append(f"Name: {full_name.strip()}")
+                lines.append(f"Education Level: {edu_level}")
+                if major.strip():
+                    lines.append(f"Major / Field of Study: {major.strip()}")
+                if institution.strip():
+                    lines.append(f"Institution: {institution.strip()}")
+                if grad_year.strip():
+                    lines.append(f"Graduation Year: {grad_year.strip()}")
+                lines.append("")
+                for i, w in enumerate(collected_work, 1):
+                    if w["title"].strip() or w["company"].strip():
+                        lines.append(f"Work Experience {i}:")
+                        if w["title"].strip():
+                            lines.append(f"  Job Title: {w['title'].strip()}")
+                        if w["company"].strip():
+                            lines.append(f"  Company: {w['company'].strip()}")
+                        lines.append(f"  Duration: {w['duration']}")
+                        if w["responsibilities"].strip():
+                            lines.append(f"  Responsibilities: {w['responsibilities'].strip()}")
+                        lines.append("")
+                if skills_list:
+                    lines.append("Skills: " + ", ".join(skills_list))
+                if cert_notes.strip():
+                    lines.append("Certifications / Awards: " + cert_notes.strip())
+                return "\n".join(lines).strip()
+
+            _has_content = bool(
+                (major or institution or full_name or "").strip()
+                or any((w["title"] or w["company"] or "").strip() for w in collected_work)
+                or skills_list
             )
+
             if st.button("Analyze Now", type="primary", key="pf_analyze_manual",
-                         disabled=not manual_profile_text.strip()):
+                         disabled=not _has_content):
                 st.session_state["analysis_error"] = None
                 st.session_state["analysis_result"] = None
                 try:
-                    result = _run_analysis_with_loading(analyze_profile_with_gemini,
-                                                        manual_profile_text.strip())
+                    cv_text = _build_cv_text()
+                    result = _run_analysis_with_loading(analyze_profile_with_gemini, cv_text)
                     st.session_state["analysis_result"] = result
-                    upsert_user_profile(st.session_state["session_id"], manual_profile_text.strip())
-                    upsert_user_skills(st.session_state["session_id"],
-                                       result.get("detected_skills", []),
-                                       result.get("top_matches", [{}])[0].get("onet_code"))
+                    upsert_user_profile(st.session_state["session_id"], cv_text)
+                    upsert_user_skills(
+                        st.session_state["session_id"],
+                        result.get("detected_skills", []),
+                        result.get("top_matches", [{}])[0].get("onet_code"),
+                    )
                     st.session_state["pf_step"] = "results"
                 except Exception as exc:
                     st.session_state["analysis_error"] = str(exc)
