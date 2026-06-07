@@ -1013,15 +1013,15 @@ def _run_with_loading(fn, *args, **kwargs):
         pct = int((i + 1) / len(steps) * 100)
         with ph.container():
             st.markdown(f"""
-            <div style="text-align:center;padding:3rem 1rem;background:#FAF8F5;border-radius:8px;">
+            <div style="text-align:center;padding:3rem 1rem;background:var(--warm-loading);border-radius:8px;">
               <div style="font-size:3rem;margin-bottom:1rem;">{icon}</div>
-              <div style="font-size:1rem;font-weight:600;color:#A17F3E;margin-bottom:1rem;
+              <div style="font-size:1rem;font-weight:600;color:var(--copper);margin-bottom:1rem;
                           font-family:'Playfair Display',Georgia,serif;font-style:italic;">{step}</div>
-              <div style="background:#E8E0D5;border-radius:9999px;height:5px;overflow:hidden;max-width:400px;margin:0 auto;">
-                <div style="background:linear-gradient(90deg,#A17F3E,#C09A51);height:100%;
+              <div style="background:var(--warm-border);border-radius:9999px;height:5px;overflow:hidden;max-width:400px;margin:0 auto;">
+                <div style="background:linear-gradient(90deg,var(--copper),var(--gold));height:100%;
                             width:{pct}%;border-radius:9999px;"></div>
               </div>
-              <div style="font-size:0.78rem;color:#9A8060;margin-top:0.5rem;">{pct}%</div>
+              <div style="font-size:0.78rem;color:var(--copper-muted);margin-top:0.5rem;">{pct}%</div>
             </div>
             """, unsafe_allow_html=True)
         time.sleep(0.45)
@@ -1051,25 +1051,43 @@ def _inject_css():
 
     /* ── CSS custom properties (design tokens) ─────────────────────────────── */
     :root {
-        --white:        #FFFFFF;
-        --charcoal:     #2C2C2C;
-        --charcoal-mid: #4A4A4A;
-        --charcoal-soft:#6B6B6B;
-        --copper:       #A17F3E;
-        --copper-dark:  #7D6130;
-        --copper-light: #C9AC72;
-        --gold:         #C09A51;
-        --gold-pale:    #F5EDD8;
-        --gold-border:  #D4B87A;
-        --warm-bg:      #F8F9FA;
-        --warm-border:  #E8E0D5;
-        --warm-muted:   #F2EDE6;
-        --success:      #2D6A4F;
-        --success-bg:   #D8F3DC;
-        --danger:       #9B2335;
-        --danger-bg:    #FAE0E4;
-        --serif:        'Playfair Display', Georgia, 'Times New Roman', serif;
-        --sans:         'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* ── Core neutrals ─────────────────────────────── */
+        --white:          #FFFFFF;
+        --charcoal:       #2C2C2C;
+        --charcoal-mid:   #4A4A4A;
+        --charcoal-soft:  #6B6B6B;
+        /* ── Brand: copper / gold ───────────────────────── */
+        --copper:         #A17F3E;
+        --copper-dark:    #7D6130;
+        --copper-light:   #C9AC72;
+        --copper-muted:   #9A8060;
+        --gold:           #C09A51;
+        --gold-pale:      #F5EDD8;
+        --gold-border:    #D4B87A;
+        --gold-warm:      #FFFDF9;
+        /* ── Warm backgrounds ───────────────────────────── */
+        --app-shell:      #DDD8CE;
+        --warm-bg:        #F8F9FA;
+        --warm-border:    #E8E0D5;
+        --warm-muted:     #F2EDE6;
+        --warm-ivory:     #FFFDF8;
+        --warm-cream:     #FAF5EB;
+        --warm-loading:   #FAF8F5;
+        /* ── Semantic ────────────────────────────────────── */
+        --success:        #2D6A4F;
+        --success-bg:     #D8F3DC;
+        --danger:         #9B2335;
+        --danger-bg:      #FAE0E4;
+        --danger-req:     #C0392B;
+        --blue-dark:      #2A4490;
+        --blue-light:     #E8EDF8;
+        /* ── Warning (roadmap fallback) ─────────────────── */
+        --warn-bg:        #FEF3C7;
+        --warn-border:    #FDE68A;
+        --warn-text:      #92400E;
+        /* ── Typography ──────────────────────────────────── */
+        --serif:          'Playfair Display', Georgia, 'Times New Roman', serif;
+        --sans:           'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     /* ── Global reset & typography ─────────────────────────────────────────── */
@@ -1080,7 +1098,7 @@ def _inject_css():
 
     /* ── App shell — warm tan frame visible on left/right sides ────────────── */
     .stApp {
-        background-color: #DDD8CE !important;
+        background-color: var(--app-shell) !important;
     }
 
     /* ── Hide Streamlit's native header bar (replaced by our fixed topbar) ── */
@@ -1161,8 +1179,8 @@ def _inject_css():
 
     /* ── Card — generic white card (st-card utility) ───────────────────────── */
     .st-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: var(--white);
+        border: 1px solid var(--warm-border);
         border-radius: 8px;
         padding: 24px;
         margin-bottom: 1.25rem;
@@ -1177,14 +1195,14 @@ def _inject_css():
         color: var(--copper);
         margin-bottom: 0.6rem;
         padding-bottom: 0.35rem;
-        border-bottom: 1px solid #E2E8F0;
+        border-bottom: 1px solid var(--warm-border);
     }
 
     /* ── Card — gold/copper accent (Best Match) ────────────────────────────── */
     .pf-card-gold {
         border: 2px solid var(--copper) !important;
         box-shadow: 0 6px 20px rgba(161,127,62,.16) !important;
-        background: linear-gradient(160deg, #FFFDF9 0%, var(--white) 100%) !important;
+        background: linear-gradient(160deg, var(--gold-warm) 0%, var(--white) 100%) !important;
     }
 
     /* ── Card — dashed placeholder ──────────────────────────────────────────── */
@@ -1211,7 +1229,7 @@ def _inject_css():
         letter-spacing: 0.08em;
     }
     .pf-badge-gold  { background: var(--gold-pale);  color: var(--copper-dark); }
-    .pf-badge-blue  { background: #E8EDF8;            color: #2A4490; }
+    .pf-badge-blue  { background: var(--blue-light);  color: var(--blue-dark); }
     .pf-badge-green { background: var(--success-bg);  color: var(--success); }
     .pf-badge-red   { background: var(--danger-bg);   color: var(--danger); }
 
@@ -1255,7 +1273,7 @@ def _inject_css():
     .pf-hero {
         text-align: center;
         padding: 4.5rem 1rem 3.5rem;
-        background: linear-gradient(160deg, #FFFDF8 0%, #FAF5EB 60%, #F5EDD8 100%);
+        background: linear-gradient(160deg, var(--warm-ivory) 0%, var(--warm-cream) 60%, var(--gold-pale) 100%);
         border-radius: 4px;
         margin-bottom: 2rem;
         border: 1px solid var(--warm-border);
@@ -1603,12 +1621,12 @@ def _inject_css():
     }
 
     /* ── Required asterisk ────────────────────────────────────────────────────── */
-    .pf-req { color: #C0392B; font-weight: 700; margin-left: 2px; }
+    .pf-req { color: var(--danger-req); font-weight: 700; margin-left: 2px; }
 
     /* ── Roadmap provider badge ───────────────────────────────────────────────── */
     .provider-badge {
         display: inline-block;
-        background: #F1F5F9; color: #334155;
+        background: var(--warm-muted); color: var(--charcoal-mid);
         font-size: 0.72rem; font-weight: 700;
         padding: 3px 8px; border-radius: 3px;
         margin-bottom: 0.3rem;
@@ -1665,7 +1683,7 @@ def _render_topbar():
     else:
         logo_html = (
             '<div class="pf-logo">Path<span>finder</span>'
-            '<span style="font-size:.65rem;font-weight:400;color:#9A8060;'
+            '<span style="font-size:.65rem;font-weight:400;color:var(--copper-muted);'
             'letter-spacing:.12em;text-transform:uppercase;'
             'font-family:\'Inter\',sans-serif;margin-left:.6rem;'
             'vertical-align:middle;">Career Intelligence</span></div>'
@@ -1717,7 +1735,7 @@ def _render_manual_form():
         st.markdown('<div class="pf-section-header">Education</div>', unsafe_allow_html=True)
         st.markdown(
             '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:#4A4A4A;">Full Name</span>'
+            'letter-spacing:.08em;color:var(--charcoal-mid);">Full Name</span>'
             '<span class="pf-req">*</span>',
             unsafe_allow_html=True
         )
@@ -1727,7 +1745,7 @@ def _render_manual_form():
         )
         st.markdown(
             '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:#4A4A4A;">Education Level</span>'
+            'letter-spacing:.08em;color:var(--charcoal-mid);">Education Level</span>'
             '<span class="pf-req">*</span>',
             unsafe_allow_html=True
         )
@@ -1744,7 +1762,7 @@ def _render_manual_form():
         )
         st.markdown(
             '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:#4A4A4A;">Major / Field of Study</span>'
+            'letter-spacing:.08em;color:var(--charcoal-mid);">Major / Field of Study</span>'
             '<span class="pf-req">*</span>',
             unsafe_allow_html=True
         )
@@ -1816,7 +1834,7 @@ def _render_manual_form():
                     unsafe_allow_html=True)
         st.markdown(
             '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:#4A4A4A;">Technical & Soft Skills</span>'
+            'letter-spacing:.08em;color:var(--charcoal-mid);">Technical & Soft Skills</span>'
             '<span class="pf-req">*</span>',
             unsafe_allow_html=True
         )
@@ -1845,7 +1863,7 @@ def _render_manual_form():
         st.markdown("---")
         st.markdown(
             '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:#4A4A4A;">Certifications / Licenses</span>',
+            'letter-spacing:.08em;color:var(--charcoal-mid);">Certifications / Licenses</span>',
             unsafe_allow_html=True
         )
         st.markdown(
@@ -1966,10 +1984,10 @@ def _render_results():
             card_cls = "pf-card pf-card-gold" if is_best else "pf-card"
             st.markdown(f"""
             <div class="{card_cls}" style="padding:1rem;min-height:72px;">
-              <div style="font-size:1.05rem;font-weight:700;color:#2C2C2C;margin-bottom:0.2rem;">
+              <div style="font-size:1.05rem;font-weight:700;color:var(--charcoal);margin-bottom:0.2rem;">
                 {match.get('title','')}
               </div>
-              <div style="font-size:0.72rem;color:#6B6B6B;font-family:'Inter',sans-serif;">{soc}</div>
+              <div style="font-size:0.72rem;color:var(--charcoal-soft);font-family:'Inter',sans-serif;">{soc}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -2015,9 +2033,9 @@ def _render_results():
         )
         st.markdown("""
         <div class="pf-card pf-card-dashed" style="text-align:center;padding:1.5rem 1rem;min-height:72px;">
-          <div style="font-size:1.8rem;color:#A17F3E;">+</div>
-          <div style="font-weight:600;color:#2C2C2C;font-size:0.95rem;">Add Profession</div>
-          <div style="font-size:0.75rem;color:#9A8060;margin-top:0.2rem;">Browse all O*NET roles</div>
+          <div style="font-size:1.8rem;color:var(--copper);">+</div>
+          <div style="font-weight:600;color:var(--charcoal);font-size:0.95rem;">Add Profession</div>
+          <div style="font-size:0.75rem;color:var(--copper-muted);margin-top:0.2rem;">Browse all O*NET roles</div>
         </div>
         """, unsafe_allow_html=True)
         all_onet = get_all_onet_titles()
@@ -2097,7 +2115,7 @@ def _render_skill_gap():
     with col_have:
         st.markdown(
             '<div style="font-family:\'Playfair Display\',serif;font-size:1rem;'
-            'font-weight:700;color:#2D6A4F;margin-bottom:0.6rem;">'
+            'font-weight:700;color:var(--success);margin-bottom:0.6rem;">'
             '&#9679; Skills You Have</div>',
             unsafe_allow_html=True
         )
@@ -2113,7 +2131,7 @@ def _render_skill_gap():
     with col_gap:
         st.markdown(
             '<div style="font-family:\'Playfair Display\',serif;font-size:1rem;'
-            'font-weight:700;color:#9B2335;margin-bottom:0.6rem;">'
+            'font-weight:700;color:var(--danger);margin-bottom:0.6rem;">'
             '&#9679; Skills to Acquire</div>',
             unsafe_allow_html=True
         )
@@ -2175,11 +2193,11 @@ def _render_skill_gap():
         with col:
             st.markdown(f"""
             <div class="{card_cls}" style="text-align:center;padding:1.5rem;">
-              <div style="font-size:2rem;color:#A17F3E;font-weight:700;">{plan['icon']}</div>
+              <div style="font-size:2rem;color:var(--copper);font-weight:700;">{plan['icon']}</div>
               <div style="font-size:1.05rem;font-weight:700;margin:0.5rem 0;">{plan['name']}</div>
-              <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:0.8rem;">{plan['desc']}</div>
-              <div style="font-size:1.7rem;font-weight:800;color:#A17F3E;font-family:'Playfair Display',serif;">{dur}</div>
-              <div style="font-size:0.75rem;color:#9A8060;margin-top:0.3rem;">
+              <div style="font-size:0.82rem;color:var(--charcoal-soft);margin-bottom:0.8rem;">{plan['desc']}</div>
+              <div style="font-size:1.7rem;font-weight:800;color:var(--copper);font-family:'Playfair Display',serif;">{dur}</div>
+              <div style="font-size:0.75rem;color:var(--copper-muted);margin-top:0.3rem;">
                 {plan['days']} days/wk &middot; {hours_pd}h/day &middot; finish {end_date}
               </div>
             </div>
@@ -2281,11 +2299,11 @@ def _render_roadmap():
 
     if not courses:
         st.markdown("""
-        <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;
+        <div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:4px;
                     padding:1.5rem;text-align:center;">
           <div style="font-size:2rem;margin-bottom:0.5rem;">&#128196;</div>
-          <div style="font-weight:600;color:#92400E;">No courses found for this role.</div>
-          <div style="font-size:0.83rem;color:#92400E;margin-top:0.25rem;">
+          <div style="font-weight:600;color:var(--warn-text);">No courses found for this role.</div>
+          <div style="font-size:0.83rem;color:var(--warn-text);margin-top:0.25rem;">
             Please go back and select a study plan.
           </div>
         </div>
@@ -2319,11 +2337,11 @@ def _render_roadmap():
                 col_info, col_action = st.columns([3, 1])
 
                 with col_info:
-                    dot_bg    = "#D8F3DC" if (done or verified) else "#F5EDD8"
-                    dot_color = "#2D6A4F" if (done or verified) else "#A17F3E"
+                    dot_bg    = "var(--success-bg)" if (done or verified) else "var(--gold-pale)"
+                    dot_color = "var(--success)"    if (done or verified) else "var(--copper)"
                     check_mark = "&#10003;" if (done or verified) else str(i + 1)
                     cert_line = (
-                        '<div style="font-size:0.73rem;color:#2D6A4F;margin-top:0.2rem;">'
+                        '<div style="font-size:0.73rem;color:var(--success);margin-top:0.2rem;">'
                         'Certificate submitted</div>'
                         if verified else ""
                     )
@@ -2335,10 +2353,10 @@ def _render_roadmap():
                                     align-items:center;justify-content:center;
                                     font-size:0.75rem;font-weight:700;">{check_mark}</div>
                         <div style="flex:1;">
-                          <div style="font-weight:700;font-size:0.95rem;color:#2C2C2C;
+                          <div style="font-weight:700;font-size:0.95rem;color:var(--charcoal);
                                       margin-bottom:0.2rem;">{title}</div>
                           <span class="provider-badge">{course.get('provider','')}</span>
-                          <div style="font-size:0.78rem;color:#6B6B6B;margin-top:0.3rem;">
+                          <div style="font-size:0.78rem;color:var(--charcoal-soft);margin-top:0.3rem;">
                             {int(hrs)}h &nbsp;&middot;&nbsp; ~{days_n} day(s)
                             &nbsp;&middot;&nbsp; starts day {cumday + 1}
                           </div>
@@ -2433,9 +2451,9 @@ def _study_planner_dialog():
             st.markdown(f"**{title}**  \n_{course.get('provider','')}_")
         with col_icon:
             icon_html = (
-                '<span style="font-size:1.4rem;color:#2D6A4F;">✅</span>'
+                '<span style="font-size:1.4rem;color:var(--success);">✅</span>'
                 if v_state["verified"] else
-                '<span style="font-size:1.4rem;color:#9B2335;">✗</span>'
+                '<span style="font-size:1.4rem;color:var(--danger);">✗</span>'
             )
             st.markdown(icon_html, unsafe_allow_html=True)
 
@@ -2523,7 +2541,7 @@ def _render_dashboard():
 
     ach_html = "".join(
         f'<span class="pf-achievement">{a}</span>' for a in achievements
-    ) if achievements else '<span style="font-size:0.75rem;color:#9A8060;">No achievements yet. Start completing courses!</span>'
+    ) if achievements else '<span style="font-size:0.75rem;color:var(--copper-muted);">No achievements yet. Start completing courses!</span>'
 
     st.markdown(f"""
     <div class="pf-profile-card">
@@ -2579,13 +2597,13 @@ def _render_dashboard():
         elif done:
             badge = '<span class="pf-badge pf-badge-blue">Completed</span>'
         else:
-            badge = '<span class="pf-badge" style="background:#F2EDE6;color:#6B6B6B;">Pending</span>'
+            badge = '<span class="pf-badge" style="background:var(--warm-muted);color:var(--charcoal-soft);">Pending</span>'
         st.markdown(f"""
         <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:0.65rem 0;border-bottom:1px solid #E8E0D5;">
+                    padding:0.65rem 0;border-bottom:1px solid var(--warm-border);">
           <div>
-            <span style="font-weight:600;color:#2C2C2C;font-size:0.88rem;">{course.get('title','')}</span>
-            <span style="font-size:0.72rem;color:#9A8060;margin-left:0.5rem;">
+            <span style="font-weight:600;color:var(--charcoal);font-size:0.88rem;">{course.get('title','')}</span>
+            <span style="font-size:0.72rem;color:var(--copper-muted);margin-left:0.5rem;">
               {course.get('provider','')} &middot; {hrs}h
             </span>
           </div>
@@ -2620,7 +2638,7 @@ def _render_upload():
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<p style="text-align:center;font-size:0.88rem;color:#6B6B6B;'
+        '<p style="text-align:center;font-size:0.88rem;color:var(--charcoal-soft);'
         'margin-top:0;margin-bottom:1.75rem;">'
         'Upload your CV and certificates, or fill in the form manually. '
         'Analyzed by Gemini AI against O*NET and SKKNI.</p>',
@@ -2646,7 +2664,7 @@ def _render_upload():
                     unsafe_allow_html=True,
                 )
                 st.markdown(
-                    '<p style="font-size:0.82rem;color:#6B6B6B;margin:0.1rem 0 0.75rem;">'
+                    '<p style="font-size:0.82rem;color:var(--charcoal-soft);margin:0.1rem 0 0.75rem;">'
                     'Upload your CV or resume in PDF format. Text will be extracted '
                     'and analyzed by AI.</p>',
                     unsafe_allow_html=True,
@@ -2679,11 +2697,11 @@ def _render_upload():
             with st.container(border=True):
                 st.markdown(
                     '<div class="st-card-section-label">Certificates & Licenses '
-                    '<span style="font-weight:400;color:#9A8060;">(Optional)</span></div>',
+                    '<span style="font-weight:400;color:var(--copper-muted);">(Optional)</span></div>',
                     unsafe_allow_html=True,
                 )
                 st.markdown(
-                    '<p style="font-size:0.82rem;color:#6B6B6B;margin:0.1rem 0 0.75rem;">'
+                    '<p style="font-size:0.82rem;color:var(--charcoal-soft);margin:0.1rem 0 0.75rem;">'
                     'Upload certificates or licenses (PDF, PNG, JPG). '
                     'These will be attached to your profile.</p>',
                     unsafe_allow_html=True,
@@ -2757,7 +2775,7 @@ def _render_landing():
     st.markdown("""
     <div class="pf-hero">
       <div style="font-family:'Inter',sans-serif;font-size:.68rem;font-weight:700;
-                  letter-spacing:.15em;text-transform:uppercase;color:#A17F3E;
+                  letter-spacing:.15em;text-transform:uppercase;color:var(--copper);
                   margin-bottom:.9rem;">Powered by Gemini AI &nbsp;&middot;&nbsp; O*NET &nbsp;&middot;&nbsp; SKKNI</div>
       <h1>From Career Confusion to an <span>Actionable, Adaptive Career Route</span></h1>
       <p>AI-powered career guidance for ASEAN students, mapped to global O*NET standards and Indonesian SKKNI competency frameworks.</p>
@@ -2777,11 +2795,11 @@ def _render_landing():
         with col:
             st.markdown(f"""
             <div class="pf-card" style="text-align:center;padding:1.75rem 1.5rem;">
-              <div style="font-size:1.6rem;color:#A17F3E;margin-bottom:.65rem;line-height:1;">{icon}</div>
+              <div style="font-size:1.6rem;color:var(--copper);margin-bottom:.65rem;line-height:1;">{icon}</div>
               <div style="font-family:'Playfair Display',Georgia,serif;font-weight:600;
-                          font-size:1rem;margin-bottom:.5rem;color:#2C2C2C;
+                          font-size:1rem;margin-bottom:.5rem;color:var(--charcoal);
                           letter-spacing:.01em;">{title}</div>
-              <div style="font-size:.83rem;color:#6B6B6B;line-height:1.65;">{desc}</div>
+              <div style="font-size:.83rem;color:var(--charcoal-soft);line-height:1.65;">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
 
