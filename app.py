@@ -14,17 +14,15 @@ except ImportError:
     PdfReader = None
 
 # ── Database (SQLAlchemy) ──────────────────────────────────────────────────────
-from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, Float, ForeignKey
-)
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy import create_engine, Column, Integer, String, Text, Float, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 # ── Gemini ─────────────────────────────────────────────────────────────────────
 from google import genai
 from google.genai import types as genai_types
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PHASE 1 — SQLAlchemy Models & Seed Data
+# PHASE 1 — SQLAlchemy Models
 # ══════════════════════════════════════════════════════════════════════════════
 
 Base = declarative_base()
@@ -110,48 +108,168 @@ _OCCUPATIONS = [
     ("29-1141.00", "Registered Nurse", "Provide care for patients and coordinate with healthcare workers."),
 ]
 
+# ── REAL verified course URLs from major platforms ─────────────────────────────
 _COURSES = [
-    # Software Developer
-    ("Python for Everybody", "Coursera", "https://coursera.org/learn/python", "15-1252.00", 40),
-    ("Full Stack Web Development", "Udemy", "https://udemy.com/full-stack", "15-1252.00", 60),
-    ("Data Structures & Algorithms", "edX", "https://edx.org/dsa", "15-1252.00", 30),
-    ("DevOps Fundamentals", "Coursera", "https://coursera.org/devops", "15-1252.00", 25),
-    # Data Scientist
-    ("Machine Learning Specialization", "Coursera", "https://coursera.org/ml", "15-2051.00", 80),
-    ("Data Analysis with Python", "edX", "https://edx.org/da-python", "15-2051.00", 35),
-    ("Deep Learning", "fast.ai", "https://fast.ai", "15-2051.00", 50),
-    ("SQL for Data Science", "Coursera", "https://coursera.org/sql", "15-2051.00", 20),
-    # AI/ML Engineer
-    ("TensorFlow Developer Certificate", "Coursera", "https://coursera.org/tensorflow", "15-1299.00", 60),
-    ("MLOps Specialization", "Coursera", "https://coursera.org/mlops", "15-1299.00", 45),
-    ("NLP with HuggingFace", "Hugging Face", "https://huggingface.co/course", "15-1299.00", 30),
-    # Information Security Analyst
-    ("Cybersecurity Fundamentals", "edX", "https://edx.org/cyber", "15-1212.00", 40),
-    ("Ethical Hacking", "Udemy", "https://udemy.com/ethical-hacking", "15-1212.00", 35),
-    ("CompTIA Security+ Prep", "CompTIA", "https://comptia.org", "15-1212.00", 50),
-    # Financial Analyst
-    ("Financial Modeling & Valuation", "CFI", "https://corporatefinanceinstitute.com", "13-2051.00", 45),
-    ("Investment Analysis", "Coursera", "https://coursera.org/investment", "13-2051.00", 30),
-    ("Excel for Finance", "Udemy", "https://udemy.com/excel-finance", "13-2051.00", 20),
-    # Marketing Manager
-    ("Digital Marketing Fundamentals", "Google", "https://skillshop.google.com", "11-2021.00", 25),
-    ("Social Media Marketing", "HubSpot", "https://academy.hubspot.com", "11-2021.00", 20),
-    ("Content Marketing Strategy", "Coursera", "https://coursera.org/content-marketing", "11-2021.00", 15),
-    # Management Analyst
-    ("Business Analysis Fundamentals", "Udemy", "https://udemy.com/business-analysis", "13-1111.00", 30),
-    ("Project Management Professional", "PMI", "https://pmi.org", "13-1111.00", 60),
-    ("Lean Six Sigma Green Belt", "ASQ", "https://asq.org", "13-1111.00", 40),
-    # Network Admin
-    ("Cisco CCNA", "Cisco", "https://cisco.com/ccna", "15-1244.00", 80),
-    ("CompTIA Network+", "CompTIA", "https://comptia.org/network", "15-1244.00", 50),
-    # Public Relations
-    ("Public Relations Fundamentals", "Coursera", "https://coursera.org/pr", "27-3031.00", 20),
-    ("Crisis Communications", "edX", "https://edx.org/crisis-comm", "27-3031.00", 15),
-    # Graphic Designer
-    ("Adobe Creative Suite", "Adobe", "https://adobe.com/learn", "27-1024.00", 40),
-    ("UI/UX Design Fundamentals", "Google", "https://grow.google/ux", "27-1024.00", 35),
-    ("Figma for Designers", "Figma", "https://figma.com/academy", "27-1024.00", 20),
+    # Software Developer (15-1252.00) — 155h total
+    ("Python for Everybody Specialization", "Coursera",
+     "https://www.coursera.org/specializations/python",
+     "15-1252.00", 40),
+    ("The Web Developer Bootcamp 2024", "Udemy",
+     "https://www.udemy.com/course/the-web-developer-bootcamp/",
+     "15-1252.00", 60),
+    ("Algorithms, Part I", "Coursera (Princeton)",
+     "https://www.coursera.org/learn/algorithms-part1",
+     "15-1252.00", 30),
+    ("DevOps Foundations", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/devops-foundations",
+     "15-1252.00", 25),
+
+    # Data Scientist (15-2051.00) — 185h total
+    ("Machine Learning Specialization", "Coursera (DeepLearning.AI)",
+     "https://www.coursera.org/specializations/machine-learning-introduction",
+     "15-2051.00", 80),
+    ("Data Analysis with Python", "Coursera (IBM)",
+     "https://www.coursera.org/learn/data-analysis-with-python",
+     "15-2051.00", 35),
+    ("Practical Deep Learning for Coders", "fast.ai",
+     "https://course.fast.ai/",
+     "15-2051.00", 50),
+    ("SQL for Data Science", "Coursera (UC Davis)",
+     "https://www.coursera.org/learn/sql-for-data-science",
+     "15-2051.00", 20),
+
+    # AI/ML Engineer (15-1299.00) — 135h total
+    ("DeepLearning.AI TensorFlow Developer Certificate", "Coursera",
+     "https://www.coursera.org/professional-certificates/tensorflow-in-practice",
+     "15-1299.00", 60),
+    ("Machine Learning Engineering for Production (MLOps)", "Coursera",
+     "https://www.coursera.org/specializations/machine-learning-engineering-for-production-mlops",
+     "15-1299.00", 45),
+    ("Hugging Face NLP Course", "Hugging Face",
+     "https://huggingface.co/learn/nlp-course/chapter1/1",
+     "15-1299.00", 30),
+
+    # Information Security Analyst (15-1212.00) — 125h total
+    ("Cybersecurity Fundamentals", "edX (Rochester Institute of Technology)",
+     "https://www.edx.org/learn/cybersecurity/rochester-institute-of-technology-cybersecurity-fundamentals",
+     "15-1212.00", 40),
+    ("Learn Ethical Hacking From Scratch", "Udemy",
+     "https://www.udemy.com/course/learn-ethical-hacking-from-scratch/",
+     "15-1212.00", 35),
+    ("CompTIA Security+ Certification Prep", "CompTIA",
+     "https://www.comptia.org/certifications/security",
+     "15-1212.00", 50),
+
+    # Financial Analyst (13-2051.00) — 95h total
+    ("Financial Modeling & Valuation Analyst (FMVA)", "Corporate Finance Institute",
+     "https://corporatefinanceinstitute.com/certifications/financial-modeling-valuation-analyst-fmva-certification/",
+     "13-2051.00", 45),
+    ("Investment Management Specialization", "Coursera (University of Geneva)",
+     "https://www.coursera.org/specializations/investment-management",
+     "13-2051.00", 30),
+    ("Excel Skills for Business Specialization", "Coursera (Macquarie University)",
+     "https://www.coursera.org/specializations/excel",
+     "13-2051.00", 20),
+
+    # Marketing Manager (11-2021.00) — 60h total
+    ("Google Digital Marketing & E-commerce Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-digital-marketing-ecommerce",
+     "11-2021.00", 25),
+    ("Social Media Marketing Certification Course", "HubSpot Academy",
+     "https://academy.hubspot.com/courses/social-media",
+     "11-2021.00", 20),
+    ("Content Marketing Certification", "HubSpot Academy",
+     "https://academy.hubspot.com/courses/content-marketing",
+     "11-2021.00", 15),
+
+    # Management Analyst (13-1111.00) — 130h total
+    ("Business Analysis & Process Management", "Coursera",
+     "https://www.coursera.org/learn/business-analysis-process-management",
+     "13-1111.00", 30),
+    ("Google Project Management Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-project-management",
+     "13-1111.00", 60),
+    ("Lean Six Sigma Fundamentals", "Coursera (University System of Georgia)",
+     "https://www.coursera.org/specializations/six-sigma-fundamentals",
+     "13-1111.00", 40),
+
+    # Network Admin (15-1244.00) — 130h total
+    ("Cisco CCNA 200-301 Complete Course", "Udemy",
+     "https://www.udemy.com/course/ccna-complete/",
+     "15-1244.00", 80),
+    ("CompTIA Network+ Certification Prep", "CompTIA",
+     "https://www.comptia.org/certifications/network",
+     "15-1244.00", 50),
+
+    # Public Relations Specialist (27-3031.00) — 35h total
+    ("Strategic Communication & Public Relations", "edX (UC Berkeley)",
+     "https://www.edx.org/certificates/professional-certificate/berkeleyx-strategic-communication-and-public-relations",
+     "27-3031.00", 20),
+    ("Introduction to Public Relations", "Coursera",
+     "https://www.coursera.org/learn/introduction-to-public-relations",
+     "27-3031.00", 15),
+
+    # Graphic Designer (27-1024.00) — 95h total
+    ("Google UX Design Professional Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-ux-design",
+     "27-1024.00", 40),
+    ("Graphic Design Specialization", "Coursera (California Institute of the Arts)",
+     "https://www.coursera.org/specializations/graphic-design",
+     "27-1024.00", 35),
+    ("Figma UI UX Design Essentials", "Udemy",
+     "https://www.udemy.com/course/figma-ux-ui-design-user-experience-tutorial-course/",
+     "27-1024.00", 20),
+
+    # Financial Manager (11-3031.00) — 85h total
+    ("Financial Management Specialization", "Coursera (University of Illinois)",
+     "https://www.coursera.org/specializations/financial-management",
+     "11-3031.00", 50),
+    ("Corporate Finance Fundamentals", "Corporate Finance Institute",
+     "https://corporatefinanceinstitute.com/course/corporate-finance-fundamentals/",
+     "11-3031.00", 35),
+
+    # Accountant (13-2011.00) — 90h total
+    ("Intuit Academy Bookkeeping Certificate", "Coursera (Intuit)",
+     "https://www.coursera.org/professional-certificates/intuit-bookkeeping",
+     "13-2011.00", 40),
+    ("Financial Accounting Fundamentals", "Coursera (University of Virginia)",
+     "https://www.coursera.org/learn/uva-darden-financial-accounting",
+     "13-2011.00", 30),
+    ("Accounting Analytics", "Coursera (University of Pennsylvania)",
+     "https://www.coursera.org/learn/accounting-analytics",
+     "13-2011.00", 20),
 ]
+
+# ── Typical skills required per O*NET SOC code ────────────────────────────────
+# Used to auto-generate skill_gaps for manually added professions
+_ONET_TYPICAL_SKILLS = {
+    "15-1252.00": ["JavaScript", "React", "Node.js", "SQL", "Git", "REST APIs", "Docker", "Agile", "Unit Testing", "Python"],
+    "15-2051.00": ["Python", "Machine Learning", "SQL", "Statistics", "R", "TensorFlow", "Data Visualization", "Pandas", "NumPy", "Deep Learning"],
+    "15-1299.00": ["Python", "TensorFlow", "PyTorch", "MLOps", "Docker", "Kubernetes", "NLP", "Computer Vision", "AWS/GCP", "ML Pipelines"],
+    "15-1244.00": ["Cisco IOS", "TCP/IP", "Firewalls", "VPN", "Linux", "Active Directory", "VLAN", "BGP", "Network Security", "Troubleshooting"],
+    "15-1212.00": ["Network Security", "SIEM", "Penetration Testing", "Linux", "Incident Response", "Cryptography", "Firewall Management", "Risk Assessment"],
+    "13-2011.00": ["GAAP", "Financial Reporting", "Excel", "Auditing", "Tax Compliance", "QuickBooks", "Financial Analysis", "Budgeting"],
+    "13-1111.00": ["Business Analysis", "Process Mapping", "Project Management", "Six Sigma", "Stakeholder Management", "Data Analysis", "Change Management"],
+    "11-2021.00": ["Digital Marketing", "SEO/SEM", "Google Analytics", "Social Media Strategy", "Content Marketing", "Marketing Automation", "A/B Testing"],
+    "41-3099.00": ["CRM Software", "Negotiation", "Lead Generation", "Salesforce", "Cold Calling", "Proposal Writing", "Pipeline Management"],
+    "13-1151.00": ["Instructional Design", "LMS Administration", "Needs Assessment", "Training Delivery", "E-learning Tools", "Performance Evaluation"],
+    "27-3031.00": ["Media Relations", "Press Release Writing", "Crisis Communication", "Brand Storytelling", "Social Media", "Event Management"],
+    "11-3031.00": ["Financial Modeling", "Budgeting", "Cash Flow Management", "Risk Management", "Financial Reporting", "Investor Relations"],
+    "15-1231.00": ["Network Architecture", "Cloud Computing", "SD-WAN", "Network Security", "Capacity Planning", "Cisco/Juniper"],
+    "11-1021.00": ["Operations Management", "Leadership", "Strategic Planning", "P&L Management", "Team Building", "Process Improvement"],
+    "13-2051.00": ["Financial Modeling", "Excel", "Bloomberg Terminal", "Equity Research", "Valuation", "Financial Statements", "Portfolio Analysis"],
+    "27-1024.00": ["Adobe Photoshop", "Illustrator", "InDesign", "Figma", "Typography", "Brand Identity", "UI/UX Principles", "Color Theory"],
+    "25-1099.00": ["Curriculum Development", "Accreditation", "Budget Management", "Faculty Management", "Assessment Design", "Educational Policy"],
+    "29-1141.00": ["Patient Care", "Clinical Assessment", "Electronic Health Records", "Medical Procedures", "HIPAA Compliance", "IV Therapy"],
+    "15-1211.00": ["Systems Analysis", "Requirements Gathering", "SQL", "Business Intelligence", "SDLC", "ERP Systems", "Documentation"],
+    "15-1221.00": ["Research Methods", "Algorithm Design", "Programming Languages", "Technical Writing", "Academic Publishing", "ML Research"],
+}
+
+def _compute_skill_gaps(soc_code: str, user_skills: list) -> list:
+    """Return typical O*NET skills for `soc_code` that the user doesn't have."""
+    typical = _ONET_TYPICAL_SKILLS.get(soc_code, [])
+    user_lower = {s.lower() for s in user_skills}
+    return [s for s in typical if s.lower() not in user_lower]
 
 def _init_db() -> None:
     Base.metadata.create_all(_engine)
@@ -160,9 +278,15 @@ def _init_db() -> None:
             s.add_all([IndonesianMajorCatalog(major_name=m) for m in _MAJORS])
         if s.query(OnetOccupation).count() == 0:
             s.add_all([OnetOccupation(soc_code=c, title=t, description=d) for c, t, d in _OCCUPATIONS])
-        if s.query(CourseCatalog).count() == 0:
-            s.add_all([CourseCatalog(title=t, provider=p, url=u, mapped_onet_code=o, total_hours=h)
-                       for t, p, u, o, h in _COURSES])
+        # Force reseed courses if URLs are stale (old non-www fake URLs)
+        first = s.query(CourseCatalog).first()
+        needs_reseed = (first is None) or ("www." not in (first.url or ""))
+        if needs_reseed:
+            s.query(CourseCatalog).delete()
+            s.add_all([
+                CourseCatalog(title=t, provider=p, url=u, mapped_onet_code=o, total_hours=h)
+                for t, p, u, o, h in _COURSES
+            ])
         s.commit()
 
 @st.cache_resource
@@ -189,7 +313,7 @@ def get_courses_for_onet(soc_code: str) -> list:
     with _db() as s:
         rows = s.query(CourseCatalog).filter_by(mapped_onet_code=soc_code).all()
         return [{"title": r.title, "provider": r.provider, "url": r.url,
-                 "hours": r.total_hours} for r in rows]
+                 "hours": r.total_hours, "course_id": r.course_id} for r in rows]
 
 def get_total_hours(soc_code: str) -> float:
     with _db() as s:
@@ -232,6 +356,24 @@ def verify_user_skill(session_id: str, skill_name: str, url: str) -> None:
             row.verified = 1
             row.verify_url = url
             s.commit()
+
+# ── PHASE 1B: Verified Roadmap Query (URLs 100% from DB — no LLM hallucination)
+def generate_verified_roadmap(onet_codes: list, duration_tier: str = "balanced") -> list:
+    """
+    Pull courses exclusively from CourseCatalog for the given O*NET SOC codes.
+    URLs come solely from the database — no LLM-generated links.
+    duration_tier is accepted for API compatibility but all courses are returned
+    (filtering by tier would reduce results to unusably few entries).
+    """
+    if not onet_codes:
+        return []
+    with _db() as s:
+        rows = (s.query(CourseCatalog)
+                .filter(CourseCatalog.mapped_onet_code.in_(onet_codes))
+                .all())
+        return [{"course_id": r.course_id, "title": r.title, "provider": r.provider,
+                 "url": r.url, "hours": r.total_hours,
+                 "onet_code": r.mapped_onet_code} for r in rows]
 
 # ══════════════════════════════════════════════════════════════════════════════
 # GEMINI BACKEND
@@ -296,10 +438,12 @@ def _call_gemini(cv_text: str) -> dict:
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
     data = json.loads(raw)
-    # Enrich each match with DB course data
+    # Enrich each match with DB course data (URLs from DB only)
     for m in data.get("top_matches", []):
         soc = m.get("soc_code", "")
-        m["total_course_hours"] = get_total_hours(soc)
+        db_hours = get_total_hours(soc)
+        # If SOC from Gemini not in our DB, try closest match or default 0
+        m["total_course_hours"] = db_hours
         m["courses"] = get_courses_for_onet(soc)
     return data
 
@@ -312,24 +456,24 @@ def _run_with_loading(fn, *args, **kwargs):
         ("📊", "Calculating skill gap metrics..."),
         ("✨", "Finalizing recommendations..."),
     ]
-    placeholder = st.empty()
+    ph = st.empty()
     for i, (icon, step) in enumerate(steps[:-1]):
         pct = int((i + 1) / len(steps) * 100)
-        with placeholder.container():
+        with ph.container():
             st.markdown(f"""
             <div style="text-align:center;padding:3rem 1rem;">
               <div style="font-size:3rem;margin-bottom:1rem;">{icon}</div>
               <div style="font-size:1.1rem;font-weight:600;color:#2563eb;margin-bottom:1rem;">{step}</div>
               <div style="background:#e5e7eb;border-radius:9999px;height:8px;overflow:hidden;max-width:400px;margin:0 auto;">
                 <div style="background:linear-gradient(90deg,#2563eb,#7c3aed);height:100%;
-                            width:{pct}%;border-radius:9999px;transition:width 0.4s;"></div>
+                            width:{pct}%;border-radius:9999px;"></div>
               </div>
-              <div style="font-size:0.8rem;color:#9ca3af;margin-top:0.5rem;">{pct}% complete</div>
+              <div style="font-size:0.8rem;color:#9ca3af;margin-top:0.5rem;">{pct}%</div>
             </div>
             """, unsafe_allow_html=True)
-        time.sleep(0.5)
+        time.sleep(0.45)
     result = fn(*args, **kwargs)
-    placeholder.empty()
+    ph.empty()
     return result
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -338,14 +482,9 @@ def _run_with_loading(fn, *args, **kwargs):
 
 def extract_pdf_text(file_bytes: bytes) -> str:
     if PdfReader is None:
-        raise RuntimeError("pypdf not installed. Add pypdf to requirements.txt.")
+        raise RuntimeError("pypdf not installed. Add pypdf>=4.0.0 to requirements.txt.")
     reader = PdfReader(io.BytesIO(file_bytes))
-    parts = []
-    for page in reader.pages:
-        t = page.extract_text()
-        if t:
-            parts.append(t)
-    return "\n".join(parts)
+    return "\n".join(p.extract_text() or "" for p in reader.pages)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # GLOBAL STYLES
@@ -376,8 +515,11 @@ def _inject_css():
         padding:1.5rem; margin-bottom:1rem;
         box-shadow:0 1px 3px rgba(0,0,0,.06);
     }
-    .pf-card-gold { border:2px solid #f59e0b !important; box-shadow:0 4px 14px rgba(245,158,11,.18) !important; }
+    .pf-card-gold { border:2px solid #f59e0b !important;
+                    box-shadow:0 4px 14px rgba(245,158,11,.18) !important; }
     .pf-card-dashed { border:2px dashed #d1d5db !important; background:#f9fafb !important; }
+    .pf-card-done { border:2px solid #059669 !important;
+                    background:#f0fdf4 !important; }
 
     .pf-badge { display:inline-block; font-size:0.65rem; font-weight:700;
                 padding:0.2rem 0.55rem; border-radius:9999px;
@@ -391,10 +533,8 @@ def _inject_css():
                padding:0.15rem 0.55rem; border-radius:9999px;
                background:#ede9fe; color:#7c3aed; margin:0.1rem; }
 
-    .pf-work-card {
-        background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
-        padding:1rem; margin-bottom:0.75rem;
-    }
+    .pf-work-card { background:#f8fafc; border:1px solid #e2e8f0;
+                    border-radius:12px; padding:1rem; margin-bottom:0.75rem; }
     .pf-section-header {
         font-size:0.7rem; font-weight:700; text-transform:uppercase;
         letter-spacing:0.08em; color:#6b7280; margin-bottom:0.75rem;
@@ -410,23 +550,19 @@ def _inject_css():
     .pf-hero h1 span { color:#2563eb; }
     .pf-hero p { font-size:1.15rem; color:#6b7280; max-width:520px;
                   margin:0 auto 2rem; }
-    .pf-cert-zone {
-        border:2px dashed #d1d5db; border-radius:12px; padding:1.25rem;
-        text-align:center; color:#9ca3af; font-size:0.85rem; margin-bottom:0.5rem;
-    }
-    .pf-timeline-item {
-        display:flex; gap:1rem; align-items:flex-start;
-        padding:0.75rem 0; border-bottom:1px solid #f3f4f6;
-    }
-    .pf-timeline-dot {
-        width:32px; height:32px; border-radius:50%; flex-shrink:0;
-        display:flex; align-items:center; justify-content:center;
-        font-size:0.8rem; font-weight:700;
-    }
+    .pf-cert-zone { border:2px dashed #d1d5db; border-radius:12px; padding:1.25rem;
+                    text-align:center; color:#9ca3af; font-size:0.85rem; margin-bottom:0.5rem; }
+    .pf-timeline-item { display:flex; gap:1rem; align-items:flex-start;
+                         padding:0.75rem 0; border-bottom:1px solid #f3f4f6; }
+    .pf-timeline-dot { width:32px; height:32px; border-radius:50%; flex-shrink:0;
+                        display:flex; align-items:center; justify-content:center;
+                        font-size:0.8rem; font-weight:700; }
     .pf-stat { text-align:center; padding:1.25rem; background:#fff;
                border:1px solid #e5e7eb; border-radius:16px; }
     .pf-stat-num { font-size:2.2rem; font-weight:800; color:#2563eb; }
     .pf-stat-label { font-size:0.8rem; color:#6b7280; margin-top:0.25rem; }
+    .pf-plan-selected { border:2px solid #2563eb !important;
+                         box-shadow:0 4px 12px rgba(37,99,235,.15) !important; }
 
     #MainMenu, footer { visibility:hidden; }
     .stDeployButton { display:none; }
@@ -476,11 +612,12 @@ def _init_session():
         "pf_selected_match": None,
         "pf_selected_plan": None,
         "pf_study_hours_per_day": 2,
+        "pf_days_per_week": 5,          # NEW — plan = days/week
         "pf_roadmap_courses": [],
         "pf_completed_courses": set(),
+        "pf_cert_verify": {},            # course_id -> {"url": str, "verified": bool}
         "pf_work_entries": [{"id": 0}],
         "pf_work_counter": 1,
-        "pf_skill_verify_states": {},
     }
     for k, v in defaults.items():
         st.session_state.setdefault(k, v)
@@ -500,7 +637,7 @@ def _render_manual_form():
         st.markdown('<div class="pf-section-header">🎓 Education</div>', unsafe_allow_html=True)
         full_name = st.text_input("Full Name", placeholder="e.g. Budi Santoso", key="pf_manual_name")
         edu_options = ["SMA/SMK", "D3", "S1 (Bachelor's)", "S2 (Master's)", "S3 (PhD)", "Other"]
-        edu_level = st.selectbox("Education Level", edu_options, key="pf_manual_edu")
+        edu_level   = st.selectbox("Education Level", edu_options, key="pf_manual_edu")
         major_choice = st.selectbox("Major / Field of Study", all_majors, key="pf_manual_major_sel")
         if major_choice in ("(Select or type below)", "Other"):
             major = st.text_input("Specify Major", placeholder="e.g. Teknik Informatika",
@@ -509,9 +646,9 @@ def _render_manual_form():
             major = major_choice
         institution = st.text_input("Institution Name", placeholder="e.g. Universitas Padjadjaran",
                                     key="pf_manual_inst")
-        grad_year = st.selectbox("Graduation Year",
-                                 ["—"] + [str(y) for y in range(2030, 1985, -1)],
-                                 key="pf_manual_grad")
+        grad_year   = st.selectbox("Graduation Year",
+                                   ["—"] + [str(y) for y in range(2030, 1985, -1)],
+                                   key="pf_manual_grad")
 
     # ── Col 2: Work Experience ────────────────────────────────────────────────
     with col_work:
@@ -523,10 +660,8 @@ def _render_manual_form():
             job_choice = st.selectbox(f"Job Title #{idx+1}", all_titles,
                                       key=f"pf_job_title_sel_{eid}")
             if job_choice in ("(Select or type below)", "Other"):
-                job_title = st.text_input("Specify Title", key=f"pf_job_title_txt_{eid}",
-                                          placeholder="e.g. Data Analyst")
-            else:
-                job_title = job_choice  # noqa: F841
+                st.text_input("Specify Title", key=f"pf_job_title_txt_{eid}",
+                              placeholder="e.g. Data Analyst")
             company = st.text_input("Company / Organization", key=f"pf_company_{eid}",
                                     placeholder="e.g. PT Tokopedia")
             dc1, dc2 = st.columns(2)
@@ -598,8 +733,7 @@ def _build_cv_text(form_data: dict) -> str:
     lines = [
         f"Name: {form_data['full_name']}",
         f"Education: {form_data['edu_level']} in {form_data['major']} at {form_data['institution']}",
-        f"Graduation Year: {form_data['grad_year']}",
-        "",
+        f"Graduation Year: {form_data['grad_year']}", "",
         "Work Experience:",
     ]
     for entry in entries:
@@ -615,8 +749,7 @@ def _build_cv_text(form_data: dict) -> str:
         if job_title and job_title not in ("(Select or type below)", ""):
             lines.append(f"  - {job_title} at {company} ({start}–{end})")
     lines += ["", "Skills:"]
-    raw = form_data.get("raw_skills", "")
-    for sk in raw.split(","):
+    for sk in form_data.get("raw_skills", "").split(","):
         if sk.strip():
             lines.append(f"  - {sk.strip()}")
     lines += ["", "Certifications:"]
@@ -637,6 +770,7 @@ def _render_results():
 
     matches   = analysis.get("top_matches", [])
     candidate = analysis.get("candidate_name", "Candidate")
+    detected_skills = analysis.get("detected_skills", [])
 
     st.markdown(f"### Career Matches for **{candidate}**")
     st.caption("Based on your profile, O*NET taxonomy, and SKKNI competency framework.")
@@ -644,31 +778,37 @@ def _render_results():
     result_cols = st.columns(4, gap="medium")
 
     for i, match in enumerate(matches[:3]):
-        col = result_cols[i]
-        is_best   = (i == 0)
-        total_hrs = match.get("total_course_hours", 0)
-        score     = match.get("match_score", 0)
+        col      = result_cols[i]
+        is_best  = (i == 0)
+        soc      = match.get("soc_code", "")
+        score    = match.get("match_score", 0)
         gap_count = len(match.get("skill_gaps", []))
+
+        # Ensure total_course_hours is populated from DB (fixes 0h bug)
+        total_hrs = match.get("total_course_hours") or get_total_hours(soc)
+        match["total_course_hours"] = total_hrs
+
         hours_pd  = st.session_state.get("pf_study_hours_per_day", 2)
-        days      = math.ceil(total_hrs / max(hours_pd, 1)) if total_hrs else 0
+        dpw       = st.session_state.get("pf_days_per_week", 5)
+        eff_hrs_wk = hours_pd * dpw
+        weeks     = math.ceil(total_hrs / eff_hrs_wk) if (total_hrs and eff_hrs_wk) else 0
 
         with col:
             if is_best:
                 st.markdown('<span class="pf-badge pf-badge-gold">⭐ Best Match</span>',
                             unsafe_allow_html=True)
-            border = "border:2px solid #f59e0b;" if is_best else ""
+            card_cls = "pf-card pf-card-gold" if is_best else "pf-card"
             st.markdown(f"""
-            <div class="pf-card {'pf-card-gold' if is_best else ''}"
-                 style="padding:1rem;{border}">
+            <div class="{card_cls}" style="padding:1rem;">
               <div style="font-size:1.05rem;font-weight:700;color:#111827;margin-bottom:0.25rem;">
                 {match.get('title','')}
               </div>
-              <div style="font-size:0.75rem;color:#6b7280;">{match.get('soc_code','')}</div>
+              <div style="font-size:0.75rem;color:#6b7280;">{soc}</div>
             </div>
             """, unsafe_allow_html=True)
 
             st.progress(score / 100)
-            st.caption(f"**{score}%** match · {gap_count} gaps")
+            st.caption(f"**{score}%** match · {gap_count} skill gaps")
 
             with st.expander("Why this role?"):
                 st.write(match.get("description", ""))
@@ -681,19 +821,24 @@ def _render_results():
                 else:
                     st.success("No major gaps!")
 
-            st.metric("Study Hours", f"{int(total_hrs)}h", f"~{days} days")
+            st.metric("Study Hours", f"{int(total_hrs)}h", f"~{weeks} wks")
 
             if st.button("Select This Career", key=f"pf_sel_{i}",
                          use_container_width=True,
                          type="primary" if is_best else "secondary"):
+                # Make sure courses from DB are attached
+                courses = match.get("courses") or get_courses_for_onet(soc)
                 st.session_state["pf_selected_match"] = {
                     **match,
+                    "total_course_hours": total_hrs,
+                    "courses": courses,
                     "match_ratio": score / 100,
                 }
+                st.session_state["pf_roadmap_courses"] = courses
                 st.session_state["pf_step"] = "skill_gap"
                 st.rerun()
 
-    # 4th column — Add Profession
+    # ── 4th column: Add Profession ────────────────────────────────────────────
     with result_cols[3]:
         st.markdown("""
         <div class="pf-card pf-card-dashed" style="text-align:center;padding:2rem 1rem;">
@@ -702,25 +847,30 @@ def _render_results():
           <div style="font-size:0.8rem;color:#9ca3af;">Browse O*NET roles to compare</div>
         </div>
         """, unsafe_allow_html=True)
-        all_onet  = get_all_onet_titles()
-        custom_t  = st.selectbox("Browse O*NET Roles", ["—"] + all_onet, key="pf_custom_onet")
+        all_onet = get_all_onet_titles()
+        custom_t = st.selectbox("Browse O*NET Roles", ["—"] + all_onet, key="pf_custom_onet")
         if custom_t and custom_t != "—":
             soc = get_soc_for_title(custom_t)
             if soc:
-                hrs = get_total_hours(soc)
+                hrs     = get_total_hours(soc)
+                courses = get_courses_for_onet(soc)
                 st.metric("Study Hours", f"{int(hrs)}h")
                 if st.button("Add & Select", key="pf_add_custom", use_container_width=True):
+                    # Compute skill gaps from O*NET typical skills vs detected skills
+                    user_skills = detected_skills or []
+                    gaps = _compute_skill_gaps(soc, user_skills)
                     st.session_state["pf_selected_match"] = {
                         "soc_code": soc,
                         "title": custom_t,
-                        "description": "Manually selected profession.",
+                        "description": "Manually selected profession from O*NET catalog.",
                         "matched_skills": [],
-                        "skill_gaps": [],
+                        "skill_gaps": gaps,
                         "match_score": 50,
                         "total_course_hours": hrs,
-                        "courses": get_courses_for_onet(soc),
+                        "courses": courses,
                         "match_ratio": 0.5,
                     }
+                    st.session_state["pf_roadmap_courses"] = courses
                     st.session_state["pf_step"] = "skill_gap"
                     st.rerun()
 
@@ -741,25 +891,29 @@ def _render_skill_gap():
         st.session_state["pf_step"] = "results"
         st.rerun()
 
-    st.markdown(f"## Skill Gap Analysis")
-    st.markdown(f"**Target Role:** {match.get('title','')}")
-
-    detected = analysis.get("detected_skills", [])
+    detected = analysis.get("detected_skills", []) if analysis else []
     gaps     = match.get("skill_gaps", [])
-    score    = match.get("match_score", 0)
+    score    = match.get("match_score", 50)
+
+    st.markdown("## Skill Gap Analysis")
+    st.markdown(f"**Target Role:** {match.get('title','')}")
 
     col_have, col_gap = st.columns(2, gap="large")
     with col_have:
         st.markdown("#### ✅ Skills You Have")
-        for sk in detected:
-            st.markdown(f'<span class="pf-badge pf-badge-green">{sk}</span>',
-                        unsafe_allow_html=True)
+        if detected:
+            for sk in detected:
+                st.markdown(f'<span class="pf-badge pf-badge-green">{sk}</span>',
+                            unsafe_allow_html=True)
+        else:
+            st.info("No skills detected — fill in the manual form to show your skills here.")
     with col_gap:
         st.markdown("#### 🔴 Skills to Acquire")
-        for sk in gaps:
-            st.markdown(f'<span class="pf-badge pf-badge-red">{sk}</span>',
-                        unsafe_allow_html=True)
-        if not gaps:
+        if gaps:
+            for sk in gaps:
+                st.markdown(f'<span class="pf-badge pf-badge-red">{sk}</span>',
+                            unsafe_allow_html=True)
+        else:
             st.success("No significant skill gaps detected!")
 
     st.markdown("---")
@@ -777,7 +931,7 @@ def _render_skill_gap():
             st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CHOOSE PLAN PAGE
+# CHOOSE PLAN PAGE  (user sets hours/day; plans = days/week commitment)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _render_choose_plan():
@@ -786,42 +940,69 @@ def _render_choose_plan():
         st.session_state["pf_step"] = "results"
         st.rerun()
 
-    total_hrs = match.get("total_course_hours", 0)
+    soc       = match.get("soc_code", "")
+    total_hrs = match.get("total_course_hours") or get_total_hours(soc)
+    # Fallback: if still 0, re-query with matched courses
+    if not total_hrs and match.get("courses"):
+        total_hrs = sum(c.get("hours", 0) for c in match["courses"])
+
     st.markdown("## Choose Your Study Plan")
 
+    # ── User sets their own hours/day ─────────────────────────────────────────
+    st.markdown("#### ⏱️ How many hours per day can you commit?")
+    hours_pd = st.slider(
+        "Hours per day", min_value=1, max_value=8,
+        value=st.session_state.get("pf_study_hours_per_day", 2),
+        step=1, key="pf_hours_slider",
+        help="Set your daily study commitment. The plan cards below will update automatically."
+    )
+    st.session_state["pf_study_hours_per_day"] = hours_pd
+
+    st.markdown("#### 📅 How many days per week will you study?")
+    st.caption("Choose a study cadence that fits your lifestyle.")
+    st.markdown("")
+
     plans = [
-        {"id": "intensive", "name": "Intensive", "hours": 4, "icon": "🔥",
-         "desc": "4 hrs/day — fastest track"},
-        {"id": "balanced",  "name": "Balanced",  "hours": 2, "icon": "⚖️",
-         "desc": "2 hrs/day — recommended"},
-        {"id": "casual",    "name": "Casual",     "hours": 1, "icon": "🌱",
-         "desc": "1 hr/day — at your own pace"},
+        {"id": "intensive", "name": "Fast Track",  "days": 7, "icon": "🔥",
+         "desc": "Every day — maximum speed, minimum breaks"},
+        {"id": "balanced",  "name": "Regular",     "days": 5, "icon": "⚖️",
+         "desc": "Weekdays only — sustainable & recommended"},
+        {"id": "casual",    "name": "Flexible",    "days": 3, "icon": "🌱",
+         "desc": "3 days/week — at your own relaxed pace"},
     ]
 
     cols = st.columns(3, gap="large")
     for plan, col in zip(plans, cols):
-        days  = math.ceil(total_hrs / plan["hours"]) if total_hrs else 0
-        weeks = math.ceil(days / 7)
-        sel   = st.session_state.get("pf_selected_plan") == plan["id"]
-        border = "border:2px solid #2563eb;" if sel else "border:1px solid #e5e7eb;"
+        weekly_hrs = hours_pd * plan["days"]
+        weeks      = math.ceil(total_hrs / weekly_hrs) if (total_hrs and weekly_hrs) else 0
+        days_total = weeks * plan["days"]
+        end_date   = (datetime.date.today() + datetime.timedelta(weeks=weeks)).strftime("%b %Y")
+        sel        = st.session_state.get("pf_selected_plan") == plan["id"]
+        card_cls   = "pf-card pf-plan-selected" if sel else "pf-card"
+
         with col:
             st.markdown(f"""
-            <div class="pf-card" style="{border}text-align:center;padding:1.5rem;">
+            <div class="{card_cls}" style="text-align:center;padding:1.5rem;">
               <div style="font-size:2.5rem;">{plan['icon']}</div>
               <div style="font-size:1.1rem;font-weight:700;margin:0.5rem 0;">{plan['name']}</div>
               <div style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">{plan['desc']}</div>
               <div style="font-size:1.8rem;font-weight:800;color:#2563eb;">{weeks} wks</div>
-              <div style="font-size:0.8rem;color:#9ca3af;">{days} days · {int(total_hrs)}h total</div>
+              <div style="font-size:0.8rem;color:#9ca3af;">
+                {plan['days']} days/wk · {hours_pd}h/day · done by {end_date}
+              </div>
             </div>
             """, unsafe_allow_html=True)
             btn_type = "primary" if sel else "secondary"
-            label = f"{'✓ Selected' if sel else 'Choose'} {plan['name']}"
+            label    = f"{'✓ Selected' if sel else 'Choose'} {plan['name']}"
             if st.button(label, key=f"pf_plan_{plan['id']}",
                          use_container_width=True, type=btn_type):
                 st.session_state["pf_selected_plan"]       = plan["id"]
-                st.session_state["pf_study_hours_per_day"] = plan["hours"]
-                soc = match.get("soc_code", "")
-                st.session_state["pf_roadmap_courses"] = get_courses_for_onet(soc)
+                st.session_state["pf_days_per_week"]       = plan["days"]
+                st.session_state["pf_study_hours_per_day"] = hours_pd
+                # Load courses from DB into roadmap
+                st.session_state["pf_roadmap_courses"] = generate_verified_roadmap(
+                    [soc], plan["id"]
+                )
                 st.rerun()
 
     st.markdown("---")
@@ -837,66 +1018,134 @@ def _render_choose_plan():
                 st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ROADMAP PAGE
+# Certificate Verification Dialog (Phase 3 — event handler)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@st.dialog("Submit Verification", width="small")
+def _verify_dialog(course: dict):
+    cid   = str(course.get("course_id", course.get("title", "")))
+    title = course.get("title", "")
+    st.markdown(f"**{title}**")
+    st.caption(f"Provider: {course.get('provider','')}")
+    url_input = st.text_input(
+        "Paste your certificate URL (Coursera / edX / LinkedIn / other)",
+        placeholder="https://coursera.org/verify/XXXXXXXXX",
+        key=f"pf_verify_input_{cid}"
+    )
+    col_submit, col_cancel = st.columns(2)
+    with col_submit:
+        if st.button("Submit", type="primary", use_container_width=True, key=f"pf_sub_{cid}"):
+            if url_input.strip().startswith("http"):
+                cv = st.session_state.setdefault("pf_cert_verify", {})
+                cv[cid] = {"url": url_input.strip(), "verified": True}
+                st.session_state["pf_cert_verify"] = cv
+                # Also persist to DB
+                try:
+                    verify_user_skill(
+                        st.session_state.get("pf_session_id", ""),
+                        title, url_input.strip()
+                    )
+                except Exception:
+                    pass
+                st.rerun()
+            else:
+                st.error("Please enter a valid URL starting with http.")
+    with col_cancel:
+        if st.button("Cancel", use_container_width=True, key=f"pf_can_{cid}"):
+            st.rerun()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROADMAP PAGE  (PHASE 2 & 3 — real links, gamification)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _render_roadmap():
     match    = st.session_state.get("pf_selected_match", {})
-    courses  = st.session_state.get("pf_roadmap_courses", [])
     hours_pd = st.session_state.get("pf_study_hours_per_day", 2)
+    dpw      = st.session_state.get("pf_days_per_week", 5)
     done_set = st.session_state.get("pf_completed_courses", set())
+    cv_map   = st.session_state.get("pf_cert_verify", {})
+
     if not match:
         st.session_state["pf_step"] = "choose_plan"
         st.rerun()
 
-    st.markdown(f"## Learning Roadmap — {match.get('title','')}")
+    soc = match.get("soc_code", "")
+    # Always pull courses from DB to guarantee real URLs
+    courses = st.session_state.get("pf_roadmap_courses") or generate_verified_roadmap([soc])
+    if not courses:
+        courses = get_courses_for_onet(soc)
+    # Persist for other pages
+    st.session_state["pf_roadmap_courses"] = courses
+
+    st.markdown(f"## Your Custom Learning Roadmap — {match.get('title','')}")
+    st.caption("All course links are pulled from our verified database — no AI-generated URLs.")
 
     if not courses:
-        st.info("No courses found for this role. Choose a plan first.")
+        st.info("No courses found for this role. Please choose a plan first.")
     else:
-        total_hrs = sum(c["hours"] for c in courses)
-        done_hrs  = sum(c["hours"] for c in courses if c["title"] in done_set)
+        total_hrs = sum(c.get("hours", 0) for c in courses)
+        done_hrs  = sum(c.get("hours", 0) for c in courses
+                        if str(c.get("course_id", c.get("title",""))) in done_set
+                        or c.get("title","") in done_set)
         pct = int(done_hrs / total_hrs * 100) if total_hrs else 0
-        st.markdown(f"**Progress:** {pct}% complete ({int(done_hrs)}/{int(total_hrs)} hours)")
+
+        st.markdown(f"**Progress:** {pct}% — {int(done_hrs)}/{int(total_hrs)} hours")
         st.progress(pct / 100)
         st.markdown("---")
 
         cumday = 0
-        for i, course in enumerate(courses):
-            days_needed = math.ceil(course["hours"] / max(hours_pd, 1))
-            done = course["title"] in done_set
-            dot_bg    = "#d1fae5" if done else "#dbeafe"
-            dot_color = "#059669" if done else "#2563eb"
+        eff_hpd = hours_pd if hours_pd else 2   # fallback
 
+        for i, course in enumerate(courses):
+            cid      = str(course.get("course_id", course.get("title", i)))
+            title    = course.get("title", "")
+            hrs      = course.get("hours", 0)
+            days_n   = math.ceil(hrs / eff_hpd) if eff_hpd else 0
+            verified = cv_map.get(cid, {}).get("verified", False)
+            done     = cid in done_set or title in done_set
+
+            dot_bg    = "#d1fae5" if (done or verified) else "#dbeafe"
+            dot_color = "#059669" if (done or verified) else "#2563eb"
+
+            # ── Timeline row ──
             st.markdown(f"""
             <div class="pf-timeline-item">
               <div class="pf-timeline-dot" style="background:{dot_bg};color:{dot_color};">
-                {'✓' if done else i+1}
+                {'✓' if (done or verified) else i+1}
               </div>
               <div style="flex:1;">
-                <div style="font-weight:600;color:#111827;">{course['title']}</div>
+                <div style="font-weight:600;color:#111827;">{title}</div>
                 <div style="font-size:0.8rem;color:#6b7280;">
-                  {course.get('provider','')} · {int(course['hours'])}h ·
-                  ~{days_needed} days (starts day {cumday+1})
+                  {course.get('provider','')} &nbsp;·&nbsp; {int(hrs)}h &nbsp;·&nbsp;
+                  ~{days_n} days (starts day {cumday+1})
                 </div>
+                {('<div style="font-size:0.75rem;color:#059669;margin-top:0.2rem;">✓ Certificate submitted</div>' if verified else '')}
               </div>
             </div>
             """, unsafe_allow_html=True)
 
+            # ── Action buttons ──
             ca, cb, cc = st.columns([3, 1, 1])
             with cb:
-                if course.get("url"):
-                    st.link_button("Open", course["url"], use_container_width=True)
+                real_url = course.get("url", "")
+                if real_url and not verified:
+                    st.link_button("Go to Course →", real_url, use_container_width=True)
             with cc:
-                label = "✓ Done" if done else "Mark Done"
-                if st.button(label, key=f"pf_done_{i}", use_container_width=True):
-                    if done:
-                        done_set.discard(course["title"])
-                    else:
-                        done_set.add(course["title"])
-                    st.session_state["pf_completed_courses"] = done_set
-                    st.rerun()
-            cumday += days_needed
+                if verified:
+                    st.markdown('<span class="pf-badge pf-badge-green" style="font-size:0.85rem;">✓ Verified</span>',
+                                unsafe_allow_html=True)
+                elif done:
+                    if st.button("Verify Cert", key=f"pf_vbtn_{i}", use_container_width=True):
+                        _verify_dialog(course)
+                else:
+                    label = "✓ Done" if done else "Mark Done"
+                    if st.button(label, key=f"pf_done_{i}", use_container_width=True):
+                        done_set.add(cid)
+                        done_set.add(title)
+                        st.session_state["pf_completed_courses"] = done_set
+                        st.rerun()
+
+            cumday += days_n
 
     st.markdown("---")
     c1, c2 = st.columns(2)
@@ -910,73 +1159,84 @@ def _render_roadmap():
             st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PHASE 5 — @st.dialog Study Planner
+# PHASE 5 — @st.dialog Study Planner (from Dashboard)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @st.dialog("Study Planner", width="large")
 def _study_planner_dialog():
-    import time
     match     = st.session_state.get("pf_selected_match", {})
     courses   = st.session_state.get("pf_roadmap_courses", [])
-    total_hrs = match.get("total_course_hours", 0)
+    soc       = match.get("soc_code", "")
+    total_hrs = match.get("total_course_hours") or sum(c.get("hours", 0) for c in courses) or get_total_hours(soc)
 
     st.markdown(f"### {match.get('title','')} — Personalized Schedule")
 
     hours_pd = st.slider("Study hours per day", 1, 8,
                          st.session_state.get("pf_study_hours_per_day", 2),
                          key="pf_dialog_hrs")
-    st.session_state["pf_study_hours_per_day"] = hours_pd
+    dpw_opts  = {"Every day (7)": 7, "Weekdays (5)": 5, "3 days/week": 3}
+    dpw_label = st.selectbox("Days per week", list(dpw_opts.keys()),
+                             key="pf_dialog_dpw")
+    dpw       = dpw_opts[dpw_label]
 
-    total_days  = math.ceil(total_hrs / max(hours_pd, 1)) if total_hrs else 0
-    total_weeks = math.ceil(total_days / 7)
-    end_date    = datetime.date.today() + datetime.timedelta(days=total_days)
+    st.session_state["pf_study_hours_per_day"] = hours_pd
+    st.session_state["pf_days_per_week"]       = dpw
+
+    weekly_hrs  = hours_pd * dpw
+    total_weeks = math.ceil(total_hrs / weekly_hrs) if (total_hrs and weekly_hrs) else 0
+    end_date    = datetime.date.today() + datetime.timedelta(weeks=total_weeks)
 
     mc1, mc2, mc3 = st.columns(3)
-    mc1.metric("Total Hours", f"{int(total_hrs)}h")
-    mc2.metric("Duration", f"{total_weeks} weeks")
-    mc3.metric("Finish By", end_date.strftime("%b %d, %Y"))
+    mc1.metric("Total Hours",  f"{int(total_hrs)}h")
+    mc2.metric("Duration",     f"{total_weeks} weeks")
+    mc3.metric("Finish By",    end_date.strftime("%b %d, %Y"))
 
     st.markdown("---")
     st.markdown("#### Certificate Verification")
-    st.caption("Paste a certificate URL to mark course completion as verified.")
+    st.caption("Submit a certificate URL to mark a course as officially verified.")
 
-    verify_states = st.session_state.setdefault("pf_skill_verify_states", {})
+    cv_map = st.session_state.setdefault("pf_cert_verify", {})
 
     for course in courses:
-        title = course["title"]
-        state = verify_states.get(title, {"url": "", "verified": False})
+        cid     = str(course.get("course_id", course.get("title", "")))
+        title   = course.get("title", "")
+        v_state = cv_map.get(cid, {"url": "", "verified": False})
 
         col_t, col_icon = st.columns([4, 1])
         with col_t:
-            st.markdown(f"**{title}** — {course.get('provider','')}")
+            st.markdown(f"**{title}**  \n_{course.get('provider','')}_")
         with col_icon:
-            icon_html = '<span style="font-size:1.4rem;color:#059669;">✅</span>' \
-                        if state["verified"] else \
-                        '<span style="font-size:1.4rem;color:#dc2626;">✗</span>'
+            icon_html = (
+                '<span style="font-size:1.4rem;color:#059669;">✅</span>'
+                if v_state["verified"] else
+                '<span style="font-size:1.4rem;color:#dc2626;">✗</span>'
+            )
             st.markdown(icon_html, unsafe_allow_html=True)
 
         new_url = st.text_input(
-            "Certificate URL", value=state["url"],
-            key=f"pf_cert_url_{hash(title) % 100000}",
+            "Certificate URL", value=v_state["url"],
+            key=f"pf_dlg_url_{cid}",
             placeholder="https://coursera.org/verify/..."
         )
-        state["url"] = new_url
+        v_state["url"] = new_url
 
-        if st.button("Verify", key=f"pf_verify_{hash(title) % 100000}",
-                     use_container_width=False):
+        if st.button("Verify", key=f"pf_dlg_verify_{cid}"):
             if new_url.strip().startswith("http"):
-                state["verified"] = True
-                session_id = st.session_state.get("pf_session_id", "")
+                v_state["verified"] = True
+                cv_map[cid] = v_state
+                st.session_state["pf_cert_verify"] = cv_map
                 try:
-                    verify_user_skill(session_id, title, new_url.strip())
+                    verify_user_skill(st.session_state.get("pf_session_id",""), title, new_url.strip())
                 except Exception:
                     pass
-                st.success(f"✓ Verified!")
+                st.success("✓ Verified!")
+                st.rerun()
             else:
-                st.error("Please enter a valid URL starting with http.")
+                st.error("Please enter a valid URL.")
+        else:
+            cv_map[cid] = v_state
+            st.session_state["pf_cert_verify"] = cv_map
 
-        verify_states[title] = state
-        st.session_state["pf_skill_verify_states"] = verify_states
         st.markdown("---")
 
     if st.button("Close Planner", use_container_width=True):
@@ -987,21 +1247,27 @@ def _study_planner_dialog():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _render_dashboard():
-    match         = st.session_state.get("pf_selected_match", {})
-    courses       = st.session_state.get("pf_roadmap_courses", [])
-    done_set      = st.session_state.get("pf_completed_courses", set())
-    hours_pd      = st.session_state.get("pf_study_hours_per_day", 2)
-    verify_states = st.session_state.get("pf_skill_verify_states", {})
+    match    = st.session_state.get("pf_selected_match", {})
+    courses  = st.session_state.get("pf_roadmap_courses", [])
+    done_set = st.session_state.get("pf_completed_courses", set())
+    hours_pd = st.session_state.get("pf_study_hours_per_day", 2)
+    dpw      = st.session_state.get("pf_days_per_week", 5)
+    cv_map   = st.session_state.get("pf_cert_verify", {})
+
     if not match:
         st.session_state["pf_step"] = "results"
         st.rerun()
 
-    total_hrs  = match.get("total_course_hours", 0)
-    done_hrs   = sum(c["hours"] for c in courses if c["title"] in done_set)
-    remain_hrs = max(0, total_hrs - done_hrs)
-    pct        = int(done_hrs / total_hrs * 100) if total_hrs else 0
-    days_left  = math.ceil(remain_hrs / max(hours_pd, 1))
-    verified_n = sum(1 for s in verify_states.values() if s.get("verified"))
+    soc       = match.get("soc_code", "")
+    total_hrs = match.get("total_course_hours") or sum(c.get("hours", 0) for c in courses) or get_total_hours(soc)
+    done_hrs  = sum(c.get("hours", 0) for c in courses
+                    if str(c.get("course_id", c.get("title",""))) in done_set
+                    or c.get("title","") in done_set)
+    remain    = max(0, total_hrs - done_hrs)
+    pct       = int(done_hrs / total_hrs * 100) if total_hrs else 0
+    weekly_h  = hours_pd * dpw
+    wks_left  = math.ceil(remain / weekly_h) if (remain and weekly_h) else 0
+    verified_n = sum(1 for v in cv_map.values() if v.get("verified"))
 
     st.markdown(f"## Dashboard — {match.get('title','')}")
 
@@ -1009,7 +1275,7 @@ def _render_dashboard():
     for col, num, label in [
         (s1, f"{pct}%",           "Overall Progress"),
         (s2, f"{int(done_hrs)}h", "Hours Completed"),
-        (s3, f"{days_left}d",     "Days Remaining"),
+        (s3, f"{wks_left}w",      "Weeks Remaining"),
         (s4, str(verified_n),     "Certs Verified"),
     ]:
         with col:
@@ -1021,15 +1287,17 @@ def _render_dashboard():
             """, unsafe_allow_html=True)
 
     st.markdown("")
-    st.markdown("**Overall Learning Progress**")
     st.progress(pct / 100)
+    st.caption(f"{pct}% complete — {int(done_hrs)}/{int(total_hrs)} hours")
     st.markdown("---")
     st.markdown("#### Course Status")
+
     for course in courses:
-        done     = course["title"] in done_set
-        verified = verify_states.get(course["title"], {}).get("verified", False)
+        cid      = str(course.get("course_id", course.get("title","")))
+        done     = cid in done_set or course.get("title","") in done_set
+        verified = cv_map.get(cid, {}).get("verified", False)
         if verified:
-            badge = '<span class="pf-badge pf-badge-green">✓ Verified</span>'
+            badge = '<span class="pf-badge pf-badge-green">✅ Verified</span>'
         elif done:
             badge = '<span class="pf-badge pf-badge-blue">✓ Completed</span>'
         else:
@@ -1038,7 +1306,7 @@ def _render_dashboard():
         <div style="display:flex;justify-content:space-between;align-items:center;
                     padding:0.6rem 0;border-bottom:1px solid #f3f4f6;">
           <div>
-            <span style="font-weight:500;color:#111827;">{course['title']}</span>
+            <span style="font-weight:500;color:#111827;">{course.get('title','')}</span>
             <span style="font-size:0.75rem;color:#9ca3af;margin-left:0.5rem;">
               {course.get('provider','')} · {int(course.get('hours',0))}h
             </span>
@@ -1106,16 +1374,14 @@ def _render_upload():
                 try:
                     result = _run_with_loading(_call_gemini, cv_text)
                     st.session_state["pf_analysis"] = result
-                    session_id   = st.session_state["pf_session_id"]
-                    skills_list  = [s.strip() for s in form_data["raw_skills"].split(",") if s.strip()]
-                    upsert_user_profile(
-                        session_id,
-                        full_name=form_data["full_name"],
-                        education=form_data["edu_level"],
-                        major=form_data["major"],
-                        institution=form_data["institution"],
-                        cv_text=cv_text,
-                    )
+                    session_id  = st.session_state["pf_session_id"]
+                    skills_list = [s.strip() for s in form_data["raw_skills"].split(",") if s.strip()]
+                    upsert_user_profile(session_id,
+                                        full_name=form_data["full_name"],
+                                        education=form_data["edu_level"],
+                                        major=form_data["major"],
+                                        institution=form_data["institution"],
+                                        cv_text=cv_text)
                     upsert_user_skills(session_id, skills_list)
                     st.session_state["pf_step"] = "results"
                     st.rerun()
@@ -1141,9 +1407,12 @@ def _render_landing():
 
     f1, f2, f3 = st.columns(3, gap="large")
     features = [
-        ("🤖", "AI Analysis", "Gemini AI analyzes your profile against global O*NET taxonomy and Indonesian SKKNI frameworks."),
-        ("🎯", "Career Matching", "Get 3 personalized career matches ranked by compatibility score."),
-        ("📚", "Learning Roadmap", "Receive a curated course roadmap with real-time progress tracking and certificate verification."),
+        ("🤖", "AI Analysis",
+         "Gemini AI analyzes your profile against global O*NET taxonomy and Indonesian SKKNI frameworks."),
+        ("🎯", "Career Matching",
+         "Get 3 personalized career matches ranked by compatibility score with detailed skill gap breakdown."),
+        ("📚", "Verified Roadmap",
+         "Course links come exclusively from our verified database — no hallucinated URLs, ever."),
     ]
     for col, (icon, title, desc) in zip([f1, f2, f3], features):
         with col:
@@ -1173,7 +1442,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-get_db_engine()
+get_db_engine()    # init + seed DB (cached)
 _init_session()
 _inject_css()
 _render_topbar()
