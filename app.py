@@ -1053,7 +1053,7 @@ def _inject_css():
         --gold:         #C09A51;
         --gold-pale:    #F5EDD8;
         --gold-border:  #D4B87A;
-        --warm-bg:      #FAF8F5;
+        --warm-bg:      #F8F9FA;
         --warm-border:  #E8E0D5;
         --warm-muted:   #F2EDE6;
         --success:      #2D6A4F;
@@ -1130,6 +1130,27 @@ def _inject_css():
         padding: 1.5rem;
         margin-bottom: 1rem;
         box-shadow: 0 2px 8px rgba(44,44,44,.05);
+    }
+
+    /* ── Card — generic white card (st-card utility) ───────────────────────── */
+    .st-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 6px rgba(44,44,44,.05);
+    }
+    .st-card-section-label {
+        font-family: var(--sans);
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--copper);
+        margin-bottom: 0.6rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid #E2E8F0;
     }
 
     /* ── Card — gold/copper accent (Best Match) ────────────────────────────── */
@@ -1431,9 +1452,10 @@ def _inject_css():
         letter-spacing: 0.02em !important;
     }
     .stTabs [aria-selected="true"] {
-        color: var(--copper) !important;
-        border-bottom: 2px solid var(--copper) !important;
-        font-weight: 600 !important;
+        color: var(--copper-dark) !important;
+        border-bottom: 3px solid var(--copper) !important;
+        font-weight: 700 !important;
+        background: rgba(161,127,62,.04) !important;
     }
 
     /* Expander */
@@ -2572,27 +2594,45 @@ def _render_dashboard():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _render_upload():
-    st.markdown("## Analyze Your Profile")
-    st.caption("Upload your CV and certificates or fill in the form manually. Analyzed by Gemini AI against O*NET and SKKNI.")
+    # ── Page header ────────────────────────────────────────────────────────────
+    st.markdown(
+        '<h2 style="margin-bottom:0.15rem;">Analyze Your Profile</h2>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<p style="font-size:0.88rem;color:#6B6B6B;margin-top:0;margin-bottom:1.5rem;">'
+        'Upload your CV and certificates, or fill in the form manually. '
+        'Analyzed by Gemini AI against O*NET and SKKNI.</p>',
+        unsafe_allow_html=True,
+    )
 
-    tab_upload, tab_manual = st.tabs(["Upload CV & Certificate", "Enter Manually"])
+    # ── Phase 2: column margin layout ─────────────────────────────────────────
+    _lm, main_col, _rm = st.columns([1, 10, 1])
 
-    # ── Tab 1: Upload CV & Certificate ────────────────────────────────────────
-    with tab_upload:
-        sub_cv, sub_cert = st.tabs(["CV / Resume", "Certificates & Licenses"])
+    with main_col:
+        tab_upload, tab_manual = st.tabs(["  Upload Document  ", "  Enter Manually  "])
 
-        with sub_cv:
+        # ── Tab 1: Upload Document ─────────────────────────────────────────────
+        with tab_upload:
+            st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
+
+            # ---- CV section card ------------------------------------------------
             st.markdown(
-                '<div style="font-size:0.78rem;color:#6B6B6B;margin-bottom:0.75rem;">'
-                'Upload your CV or resume in PDF format. Text will be extracted and analyzed by AI.</div>',
-                unsafe_allow_html=True
+                '<div class="st-card">'
+                '<div class="st-card-section-label">CV / Resume</div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                '<p style="font-size:0.82rem;color:#6B6B6B;margin:-0.25rem 0 0.75rem;">'
+                'Upload your CV or resume in PDF format. Text will be extracted and analyzed by AI.</p>',
+                unsafe_allow_html=True,
             )
             uploaded = st.file_uploader(
-                "Upload CV (PDF)", type=["pdf"],
-                key="pf_pdf_upload", label_visibility="collapsed"
+                "CV (PDF only)", type=["pdf"],
+                key="pf_pdf_upload", label_visibility="visible",
             )
             if uploaded:
-                st.success(f"Loaded: {uploaded.name}")
+                st.success(f"Ready: {uploaded.name}")
                 if st.button("Analyze CV", type="primary",
                              use_container_width=True, key="pf_analyze_pdf"):
                     try:
@@ -2609,63 +2649,77 @@ def _render_upload():
                             st.rerun()
                     except Exception as e:
                         st.error(f"Analysis failed: {e}")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        with sub_cert:
+            # ---- Certificates section card --------------------------------------
             st.markdown(
-                '<div style="font-size:0.78rem;color:#6B6B6B;margin-bottom:0.75rem;">'
-                'Upload certificates or licenses. These will be attached to your profile.</div>',
-                unsafe_allow_html=True
+                '<div class="st-card">'
+                '<div class="st-card-section-label">Certificates & Licenses (Optional)</div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                '<p style="font-size:0.82rem;color:#6B6B6B;margin:-0.25rem 0 0.75rem;">'
+                'Upload certificates or licenses (PDF, PNG, JPG). These will be attached to your profile.</p>',
+                unsafe_allow_html=True,
             )
             cert_files = st.file_uploader(
-                "Upload Certificates", type=["pdf", "png", "jpg", "jpeg"],
-                accept_multiple_files=True, label_visibility="collapsed",
-                key="pf_cert_files_upload"
+                "Certificates & Licenses", type=["pdf", "png", "jpg", "jpeg"],
+                accept_multiple_files=True, label_visibility="visible",
+                key="pf_cert_files_upload",
             )
             if cert_files:
-                for cf in cert_files:
-                    st.markdown(
-                        f'<span class="pf-badge pf-badge-green">Uploaded: {cf.name}</span>',
-                        unsafe_allow_html=True
-                    )
+                badges = " ".join(
+                    f'<span class="pf-badge pf-badge-green">{cf.name}</span>'
+                    for cf in cert_files
+                )
+                st.markdown(badges, unsafe_allow_html=True)
+                st.caption(f"{len(cert_files)} file(s) uploaded")
             cert_list_text = st.text_area(
-                "Or list certificates manually (one per line)",
+                "Or list certifications manually (one per line)",
                 placeholder="AWS Certified Developer (2023)\nGoogle Data Analytics Certificate",
-                height=100, key="pf_cert_upload_text"
+                height=90, key="pf_cert_upload_text",
             )
             if cert_list_text.strip():
-                st.caption(f"{len([l for l in cert_list_text.splitlines() if l.strip()])} certificate(s) listed")
+                n = len([l for l in cert_list_text.splitlines() if l.strip()])
+                st.caption(f"{n} certificate(s) listed")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── Tab 2: Enter Manually ──────────────────────────────────────────────────
-    with tab_manual:
-        form_data = _render_manual_form()
-        st.markdown("")
-        if st.button("Analyze Profile", type="primary",
-                     use_container_width=True, key="pf_analyze_manual"):
-            if not form_data["full_name"].strip():
-                st.warning("Full name is required.")
-            elif not form_data["selected_skills"]:
-                st.warning("Please select or enter at least one skill.")
-            else:
-                cv_text = _build_cv_text(form_data)
-                try:
-                    result = _run_with_loading(_call_gemini, cv_text)
-                    st.session_state["pf_analysis"] = result
-                    session_id = st.session_state["pf_session_id"]
-                    upsert_user_profile(
-                        session_id,
-                        full_name=form_data["full_name"],
-                        education=form_data["edu_level"],
-                        major=form_data["major"],
-                        institution=form_data["institution"],
-                        cv_text=cv_text,
-                    )
-                    upsert_user_skills(session_id, form_data["selected_skills"])
-                    st.session_state["pf_step"] = "results"
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Analysis failed: {e}")
+        # ── Tab 2: Enter Manually ──────────────────────────────────────────────
+        with tab_manual:
+            st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
+            form_data = _render_manual_form()
 
-    st.markdown("---")
+            # Bottom action bar
+            st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+            act_l, act_m, act_r = st.columns([1, 2, 1])
+            with act_m:
+                if st.button("Analyze Now", type="primary",
+                             use_container_width=True, key="pf_analyze_manual"):
+                    if not form_data["full_name"].strip():
+                        st.warning("Full name is required.")
+                    elif not form_data["selected_skills"]:
+                        st.warning("Please select or enter at least one skill.")
+                    else:
+                        cv_text = _build_cv_text(form_data)
+                        try:
+                            result = _run_with_loading(_call_gemini, cv_text)
+                            st.session_state["pf_analysis"] = result
+                            session_id = st.session_state["pf_session_id"]
+                            upsert_user_profile(
+                                session_id,
+                                full_name=form_data["full_name"],
+                                education=form_data["edu_level"],
+                                major=form_data["major"],
+                                institution=form_data["institution"],
+                                cv_text=cv_text,
+                            )
+                            upsert_user_skills(session_id, form_data["selected_skills"])
+                            st.session_state["pf_step"] = "results"
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Analysis failed: {e}")
+
+    st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
     if st.button("Back to Home"):
         st.session_state["pf_step"] = "landing"
         st.rerun()
