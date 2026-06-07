@@ -1523,10 +1523,9 @@ def _inject_css():
         color: var(--charcoal) !important;
     }
 
-    /* ── Streamlit scroll context — allow fixed topbar to overlay ───────────── */
-    section[data-testid="stMain"],
-    section[data-testid="stMain"] > div {
-        overflow: visible !important;
+    /* ── Streamlit scroll context — keep default scroll behaviour ───────────── */
+    section[data-testid="stMain"] {
+        overflow-y: auto !important;
     }
 
     /* ── Logo wrapper ─────────────────────────────────────────────────────────── */
