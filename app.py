@@ -2770,22 +2770,34 @@ def _render_upload():
                     "CV (PDF only)", type=["pdf"],
                     key="pf_pdf_upload", label_visibility="visible",
                 )
-                if uploaded:
-                    st.success(f"Ready: {uploaded.name}")
+                # Mirror structure: paste area (matches Certs card height exactly)
+                cv_paste = st.text_area(
+                    "Or paste your CV text directly",
+                    placeholder="Paste your CV content here if you don't have a PDF...",
+                    height=130, key="pf_cv_paste_text",
+                )
+                # Determine source and show Analyze button
+                has_input = uploaded or cv_paste.strip()
+                if has_input:
+                    if uploaded:
+                        st.success(f"Ready: {uploaded.name}")
                     if st.button("Analyze CV", type="primary",
                                  use_container_width=True, key="pf_analyze_pdf"):
                         try:
-                            cv_text = extract_pdf_text(uploaded.read())
-                            if not cv_text.strip():
-                                st.error("Could not extract text. Try the manual form instead.")
+                            if uploaded:
+                                cv_text = extract_pdf_text(uploaded.read())
+                                if not cv_text.strip():
+                                    st.error("Could not extract text. Try the manual form instead.")
+                                    st.stop()
                             else:
-                                result = _run_with_loading(_call_gemini, cv_text)
-                                st.session_state["pf_analysis"] = result
-                                upsert_user_profile(
-                                    st.session_state["pf_session_id"], cv_text=cv_text
-                                )
-                                st.session_state["pf_step"] = "results"
-                                st.rerun()
+                                cv_text = cv_paste.strip()
+                            result = _run_with_loading(_call_gemini, cv_text)
+                            st.session_state["pf_analysis"] = result
+                            upsert_user_profile(
+                                st.session_state["pf_session_id"], cv_text=cv_text
+                            )
+                            st.session_state["pf_step"] = "results"
+                            st.rerun()
                         except Exception as e:
                             st.error(f"Analysis failed: {e}")
 
