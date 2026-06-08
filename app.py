@@ -517,7 +517,7 @@ _COURSES = [
      "https://www.coursera.org/learn/accounting-analytics",
      "13-2011.00", 20),
     ("IAI Certified Accountant Program", "Ikatan Akuntan Indonesia (IAI)",
-     "https://iai.or.id/",
+     "https://iai.or.id/program-pendidikan",
      "13-2011.00", 40),
 
     # Data Engineer (15-2061.00)
@@ -621,8 +621,8 @@ _COURSES = [
     ("AutoCAD Civil 3D Fundamentals", "Autodesk University",
      "https://www.autodesk.com/autodesk-university/",
      "17-2051.00", 20),
-    ("BIM Fundamentals for Engineers", "BIM Institute Indonesia",
-     "https://www.biminstitute.co.id/",
+    ("BIM Fundamentals for Engineers", "Autodesk Learning",
+     "https://www.autodesk.com/certification/learn/catalog/discipline/building-design",
      "17-2051.00", 20),
 
     # Electrical Engineer (17-2071.00)
@@ -657,7 +657,7 @@ _COURSES = [
      "https://www.linkedin.com/learning/motion-graphics-techniques",
      "27-1014.00", 20),
     ("3D Animation with Blender", "CG Master Academy (CGMA)",
-     "https://cgmasteracademy.com/",
+     "https://cgmasteracademy.com/courses/3d-animation/",
      "27-1014.00", 40),
 
     # Secondary School Teacher (25-2031.00)
@@ -677,8 +677,8 @@ _COURSES = [
      "25-9031.00", 20),
 
     # Registered Nurse (29-1141.00)
-    ("Global Health Delivery", "OpenWHO (WHO)",
-     "https://openwho.org/courses",
+    ("Global Health: Nursing & Midwifery", "OpenWHO (WHO)",
+     "https://openwho.org/channels/nursing-midwifery",
      "29-1141.00", 15),
     ("Critical Care Nursing Basics", "Coursera",
      "https://www.coursera.org/learn/critical-care-nursing-basics",
@@ -711,7 +711,7 @@ _COURSES = [
      "https://rouxbe.com/programs/plant-based-professional",
      "35-1011.00", 25),
     ("Food & Beverage Service Management", "Typsy",
-     "https://typsy.com/courses",
+     "https://typsy.com/collections/food-service",
      "35-1011.00", 15),
 
     # Lodging Manager / Tourism (11-9081.00, 39-7011.00)
@@ -747,8 +747,8 @@ _COURSES = [
     ("Data Analytics with Python", "Karier.mu",
      "https://karier.mu/kelas/data-analytics",
      "15-2051.00", 25),
-    ("Cybersecurity Fundamentals", "Alterra Academy",
-     "https://academy.alterra.id/",
+    ("Google Cybersecurity Professional Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-cybersecurity",
      "15-1212.00", 30),
 
     # Cloud certifications
@@ -764,8 +764,8 @@ _COURSES = [
     ("Cisco CCNA Networking Fundamentals", "Cisco Networking Academy",
      "https://www.netacad.com/courses/networking",
      "15-1244.00", 70),
-    ("Red Hat Enterprise Linux Administration", "Red Hat Training",
-     "https://www.redhat.com/en/services/training-and-certification",
+    ("Red Hat System Administration I (RH124)", "Red Hat Training",
+     "https://www.redhat.com/en/services/training/rh124",
      "15-1244.00", 40),
 
     # Project & Scrum certifications
@@ -792,8 +792,8 @@ _COURSES = [
     ("Pluralsight DevOps Skills Assessment", "Pluralsight",
      "https://www.pluralsight.com/product/skills/assessments",
      "15-1252.00", 20),
-    ("CFA Investment Fundamentals", "CFA Institute",
-     "https://www.cfainstitute.org/",
+    ("CFA Program (Level I)", "CFA Institute",
+     "https://www.cfainstitute.org/en/programs/cfa",
      "13-2051.00", 120),
     ("Financial Modeling & Valuation (Advanced)", "Corporate Finance Institute",
      "https://corporatefinanceinstitute.com/certifications/financial-modeling-valuation-analyst-fmva-certification/",
@@ -887,9 +887,21 @@ def _init_db() -> None:
             s.add_all([IndonesianMajorCatalog(major_name=m) for m in _MAJORS])
         if s.query(OnetOccupation).count() == 0:
             s.add_all([OnetOccupation(soc_code=c, title=t, description=d) for c, t, d in _OCCUPATIONS])
-        # Force reseed courses if URLs are stale (old non-www fake URLs)
-        first = s.query(CourseCatalog).first()
-        needs_reseed = (first is None) or ("www." not in (first.url or ""))
+        # Reseed courses whenever catalog changes (count mismatch or stale URL detected)
+        _db_count = s.query(CourseCatalog).count()
+        _stale = s.query(CourseCatalog).filter(
+            CourseCatalog.url.in_([
+                "https://academy.alterra.id/",
+                "https://www.cfainstitute.org/",
+                "https://www.redhat.com/en/services/training-and-certification",
+                "https://www.biminstitute.co.id/",
+                "https://typsy.com/courses",
+                "https://iai.or.id/",
+                "https://openwho.org/courses",
+                "https://cgmasteracademy.com/",
+            ])
+        ).first()
+        needs_reseed = (_db_count == 0) or (_db_count != len(_COURSES)) or (_stale is not None)
         if needs_reseed:
             s.query(CourseCatalog).delete()
             s.add_all([
@@ -2439,7 +2451,6 @@ def _render_roadmap():
     st.markdown(
         f"**Target Role:** {match.get('title','')}",
     )
-    st.caption("All course links are sourced exclusively from our verified catalog. No AI-generated URLs.")
 
     if not courses:
         st.markdown("""
