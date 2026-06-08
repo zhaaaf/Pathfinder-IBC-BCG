@@ -933,7 +933,7 @@ def generate_verified_roadmap(onet_codes: list, duration_tier: str = "balanced")
 # GEMINI BACKEND
 # ══════════════════════════════════════════════════════════════════════════════
 
-ANALYZE_MODEL = "gemini-2.5-flash"
+ANALYZE_MODEL = "gemini-3.5-flash"
 
 ANALYZE_SYSTEM_PROMPT = """
 You are an expert career counselor and labor-market analyst specializing in the Indonesian job market and international standards (O*NET SOC codes, SKKNI).
