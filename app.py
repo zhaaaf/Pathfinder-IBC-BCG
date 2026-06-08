@@ -117,52 +117,107 @@ def _logo_b64() -> str:
     return ""
 
 # ── Comprehensive skill list for autocomplete ─────────────────────────────────
-_ALL_SKILLS = [
-    # Programming
+_TECHNICAL_SKILLS = [
+    # Programming Languages
     "Python","JavaScript","TypeScript","Java","C++","C#","R","Go","Swift","Kotlin",
-    "PHP","Ruby","Rust","Scala","MATLAB","Bash/Shell",
-    # Web
+    "PHP","Ruby","Rust","Scala","MATLAB","Bash/Shell","Dart","Perl","Haskell","Lua",
+    "Assembly","COBOL","Fortran","Elixir","Clojure","F#","Groovy","PowerShell",
+    # Web Development
     "HTML/CSS","React","Vue.js","Angular","Node.js","Django","Flask","Spring Boot",
-    "REST APIs","GraphQL","WordPress","Next.js",
+    "REST APIs","GraphQL","WordPress","Next.js","Svelte","Laravel","FastAPI",
+    "Express.js","jQuery","Bootstrap","Tailwind CSS","WebSockets","Redux",
+    "Nuxt.js","Gatsby","Remix","Astro","WebAssembly",
     # Data & AI
-    "SQL","PostgreSQL","MySQL","MongoDB","Excel","Tableau","Power BI",
-    "Google Analytics","Pandas","NumPy","TensorFlow","PyTorch","Scikit-learn",
-    "Machine Learning","Deep Learning","NLP","Computer Vision","Data Visualization",
-    "Statistical Analysis","A/B Testing","R Programming",
+    "SQL","PostgreSQL","MySQL","MongoDB","Redis","Elasticsearch","Cassandra",
+    "Excel","Tableau","Power BI","Google Analytics","Pandas","NumPy","SciPy",
+    "TensorFlow","PyTorch","Scikit-learn","Keras","Hugging Face","OpenAI API",
+    "Machine Learning","Deep Learning","NLP","Computer Vision","Reinforcement Learning",
+    "Data Visualization","Statistical Analysis","A/B Testing","R Programming",
+    "Data Mining","Feature Engineering","LLMs","Generative AI",
+    "ETL Pipelines","Apache Spark","Hadoop","Apache Kafka","Airflow","dbt",
+    "BigQuery","Snowflake","Databricks","Looker","Metabase",
     # Cloud & DevOps
     "AWS","Azure","Google Cloud","Docker","Kubernetes","Terraform","CI/CD","Git",
-    "Linux","Agile/Scrum","DevOps","Microservices","Jenkins",
-    # Business & Finance
+    "GitHub Actions","GitLab CI","Linux","Agile/Scrum","DevOps","Microservices",
+    "Jenkins","Ansible","Puppet","Chef","Prometheus","Grafana","Nginx","Apache",
+    "Serverless","Cloud Functions","AWS Lambda","Azure Functions","Vault",
+    # Business & Operations
     "Financial Modeling","Budgeting","Financial Analysis","Forecasting",
-    "Risk Management","Accounting (GAAP)","Auditing","Tax Compliance",
-    "Business Analysis","Process Improvement","Six Sigma","Lean",
-    "Project Management","Stakeholder Management","Change Management","SAP","ERP Systems",
+    "Risk Management","Accounting (GAAP/IFRS)","Auditing","Tax Compliance",
+    "Business Analysis","Process Improvement","Six Sigma","Lean","Kaizen",
+    "Project Management","SAP","ERP Systems","Oracle ERP","Odoo",
+    "Supply Chain Management","Procurement","Logistics","Inventory Management",
+    "Power Automate","RPA (UiPath / Automation Anywhere)",
     # Marketing & Sales
     "Digital Marketing","SEO/SEM","Content Marketing","Social Media Marketing",
-    "Email Marketing","Brand Management","CRM","Salesforce","HubSpot",
+    "Email Marketing","Brand Management","CRM","Salesforce","HubSpot","Zoho CRM",
     "Copywriting","Market Research","Lead Generation","Sales Strategy",
-    "Google Ads","Facebook Ads","E-commerce",
+    "Google Ads","Facebook Ads","TikTok Ads","E-commerce","Shopify",
+    "Marketing Automation","Affiliate Marketing","Influencer Marketing",
+    "Customer Segmentation","Conversion Rate Optimization",
     # Design & Creative
     "Adobe Photoshop","Adobe Illustrator","Adobe InDesign","Figma","Sketch",
     "UI/UX Design","Wireframing","Prototyping","Typography","Brand Identity",
     "Video Editing","Adobe Premiere Pro","After Effects","Blender","Cinema 4D",
-    # Soft Skills
-    "Public Speaking","Presentation Skills","Technical Writing","Business Writing",
-    "Negotiation","Leadership","Team Management","Critical Thinking",
-    "Problem Solving","Time Management","Conflict Resolution","Emotional Intelligence",
+    "Canva","Adobe XD","User Research","Accessibility Design","Motion Graphics",
+    "3D Modeling","Illustration","Graphic Design","Photography",
     # Engineering Tools
     "AutoCAD","SolidWorks","MATLAB/Simulink","Circuit Design","PLC Programming",
-    "Structural Analysis","HYSYS/Aspen Plus",
-    # Healthcare
-    "Patient Care","Clinical Assessment","Electronic Health Records",
-    "Medical Procedures","Pharmacology","First Aid","Nutrition Assessment",
-    # Languages
+    "Structural Analysis","HYSYS/Aspen Plus","CATIA","Ansys","LabVIEW",
+    "Revit","Civil 3D","Arena Simulation","ETAP","STAAD.Pro","SCADA",
+    "Embedded Systems","IoT","PCB Design (Altium/Eagle)","VHDL/Verilog",
+    # Healthcare & Sciences
+    "Patient Care","Clinical Assessment","Electronic Health Records (EHR)",
+    "Medical Procedures","Pharmacology","First Aid & CPR","Nutrition Assessment",
+    "Laboratory Techniques","PCR","Cell Culture","GCP/GMP Compliance",
+    "Medical Imaging","Epidemiology","Clinical Research","SPSS",
+    # Security & Networking
+    "Cybersecurity","Penetration Testing","Network Security","Ethical Hacking",
+    "SIEM","Firewall Management","Cisco Networking","VPN","TCP/IP","DNS",
+    "ISO 27001","SOC Operations","Cryptography","Incident Response",
+    # Languages (Proficiency)
     "English (Professional)","Bahasa Indonesia","Mandarin Chinese","Japanese",
-    "Korean","French","German","Arabic",
+    "Korean","French","German","Arabic","Spanish","Portuguese","Hindi",
     # Productivity & Collaboration
     "Microsoft Office Suite","Google Workspace","Slack","Jira","Notion",
-    "Asana","Trello","Zoom","Power Automate",
+    "Asana","Trello","Zoom","Confluence","SharePoint","Monday.com",
+    "ClickUp","Miro","Figma (Collaborative)","Airtable",
 ]
+
+_SOFT_SKILLS = [
+    # Communication
+    "Public Speaking","Presentation Skills","Technical Writing","Business Writing",
+    "Active Listening","Storytelling","Report Writing","Persuasion",
+    "Cross-cultural Communication","Negotiation","Copywriting",
+    # Leadership & Management
+    "Leadership","Team Management","Delegation","Coaching & Mentoring",
+    "Stakeholder Management","Change Management","Decision Making",
+    "Strategic Thinking","People Management","Talent Development",
+    "Performance Management","Conflict Resolution","Facilitation",
+    "Crisis Management","Visionary Thinking",
+    # Thinking & Problem Solving
+    "Critical Thinking","Problem Solving","Analytical Thinking",
+    "Creative Thinking","Systems Thinking","First Principles Thinking",
+    "Design Thinking","Research Skills","Data-driven Decision Making",
+    "Root Cause Analysis","Lateral Thinking",
+    # Work Ethic & Productivity
+    "Time Management","Prioritization","Self-motivation","Attention to Detail",
+    "Multitasking","Goal Setting","Accountability","Work Ethics",
+    "Adaptability","Resilience","Continuous Learning","Growth Mindset",
+    "Self-discipline","Stress Management","Initiative",
+    # Interpersonal & Collaboration
+    "Teamwork","Collaboration","Empathy","Emotional Intelligence",
+    "Networking","Customer Service","Client Relations",
+    "Cross-functional Collaboration","Inclusivity","Cultural Sensitivity",
+    "Mentoring","Community Building","Conflict Management",
+    # Project & Process
+    "Project Management","Process Improvement","Risk Awareness","Planning",
+    "Coordination","Documentation","Reporting","Quality Mindset",
+    "Agile Mindset","Scrum Practices","Kanban","OKR Framework",
+]
+
+# Combined for backward compat
+_ALL_SKILLS = _TECHNICAL_SKILLS + _SOFT_SKILLS
 
 # ── Seed data ──────────────────────────────────────────────────────────────────
 _MAJORS = [
@@ -1786,7 +1841,8 @@ def _init_session():
         "pf_work_entries":        [{"id": 0}],
         "pf_work_counter":        1,
         "pf_profile_photo_b64":   "",
-        "pf_manual_skills_sel":   [],
+        "pf_manual_tech_sel":     [],
+        "pf_manual_soft_sel":     [],
     }
     for k, v in defaults.items():
         st.session_state.setdefault(k, v)
@@ -1799,27 +1855,26 @@ def _render_manual_form():
     all_majors = ["-- Select Major --"] + get_all_majors()
     all_titles = ["-- Select Role --"] + get_all_onet_titles() + ["Other"]
 
+    # ── field label helper ────────────────────────────────────────────────────
+    def _lbl(text: str, required: bool = False) -> None:
+        req = '<span class="pf-req">*</span>' if required else ""
+        st.markdown(
+            f'<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
+            f'letter-spacing:.08em;color:var(--charcoal-mid);">{text}</span>{req}',
+            unsafe_allow_html=True,
+        )
+
     col_edu, col_work, col_skills = st.columns([1, 1.2, 1], gap="large")
 
-    # ── Col 1: Education ──────────────────────────────────────────────────────
+    # ── Col 1: Education (all except Graduation Year) ─────────────────────────
     with col_edu:
         st.markdown('<div class="pf-section-header">Education</div>', unsafe_allow_html=True)
-        st.markdown(
-            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:var(--charcoal-mid);">Full Name</span>'
-            '<span class="pf-req">*</span>',
-            unsafe_allow_html=True
-        )
+        _lbl("Full Name", required=True)
         full_name = st.text_input(
             "Full Name", placeholder="e.g. John Smith",
-            key="pf_manual_name", label_visibility="collapsed"
+            key="pf_manual_name", label_visibility="collapsed",
         )
-        st.markdown(
-            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:var(--charcoal-mid);">Education Level</span>'
-            '<span class="pf-req">*</span>',
-            unsafe_allow_html=True
-        )
+        _lbl("Education Level", required=True)
         edu_options = [
             "Junior High School", "Senior High School / Vocational",
             "Diploma (D1/D2)", "Associate Degree (D3)",
@@ -1829,101 +1884,94 @@ def _render_manual_form():
         ]
         edu_level = st.selectbox(
             "Education Level", edu_options,
-            key="pf_manual_edu", label_visibility="collapsed"
+            key="pf_manual_edu", label_visibility="collapsed",
         )
-        st.markdown(
-            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:var(--charcoal-mid);">Major / Field of Study</span>'
-            '<span class="pf-req">*</span>',
-            unsafe_allow_html=True
-        )
+        _lbl("Major / Field of Study", required=True)
         major_choice = st.selectbox(
             "Major", all_majors,
-            key="pf_manual_major_sel", label_visibility="collapsed"
+            key="pf_manual_major_sel", label_visibility="collapsed",
         )
         major = "" if major_choice == "-- Select Major --" else major_choice
-
+        _lbl("Institution / University")
         institution = st.text_input(
             "Institution / University", placeholder="e.g. University of Indonesia",
-            key="pf_manual_inst"
-        )
-        grad_year = st.selectbox(
-            "Graduation Year",
-            ["--"] + [str(y) for y in range(2030, 1985, -1)],
-            key="pf_manual_grad"
+            key="pf_manual_inst", label_visibility="collapsed",
         )
 
-    # ── Col 2: Work Experience ────────────────────────────────────────────────
+    # ── Col 2: Work Experience (all except Add Experience button) ─────────────
     with col_work:
         st.markdown('<div class="pf-section-header">Work Experience</div>',
                     unsafe_allow_html=True)
         entries = st.session_state["pf_work_entries"]
         for idx, entry in enumerate(entries):
             eid = entry["id"]
-            st.markdown('<div class="pf-work-card">', unsafe_allow_html=True)
             job_choice = st.selectbox(
-                f"Job Title #{idx+1}", all_titles, key=f"pf_job_title_sel_{eid}"
+                f"Job Title #{idx + 1}", all_titles, key=f"pf_job_title_sel_{eid}",
             )
             if job_choice in ("-- Select Role --", "Other"):
                 st.text_input(
                     "Custom Title", key=f"pf_job_title_txt_{eid}",
-                    placeholder="e.g. Data Analyst"
+                    placeholder="e.g. Data Analyst",
                 )
             st.text_input(
                 "Company / Organization", key=f"pf_company_{eid}",
-                placeholder="e.g. PT Tokopedia"
+                placeholder="e.g. PT Tokopedia",
             )
             dc1, dc2 = st.columns(2)
             with dc1:
                 st.selectbox(
                     "Start Year",
                     ["--"] + [str(y) for y in range(2030, 1980, -1)],
-                    key=f"pf_start_{eid}"
+                    key=f"pf_start_{eid}",
                 )
             with dc2:
                 st.selectbox(
                     "End Year",
                     ["--", "Present"] + [str(y) for y in range(2030, 1980, -1)],
-                    key=f"pf_end_{eid}"
+                    key=f"pf_end_{eid}",
                 )
-            st.markdown('</div>', unsafe_allow_html=True)
             if len(entries) > 1:
                 if st.button("Remove", key=f"pf_remove_{eid}", use_container_width=True):
                     st.session_state["pf_work_entries"] = [
                         e for e in entries if e["id"] != eid
                     ]
                     st.rerun()
-        if st.button("+ Add Experience", use_container_width=True):
-            nid = st.session_state["pf_work_counter"]
-            st.session_state["pf_work_entries"].append({"id": nid})
-            st.session_state["pf_work_counter"] += 1
-            st.rerun()
 
-    # ── Col 3: Skills & Certs ─────────────────────────────────────────────────
+    # ── Col 3: Skills & Certifications ────────────────────────────────────────
     with col_skills:
         st.markdown('<div class="pf-section-header">Skills & Certifications</div>',
                     unsafe_allow_html=True)
-        st.markdown(
-            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:var(--charcoal-mid);">Technical & Soft Skills</span>'
-            '<span class="pf-req">*</span>',
-            unsafe_allow_html=True
-        )
-        selected_skills = st.multiselect(
-            "Skills (type to search)",
-            options=_ALL_SKILLS,
-            default=st.session_state.get("pf_manual_skills_sel", []),
-            key="pf_manual_skills_sel",
-            placeholder="Type to search skills...",
+
+        # Technical Skills
+        _lbl("Technical Skills", required=True)
+        selected_tech = st.multiselect(
+            "Technical Skills",
+            options=_TECHNICAL_SKILLS,
+            default=st.session_state.get("pf_manual_tech_sel", []),
+            key="pf_manual_tech_sel",
+            placeholder="Type to search technical skills...",
             label_visibility="collapsed",
         )
+
+        # Soft Skills
+        _lbl("Soft Skills")
+        selected_soft = st.multiselect(
+            "Soft Skills",
+            options=_SOFT_SKILLS,
+            default=st.session_state.get("pf_manual_soft_sel", []),
+            key="pf_manual_soft_sel",
+            placeholder="Type to search soft skills...",
+            label_visibility="collapsed",
+        )
+
+        # Unlisted skills
         extra_skills = st.text_input(
             "Add unlisted skills (comma-separated)",
-            placeholder="e.g. QGIS, Revit, Tableau...",
-            key="pf_extra_skills"
+            placeholder="e.g. QGIS, Revit, Arena...",
+            key="pf_extra_skills",
         )
         extra_list = [s.strip() for s in extra_skills.split(",") if s.strip()]
-        all_user_skills = list(selected_skills) + extra_list
+        all_user_skills = list(selected_tech) + list(selected_soft) + extra_list
         if all_user_skills:
             pills_html = " ".join(
                 f'<span class="pf-pill">{s}</span>' for s in all_user_skills
@@ -1932,30 +1980,46 @@ def _render_manual_form():
             st.caption(f"{len(all_user_skills)} skill(s) selected")
 
         st.markdown("---")
-        st.markdown(
-            '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            'letter-spacing:.08em;color:var(--charcoal-mid);">Certifications / Licenses</span>',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            '<div class="pf-cert-zone">Drop certificate files here (PDF / PNG / JPG)</div>',
-            unsafe_allow_html=True
-        )
+        _lbl("Certifications / Licenses")
         cert_files = st.file_uploader(
-            "Certificates", type=["pdf", "png", "jpg", "jpeg"],
-            accept_multiple_files=True, label_visibility="collapsed",
-            key="pf_cert_files"
+            "Certificates (PDF / PNG / JPG)",
+            type=["pdf", "png", "jpg", "jpeg"],
+            accept_multiple_files=True,
+            label_visibility="visible",
+            key="pf_cert_files",
         )
         if cert_files:
             for cf in cert_files:
                 st.markdown(
                     f'<span class="pf-badge pf-badge-green">Uploaded: {cf.name}</span>',
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,
                 )
+
+    # ── Bottom-aligned row: Graduation Year | Add Experience | Cert text ──────
+    st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
+    bot_edu, bot_work, bot_skills = st.columns([1, 1.2, 1], gap="large")
+
+    with bot_edu:
+        grad_year = st.selectbox(
+            "Graduation Year",
+            ["--"] + [str(y) for y in range(2030, 1985, -1)],
+            key="pf_manual_grad",
+        )
+
+    with bot_work:
+        # Spacer to visually align button with selects in other columns
+        st.markdown('<div style="height:1.55rem;"></div>', unsafe_allow_html=True)
+        if st.button("+ Add Experience", use_container_width=True):
+            nid = st.session_state["pf_work_counter"]
+            st.session_state["pf_work_entries"].append({"id": nid})
+            st.session_state["pf_work_counter"] += 1
+            st.rerun()
+
+    with bot_skills:
         cert_text = st.text_area(
             "Or list certifications manually",
             placeholder="AWS Certified Developer (2023)\nGoogle Data Analytics Certificate",
-            height=70, key="pf_cert_text"
+            height=70, key="pf_cert_text",
         )
 
     return {
@@ -2744,7 +2808,7 @@ def _render_upload():
 
     tab_upload, tab_manual = st.tabs([
         "\U0001F4C4  Upload CV & Certificate",
-        "\U0000270F  Input Manual Data",
+        "\U0000270F  Manual Data Entry",
     ])
 
     # ── Tab 1: Upload CV & Certificate ────────────────────────────────────────
@@ -2836,7 +2900,7 @@ def _render_upload():
                     n = len([l for l in cert_list_text.splitlines() if l.strip()])
                     st.caption(f"{n} certificate(s) listed")
 
-    # ── Tab 2: Input Manual Data ───────────────────────────────────────────────
+    # ── Tab 2: Manual Data Entry ───────────────────────────────────────────────
     with tab_manual:
         st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
         form_data = _render_manual_form()
