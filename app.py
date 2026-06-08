@@ -2801,36 +2801,13 @@ def _render_upload():
                     "CV (PDF only)", type=["pdf"],
                     key="pf_pdf_upload", label_visibility="visible",
                 )
-                # Mirror structure: paste area (matches Certs card height exactly)
+                if uploaded:
+                    st.success(f"Ready: {uploaded.name}")
                 cv_paste = st.text_area(
                     "Or paste your CV text directly",
                     placeholder="Paste your CV content here if you don't have a PDF...",
                     height=130, key="pf_cv_paste_text",
                 )
-                # Determine source and show Analyze button
-                has_input = uploaded or cv_paste.strip()
-                if has_input:
-                    if uploaded:
-                        st.success(f"Ready: {uploaded.name}")
-                    if st.button("Analyze CV", type="primary",
-                                 use_container_width=True, key="pf_analyze_pdf"):
-                        try:
-                            if uploaded:
-                                cv_text = extract_pdf_text(uploaded.read())
-                                if not cv_text.strip():
-                                    st.error("Could not extract text. Try the manual form instead.")
-                                    st.stop()
-                            else:
-                                cv_text = cv_paste.strip()
-                            result = _run_with_loading(_call_gemini, cv_text)
-                            st.session_state["pf_analysis"] = result
-                            upsert_user_profile(
-                                st.session_state["pf_session_id"], cv_text=cv_text
-                            )
-                            st.session_state["pf_step"] = "results"
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Analysis failed: {e}")
 
         # ---- Right: Certificates & Licenses -----------------------------------
         with col_cert:
@@ -2866,6 +2843,43 @@ def _render_upload():
                 if cert_list_text.strip():
                     n = len([l for l in cert_list_text.splitlines() if l.strip()])
                     st.caption(f"{n} certificate(s) listed")
+
+        # ---- Analyze button — always visible, below both cards ---------------
+        st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+        _, btn_col, _ = st.columns([1, 2, 1])
+        with btn_col:
+            if st.button("Analyze", type="primary", use_container_width=True,
+                         key="pf_analyze_pdf"):
+                # Build CV text from upload or paste
+                cv_text = ""
+                if uploaded:
+                    try:
+                        cv_text = extract_pdf_text(uploaded.read())
+                    except Exception:
+                        cv_text = ""
+                if not cv_text.strip() and cv_paste.strip():
+                    cv_text = cv_paste.strip()
+
+                # Append certificate text if provided
+                cert_extra = cert_list_text.strip() if cert_list_text.strip() else ""
+
+                if not cv_text.strip() and not cert_extra:
+                    st.warning("Please upload a CV, paste your CV text, or add at least one certificate before analyzing.")
+                else:
+                    # Combine into one analysis payload
+                    payload = cv_text
+                    if cert_extra:
+                        payload += f"\n\nCertifications:\n{cert_extra}"
+                    try:
+                        result = _run_with_loading(_call_gemini, payload)
+                        st.session_state["pf_analysis"] = result
+                        upsert_user_profile(
+                            st.session_state["pf_session_id"], cv_text=payload
+                        )
+                        st.session_state["pf_step"] = "results"
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Analysis failed: {e}")
 
     # ── Tab 2: Manual Data Entry ───────────────────────────────────────────────
     with tab_manual:
