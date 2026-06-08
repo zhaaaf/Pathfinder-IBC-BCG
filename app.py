@@ -377,9 +377,10 @@ _OCCUPATIONS = [
     ("41-2011.00", "Retail Sales Associate", "Sell merchandise and assist customers in retail establishments."),
 ]
 
-# ── Verified course URLs — each URL links to the specific course/program page ──
+# ── Verified course catalog — URLs link directly to the specific course page ───
 _COURSES = [
-    # Software Developer (15-1252.00)
+
+    # ── Software Developer (15-1252.00) ──────────────────────────────────────
     ("Python for Everybody Specialization", "Coursera (University of Michigan)",
      "https://www.coursera.org/specializations/python",
      "15-1252.00", 40),
@@ -782,7 +783,317 @@ _COURSES = [
      "https://www.coursera.org/learn/sustainable-tourism",
      "39-7011.00", 20),
 
-    # Data Analytics Professional Certificate (MySkill — Indonesia)
+    # ── Operations Research Analyst (15-2031.00) ──────────────────────────────
+    ("Operations Research (1): Models and Applications", "Coursera (National Taiwan University)",
+     "https://www.coursera.org/learn/operations-research-modeling",
+     "15-2031.00", 25),
+    ("Discrete Optimization", "Coursera (University of Melbourne)",
+     "https://www.coursera.org/learn/discrete-optimization",
+     "15-2031.00", 30),
+    ("Linear and Integer Programming", "Coursera (University of Colorado Boulder)",
+     "https://www.coursera.org/learn/linear-and-integer-programming",
+     "15-2031.00", 20),
+    ("Supply Chain Analytics", "Coursera (Rutgers University)",
+     "https://www.coursera.org/learn/supply-chain-analytics",
+     "15-2031.00", 20),
+
+    # ── Computer & Information Research Scientist (15-1221.00) ───────────────
+    ("Algorithms Specialization", "Coursera (Stanford University)",
+     "https://www.coursera.org/specializations/algorithms",
+     "15-1221.00", 60),
+    ("Computational Thinking for Problem Solving", "Coursera (University of Pennsylvania)",
+     "https://www.coursera.org/learn/computational-thinking-problem-solving",
+     "15-1221.00", 20),
+    ("Research Methods", "Coursera (University of London)",
+     "https://www.coursera.org/learn/research-methods",
+     "15-1221.00", 15),
+
+    # ── Systems Analyst (15-1211.00) ─────────────────────────────────────────
+    ("Systems Analysis and Design", "Coursera (University of New Mexico)",
+     "https://www.coursera.org/learn/systems-analysis-design",
+     "15-1211.00", 20),
+    ("Business Intelligence and Data Warehousing", "Coursera (University of Colorado)",
+     "https://www.coursera.org/learn/business-intelligence-data-warehousing",
+     "15-1211.00", 20),
+    ("Enterprise Systems Architecture", "edX (Purdue University)",
+     "https://www.edx.org/learn/enterprise-architecture",
+     "15-1211.00", 25),
+
+    # ── IT Support Specialist (15-1232.00) ────────────────────────────────────
+    ("Google IT Support Professional Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-it-support",
+     "15-1232.00", 120),
+    ("CompTIA A+ Certification Prep", "CompTIA",
+     "https://www.comptia.org/certifications/a",
+     "15-1232.00", 40),
+    ("Introduction to Technical Support", "Coursera (IBM)",
+     "https://www.coursera.org/learn/introduction-technical-support",
+     "15-1232.00", 15),
+
+    # ── Network/Computer Systems Administrator (15-1241.00) ───────────────────
+    ("CompTIA Network+ Certification", "CompTIA",
+     "https://www.comptia.org/certifications/network",
+     "15-1241.00", 50),
+    ("Cisco CCNA: Switching, Routing, and Wireless Essentials", "Cisco Networking Academy",
+     "https://www.netacad.com/courses/networking/ccna-switching-routing-wireless-essentials",
+     "15-1241.00", 70),
+    ("Linux Fundamentals", "Coursera (LearnQuest)",
+     "https://www.coursera.org/learn/linux-fundamentals",
+     "15-1241.00", 20),
+
+    # ── Chemical Engineer (17-2041.00) ────────────────────────────────────────
+    ("Process Design and Simulation with Aspen Plus", "Udemy",
+     "https://www.udemy.com/course/aspen-plus-for-chemical-engineering/",
+     "17-2041.00", 20),
+    ("Chemical Process Safety", "Coursera (Texas A&M University)",
+     "https://www.coursera.org/learn/chemical-process-safety",
+     "17-2041.00", 20),
+    ("Thermodynamics and Phase Equilibria", "Coursera (University of Amsterdam)",
+     "https://www.coursera.org/learn/thermodynamics-phase-equilibria",
+     "17-2041.00", 25),
+    ("Process Control", "Coursera (University of Michigan)",
+     "https://www.coursera.org/learn/process-control",
+     "17-2041.00", 20),
+
+    # ── Aerospace Engineer (17-2011.00) ───────────────────────────────────────
+    ("Spacecraft Dynamics and Control Specialization", "Coursera (University of Colorado Boulder)",
+     "https://www.coursera.org/specializations/spacecraft-dynamics-control",
+     "17-2011.00", 60),
+    ("Introduction to Aeronautical Engineering", "edX (TU Delft)",
+     "https://www.edx.org/learn/aerospace-engineering/delft-university-of-technology-introduction-to-aeronautical-engineering",
+     "17-2011.00", 30),
+    ("Aerodynamics for Engineers", "edX (Purdue University)",
+     "https://www.edx.org/learn/aerodynamics",
+     "17-2011.00", 25),
+
+    # ── Biomedical Engineer (17-2031.00) ──────────────────────────────────────
+    ("Bioelectricity: A Quantitative Approach", "Coursera (Duke University)",
+     "https://www.coursera.org/learn/bioelectricity",
+     "17-2031.00", 20),
+    ("Biomedical Imaging", "Coursera (Johns Hopkins University)",
+     "https://www.coursera.org/learn/biomedical-imaging",
+     "17-2031.00", 20),
+    ("Medical Device Design (FDA Regulatory Affairs)", "Coursera (Duke University)",
+     "https://www.coursera.org/specializations/medtech-innovation",
+     "17-2031.00", 30),
+
+    # ── Environmental Engineer (17-2081.00) ───────────────────────────────────
+    ("Environmental Management & Ethics", "Coursera (Erasmus University Rotterdam)",
+     "https://www.coursera.org/learn/environmental-management-ethics",
+     "17-2081.00", 20),
+    ("GIS, Mapping, and Spatial Analysis", "Coursera (University of Toronto)",
+     "https://www.coursera.org/learn/gis-mapping-spatial-analysis",
+     "17-2081.00", 20),
+    ("Sustainability and Development", "Coursera (University of Michigan)",
+     "https://www.coursera.org/learn/sustainability-development",
+     "17-2081.00", 15),
+    ("Environmental Impact Assessment", "Coursera (University of Cape Town)",
+     "https://www.coursera.org/learn/environmental-impact-assessment",
+     "17-2081.00", 20),
+
+    # ── Petroleum Engineer (17-2171.00) ───────────────────────────────────────
+    ("Subsurface Reservoir Characterization", "Coursera (Duke University)",
+     "https://www.coursera.org/learn/subsurface-reservoir-characterization",
+     "17-2171.00", 20),
+    ("Reservoir Rock and Fluid Properties", "Coursera (University of Texas Austin)",
+     "https://www.coursera.org/learn/reservoir-rock-fluid-properties",
+     "17-2171.00", 20),
+    ("Petroleum Production Operations", "Coursera (University of Aberdeen)",
+     "https://www.coursera.org/learn/petroleum-production-operations",
+     "17-2171.00", 25),
+
+    # ── Mining and Geological Engineer (17-2151.00) ───────────────────────────
+    ("Mining and Mineral Resources", "Coursera (University of Queensland)",
+     "https://www.coursera.org/learn/mining-mineral-resources",
+     "17-2151.00", 20),
+    ("Introduction to Geology", "Coursera (Duke University)",
+     "https://www.coursera.org/learn/introduction-geology",
+     "17-2151.00", 20),
+
+    # ── General Manager / CEO (11-1021.00) ────────────────────────────────────
+    ("Leadership and Organizational Behavior", "Coursera (IESE Business School)",
+     "https://www.coursera.org/learn/leadership-and-organizational-behavior",
+     "11-1021.00", 20),
+    ("Strategic Management and Innovation", "Coursera (Copenhagen Business School)",
+     "https://www.coursera.org/specializations/strategic-management-innovation",
+     "11-1021.00", 35),
+    ("Financial Acumen for Non-Financial Managers", "Coursera (University of Pennsylvania)",
+     "https://www.coursera.org/learn/finance-for-non-finance-managers",
+     "11-1021.00", 15),
+
+    # ── Operations Manager (11-3051.00) ───────────────────────────────────────
+    ("Operations Management: Strategy and Quality", "Coursera (University of Illinois)",
+     "https://www.coursera.org/learn/operations-management",
+     "11-3051.00", 20),
+    ("Manufacturing & Production Management", "Coursera (Tecnológico de Monterrey)",
+     "https://www.coursera.org/learn/manufacturing-production",
+     "11-3051.00", 20),
+    ("Quality Management and Lean Six Sigma", "Coursera (University System of Georgia)",
+     "https://www.coursera.org/learn/six-sigma-define-measure-advanced",
+     "11-3051.00", 25),
+
+    # ── Purchasing / Procurement Manager (11-3061.00) ─────────────────────────
+    ("Procurement & Sourcing Introduction", "Coursera (Rutgers University)",
+     "https://www.coursera.org/learn/procurement-sourcing-intro",
+     "11-3061.00", 20),
+    ("Contract Management: Building Relationships in Business", "Coursera (University of Melbourne)",
+     "https://www.coursera.org/learn/contract-management",
+     "11-3061.00", 15),
+    ("Category Management in Purchasing", "Coursera (Rutgers University)",
+     "https://www.coursera.org/learn/category-management-purchasing",
+     "11-3061.00", 20),
+
+    # ── Transportation / Logistics Manager (11-3071.00) ───────────────────────
+    ("Supply Chain and Logistics Management", "edX (MIT)",
+     "https://www.edx.org/certificates/professional-certificate/mitx-supply-chain-management",
+     "11-3071.00", 45),
+    ("Transportation and Distribution Management", "Coursera (Rutgers University)",
+     "https://www.coursera.org/learn/transportation-distribution",
+     "11-3071.00", 20),
+
+    # ── Bookkeeping Clerk / Accounting Assistant (43-3031.00) ─────────────────
+    ("Bookkeeping Basics", "Coursera (Intuit)",
+     "https://www.coursera.org/learn/bookkeeping-basics",
+     "43-3031.00", 25),
+    ("Payroll Fundamentals", "Coursera (ADP)",
+     "https://www.coursera.org/learn/payroll-fundamentals",
+     "43-3031.00", 15),
+    ("QuickBooks Online for Beginners", "Udemy",
+     "https://www.udemy.com/course/quickbooks-online/",
+     "43-3031.00", 10),
+
+    # ── Credit Analyst (13-2041.00) ───────────────────────────────────────────
+    ("Credit Risk Management", "Coursera (New York Institute of Finance)",
+     "https://www.coursera.org/learn/credit-risk-management",
+     "13-2041.00", 20),
+    ("Introduction to Financial Analysis", "Coursera (University of Michigan)",
+     "https://www.coursera.org/learn/financial-analysis",
+     "13-2041.00", 20),
+    ("Banking and Financial Institutions", "Coursera (Yale University)",
+     "https://www.coursera.org/learn/banking-and-financial-institutions",
+     "13-2041.00", 20),
+
+    # ── Advertising Manager (11-2011.00) ─────────────────────────────────────
+    ("Digital Advertising", "Coursera (University of Illinois)",
+     "https://www.coursera.org/learn/digital-advertising",
+     "11-2011.00", 20),
+    ("HubSpot Marketing Hub Certification", "HubSpot Academy",
+     "https://academy.hubspot.com/courses/hubspot-marketing-software",
+     "11-2011.00", 12),
+    ("Brand and Product Management", "Coursera (IE Business School)",
+     "https://www.coursera.org/learn/brand-and-product-management",
+     "11-2011.00", 15),
+    ("Media Planning and Buying", "Coursera (University of Illinois)",
+     "https://www.coursera.org/learn/media-planning-and-buying",
+     "11-2011.00", 15),
+
+    # ── Broadcast News Analyst (27-3021.00) ───────────────────────────────────
+    ("Digital Journalism", "Coursera (University of Strathclyde)",
+     "https://www.coursera.org/learn/digital-journalism",
+     "27-3021.00", 20),
+    ("Science Journalism", "Coursera (MIT)",
+     "https://www.coursera.org/learn/science-journalism",
+     "27-3021.00", 15),
+    ("Video Production Techniques", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/video-production-techniques",
+     "27-3021.00", 10),
+
+    # ── Producer and Director (27-2012.00) ────────────────────────────────────
+    ("Film Production", "Coursera (Michigan State University)",
+     "https://www.coursera.org/specializations/film-making",
+     "27-2012.00", 30),
+    ("Screenwriting", "Coursera (Michigan State University)",
+     "https://www.coursera.org/learn/screenwriting",
+     "27-2012.00", 15),
+    ("Introduction to Video Post-Production", "edX (W3Cx)",
+     "https://www.edx.org/learn/video-editing",
+     "27-2012.00", 20),
+
+    # ── PR Manager (11-2031.00) ───────────────────────────────────────────────
+    ("Crisis Communications", "Coursera (Northwestern University)",
+     "https://www.coursera.org/learn/crisis-communications",
+     "11-2031.00", 15),
+    ("Public Relations for Digital Media", "edX (Edinburgh Napier University)",
+     "https://www.edx.org/learn/public-relations/edinburgh-napier-university-public-relations-for-digital-media",
+     "11-2031.00", 20),
+
+    # ── Preschool Teacher (25-2011.00) ────────────────────────────────────────
+    ("Early Childhood Development", "Coursera (Yale University)",
+     "https://www.coursera.org/learn/early-childhood-development",
+     "25-2011.00", 20),
+    ("Play-Based Learning", "Coursera (University of California, Irvine)",
+     "https://www.coursera.org/learn/play-based-learning",
+     "25-2011.00", 15),
+
+    # ── Elementary School Teacher (25-2021.00) ────────────────────────────────
+    ("Foundations of Teaching for Learning", "Coursera (Commonwealth Education Trust)",
+     "https://www.coursera.org/specializations/foundations-teaching",
+     "25-2021.00", 35),
+    ("Classroom Management", "Coursera (New Teacher Center)",
+     "https://www.coursera.org/learn/classroom-management",
+     "25-2021.00", 15),
+
+    # ── Adult Literacy Instructor (25-3011.00) ────────────────────────────────
+    ("Teaching Adult Learners", "Coursera (University of Zurich)",
+     "https://www.coursera.org/learn/teaching-adult-learners",
+     "25-3011.00", 15),
+    ("Literacy Instruction for Adult Learners", "edX (LINCS)",
+     "https://www.edx.org/learn/literacy",
+     "25-3011.00", 15),
+
+    # ── Education Administrator (25-1099.00) ─────────────────────────────────
+    ("Educational Leadership", "Coursera (Johns Hopkins University)",
+     "https://www.coursera.org/specializations/k12-school-leadership",
+     "25-1099.00", 30),
+    ("School Curriculum Design", "Coursera (University of London)",
+     "https://www.coursera.org/learn/school-curriculum-design",
+     "25-1099.00", 20),
+
+    # ── Pharmacist (29-1051.00) ───────────────────────────────────────────────
+    ("Pharmacy Drug Dosing and Safety", "Coursera (University of Washington)",
+     "https://www.coursera.org/learn/pharmacy-dosing-safety",
+     "29-1051.00", 20),
+    ("Drug Interactions and Pharmacology", "Coursera (UC San Diego)",
+     "https://www.coursera.org/learn/drug-interactions",
+     "29-1051.00", 20),
+    ("Clinical Pharmacology", "edX (Karolinska Institutet)",
+     "https://www.edx.org/learn/clinical-pharmacology",
+     "29-1051.00", 25),
+
+    # ── Medical Laboratory Technologist (29-2011.00) ──────────────────────────
+    ("Hematology: From Cells to Clinical Cases", "Coursera (University of Michigan)",
+     "https://www.coursera.org/learn/hematology",
+     "29-2011.00", 15),
+    ("Microbiology: A Systems Approach", "Coursera (University of Houston System)",
+     "https://www.coursera.org/learn/microbiology",
+     "29-2011.00", 20),
+    ("Clinical Laboratory Science", "edX (ASMcue)",
+     "https://www.edx.org/learn/medical-laboratory-science",
+     "29-2011.00", 20),
+
+    # ── Child and Family Social Worker (21-1021.00) ───────────────────────────
+    ("Social Work Practice", "Coursera (University of Michigan)",
+     "https://www.coursera.org/learn/social-work-practice",
+     "21-1021.00", 20),
+    ("Child Protection: Children's Rights in Theory and Practice", "Coursera (Harvard University)",
+     "https://www.coursera.org/learn/child-protection",
+     "21-1021.00", 20),
+    ("Community Organizing for Social Justice", "Coursera (University of Michigan)",
+     "https://www.coursera.org/learn/community-organizing",
+     "21-1021.00", 15),
+
+    # ── Retail Sales Associate (41-2011.00) ───────────────────────────────────
+    ("Customer Service Fundamentals", "Coursera (IBM)",
+     "https://www.coursera.org/learn/customer-service-fundamentals",
+     "41-2011.00", 10),
+    ("Retail Sales Training", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/retail-sales-foundations",
+     "41-2011.00", 8),
+    ("Inventory Management Fundamentals", "Coursera (University of California, Irvine)",
+     "https://www.coursera.org/learn/inventory-management",
+     "41-2011.00", 10),
+
+    # ── Data Analytics (MySkill — Indonesia) ─────────────────────────────────
     ("Data Analytics Professional Certificate", "MySkill",
      "https://myskill.id/course/data-analytics",
      "15-2051.00", 20),
@@ -906,6 +1217,7 @@ def _init_db() -> None:
             ])
         ).first()
         needs_reseed = (_db_count == 0) or (_db_count != len(_COURSES)) or (_stale is not None)
+        # _COURSES count is the ground truth — mismatch always triggers reseed
         if needs_reseed:
             s.query(CourseCatalog).delete()
             s.add_all([
