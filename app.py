@@ -1643,12 +1643,33 @@ def _inject_css():
         min-height: 0 !important;
     }
 
-    /* 4. st.container(border=True) wrapper fills its intermediate div */
+    /* 4. st.container(border=True) wrapper fills its intermediate div
+          and enforces minimum height so both upload cards are equal */
     [data-testid="stVerticalBlockBorderWrapper"] {
         flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        min-height: 0 !important;
+        min-height: 360px !important;
+    }
+
+    /* 4b. Inner stVerticalBlock inside border wrapper — also flex column */
+    [data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 4c. File uploader stretches to fill remaining card height */
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stFileUploader"] {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stFileUploaderDropzone"] {
+        flex: 1 !important;
+        min-height: 120px !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     /* 5. pf-result-card keeps its own flex growth */
@@ -2767,11 +2788,6 @@ def _render_upload():
                                 st.rerun()
                         except Exception as e:
                             st.error(f"Analysis failed: {e}")
-                # Flex spacer — pushes CV card to match the Certs card height
-                st.markdown(
-                    '<div style="flex:1;min-height:168px;"></div>',
-                    unsafe_allow_html=True,
-                )
 
         # ---- Right: Certificates & Licenses -----------------------------------
         with col_cert:
