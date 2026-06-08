@@ -1897,8 +1897,13 @@ def _render_manual_form():
             "Institution / University", placeholder="e.g. University of Indonesia",
             key="pf_manual_inst", label_visibility="collapsed",
         )
+        grad_year = st.selectbox(
+            "Graduation Year",
+            ["--"] + [str(y) for y in range(2030, 1985, -1)],
+            key="pf_manual_grad",
+        )
 
-    # ── Col 2: Work Experience (all except Add Experience button) ─────────────
+    # ── Col 2: Work Experience ────────────────────────────────────────────────
     with col_work:
         st.markdown('<div class="pf-section-header">Work Experience</div>',
                     unsafe_allow_html=True)
@@ -1936,6 +1941,11 @@ def _render_manual_form():
                         e for e in entries if e["id"] != eid
                     ]
                     st.rerun()
+        if st.button("+ Add Experience", use_container_width=True):
+            nid = st.session_state["pf_work_counter"]
+            st.session_state["pf_work_entries"].append({"id": nid})
+            st.session_state["pf_work_counter"] += 1
+            st.rerun()
 
     # ── Col 3: Skills & Certifications ────────────────────────────────────────
     with col_skills:
@@ -1994,28 +2004,6 @@ def _render_manual_form():
                     f'<span class="pf-badge pf-badge-green">Uploaded: {cf.name}</span>',
                     unsafe_allow_html=True,
                 )
-
-    # ── Bottom-aligned row: Graduation Year | Add Experience | Cert text ──────
-    st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
-    bot_edu, bot_work, bot_skills = st.columns([1, 1.2, 1], gap="large")
-
-    with bot_edu:
-        grad_year = st.selectbox(
-            "Graduation Year",
-            ["--"] + [str(y) for y in range(2030, 1985, -1)],
-            key="pf_manual_grad",
-        )
-
-    with bot_work:
-        # Spacer to visually align button with selects in other columns
-        st.markdown('<div style="height:1.55rem;"></div>', unsafe_allow_html=True)
-        if st.button("+ Add Experience", use_container_width=True):
-            nid = st.session_state["pf_work_counter"]
-            st.session_state["pf_work_entries"].append({"id": nid})
-            st.session_state["pf_work_counter"] += 1
-            st.rerun()
-
-    with bot_skills:
         cert_text = st.text_area(
             "Or list certifications manually",
             placeholder="AWS Certified Developer (2023)\nGoogle Data Analytics Certificate",
