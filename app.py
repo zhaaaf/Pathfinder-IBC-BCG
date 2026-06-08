@@ -2082,7 +2082,8 @@ def _render_results():
             unsafe_allow_html=True
         )
         st.markdown("""
-        <div class="pf-card pf-card-dashed" style="text-align:center;padding:1.5rem 1rem;min-height:72px;">
+        <div class="pf-card pf-card-dashed pf-result-card"
+             style="text-align:center;padding:1.5rem 1rem;justify-content:center;align-items:center;">
           <div style="font-size:1.8rem;color:var(--copper);">+</div>
           <div style="font-weight:600;color:var(--charcoal);font-size:0.95rem;">Add Profession</div>
           <div style="font-size:0.75rem;color:var(--copper-muted);margin-top:0.2rem;">Browse all O*NET roles</div>
@@ -2097,28 +2098,37 @@ def _render_results():
             if soc:
                 hrs     = get_total_hours(soc)
                 courses = get_courses_for_onet(soc)
-                st.metric(
-                    "Total Study Hours",
-                    f"{int(hrs)}h" if hrs else "N/A",
-                    _fmt_duration(hrs)
-                )
-                if st.button("Add & Select", key="pf_add_custom",
-                             use_container_width=True, type="primary"):
-                    gaps = _compute_skill_gaps(soc, detected_skills or [])
-                    st.session_state["pf_selected_match"] = {
-                        "soc_code": soc,
-                        "title": custom_t,
-                        "description": "Manually selected profession from O*NET catalog.",
-                        "matched_skills": [],
-                        "skill_gaps": gaps,
-                        "match_score": 50,
-                        "total_course_hours": hrs,
-                        "courses": courses,
-                        "match_ratio": 0.5,
-                    }
-                    st.session_state["pf_roadmap_courses"] = courses
-                    st.session_state["pf_step"] = "skill_gap"
-                    st.rerun()
+                if courses:
+                    st.metric(
+                        "Total Study Hours",
+                        f"{int(hrs)}h" if hrs else "-",
+                        _fmt_duration(hrs) if hrs else ""
+                    )
+                    if st.button("Add & Select", key="pf_add_custom",
+                                 use_container_width=True, type="primary"):
+                        gaps = _compute_skill_gaps(soc, detected_skills or [])
+                        st.session_state["pf_selected_match"] = {
+                            "soc_code": soc,
+                            "title": custom_t,
+                            "description": "Manually selected profession from O*NET catalog.",
+                            "matched_skills": [],
+                            "skill_gaps": gaps,
+                            "match_score": 50,
+                            "total_course_hours": hrs,
+                            "courses": courses,
+                            "match_ratio": 0.5,
+                        }
+                        st.session_state["pf_roadmap_courses"] = courses
+                        st.session_state["pf_step"] = "skill_gap"
+                        st.rerun()
+                else:
+                    st.markdown(
+                        '<div class="pf-badge pf-badge-red" style="display:block;'
+                        'text-align:center;padding:0.4rem 0.6rem;margin-bottom:0.5rem;">'
+                        'No courses available for this role</div>',
+                        unsafe_allow_html=True
+                    )
+                    st.metric("Total Study Hours", "-", "")
 
     st.markdown("---")
     if st.button("Retake Analysis"):
@@ -2220,6 +2230,17 @@ def _render_skill_gap():
          "icon": "◦", "desc": "3 days per week, relaxed pace"},
     ]
 
+    # Determine how many courses exist for this role
+    _role_courses   = match.get("courses") or get_courses_for_onet(soc)
+    _course_count   = len(_role_courses)
+    _only_regular   = _course_count <= 1          # restrict if ≤ 1 course
+
+    if _only_regular:
+        st.info(
+            f"⚠️ Only {'1 course' if _course_count == 1 else 'no courses'} available "
+            f"for this role. **Only the Regular plan is applicable.**"
+        )
+
     def _duration_label(hrs, days_per_wk, hpd):
         if not hrs or not days_per_wk or not hpd:
             return "N/A"
@@ -2231,7 +2252,7 @@ def _render_skill_gap():
 
     cols = st.columns(3, gap="large")
     for plan, col in zip(plans, cols):
-        weekly_hrs = hours_pd * plan["days"]
+        weekly_hrs  = hours_pd * plan["days"]
         wks  = math.ceil(total_hrs / weekly_hrs) if (total_hrs and weekly_hrs) else 0
         dur  = _duration_label(total_hrs, plan["days"], hours_pd)
         end_date = (
@@ -2240,9 +2261,13 @@ def _render_skill_gap():
         sel      = st.session_state.get("pf_selected_plan") == plan["id"]
         card_cls = "pf-card pf-plan-selected" if sel else "pf-card"
 
+        # A plan is available if courses > 1, or it IS the Regular plan
+        plan_available = not _only_regular or plan["id"] == "balanced"
+
         with col:
+            opacity = "1" if plan_available else "0.45"
             st.markdown(f"""
-            <div class="{card_cls}" style="text-align:center;padding:1.5rem;">
+            <div class="{card_cls}" style="text-align:center;padding:1.5rem;opacity:{opacity};">
               <div style="font-size:2rem;color:var(--copper);font-weight:700;">{plan['icon']}</div>
               <div style="font-size:1.05rem;font-weight:700;margin:0.5rem 0;">{plan['name']}</div>
               <div style="font-size:0.82rem;color:var(--charcoal-soft);margin-bottom:0.8rem;">{plan['desc']}</div>
@@ -2255,7 +2280,8 @@ def _render_skill_gap():
             btn_type = "primary" if sel else "secondary"
             label    = ("Selected: " if sel else "Choose ") + plan["name"]
             if st.button(label, key=f"pf_plan_{plan['id']}",
-                         use_container_width=True, type=btn_type):
+                         use_container_width=True, type=btn_type,
+                         disabled=not plan_available):
                 st.session_state["pf_selected_plan"]       = plan["id"]
                 st.session_state["pf_days_per_week"]       = plan["days"]
                 st.session_state["pf_study_hours_per_day"] = hours_pd
