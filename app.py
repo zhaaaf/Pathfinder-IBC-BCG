@@ -2116,11 +2116,16 @@ def _render_results():
             if st.button("Select This Career", key=f"pf_sel_{i}",
                          use_container_width=True,
                          type="primary" if is_best else "secondary"):
-                courses = match.get("courses") or get_courses_for_onet(soc)
+                # Fetch courses once and store explicitly (even if empty list)
+                # so skill gap page sees _no_courses correctly
+                if "courses" in match and match["courses"] is not None:
+                    courses = match["courses"]
+                else:
+                    courses = get_courses_for_onet(soc)
                 st.session_state["pf_selected_match"] = {
                     **match,
                     "total_course_hours": total_hrs,
-                    "courses": courses,
+                    "courses": courses,          # explicit key, may be []
                     "match_ratio": score / 100,
                 }
                 st.session_state["pf_roadmap_courses"] = courses
@@ -2284,9 +2289,13 @@ def _render_skill_gap():
     ]
 
     # Determine how many courses exist for this role
-    _role_courses   = match.get("courses") or get_courses_for_onet(soc)
+    # Use "courses" key if explicitly set (even empty list); fall back to DB only if key missing
+    if "courses" in match:
+        _role_courses = match["courses"] or []
+    else:
+        _role_courses = get_courses_for_onet(soc)
     _course_count   = len(_role_courses)
-    _no_courses     = _course_count == 0          # no courses → all plans locked
+    _no_courses     = _course_count == 0          # no courses → ALL plans locked
     _only_regular   = _course_count == 1          # 1 course  → only Regular
 
     if _no_courses:
