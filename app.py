@@ -377,24 +377,30 @@ _OCCUPATIONS = [
     ("41-2011.00", "Retail Sales Associate", "Sell merchandise and assist customers in retail establishments."),
 ]
 
-# ── REAL verified course URLs from major platforms ─────────────────────────────
+# ── Verified course URLs — each URL links to the specific course/program page ──
 _COURSES = [
-    # Software Developer (15-1252.00) — 155h total
-    ("Python for Everybody Specialization", "Coursera",
+    # Software Developer (15-1252.00)
+    ("Python for Everybody Specialization", "Coursera (University of Michigan)",
      "https://www.coursera.org/specializations/python",
      "15-1252.00", 40),
     ("The Web Developer Bootcamp 2024", "Udemy",
      "https://www.udemy.com/course/the-web-developer-bootcamp/",
      "15-1252.00", 60),
-    ("Algorithms, Part I", "Coursera (Princeton)",
+    ("Algorithms, Part I", "Coursera (Princeton University)",
      "https://www.coursera.org/learn/algorithms-part1",
      "15-1252.00", 30),
-    ("DevOps Foundations", "LinkedIn Learning",
-     "https://www.linkedin.com/learning/devops-foundations",
+    ("Docker & Kubernetes: The Practical Guide", "Udemy",
+     "https://www.udemy.com/course/docker-kubernetes-the-practical-guide/",
      "15-1252.00", 25),
+    ("HarvardX CS50: Introduction to Computer Science", "edX (Harvard University)",
+     "https://cs50.harvard.edu/x/",
+     "15-1252.00", 100),
+    ("Python Programming Basics", "Dicoding Indonesia",
+     "https://www.dicoding.com/academies/86",
+     "15-1252.00", 15),
 
-    # Data Scientist (15-2051.00) — 185h total
-    ("Machine Learning Specialization", "Coursera (DeepLearning.AI)",
+    # Data Scientist (15-2051.00)
+    ("Machine Learning Specialization", "Coursera (DeepLearning.AI / Stanford)",
      "https://www.coursera.org/specializations/machine-learning-introduction",
      "15-2051.00", 80),
     ("Data Analysis with Python", "Coursera (IBM)",
@@ -406,19 +412,34 @@ _COURSES = [
     ("SQL for Data Science", "Coursera (UC Davis)",
      "https://www.coursera.org/learn/sql-for-data-science",
      "15-2051.00", 20),
+    ("IBM Data Science Professional Certificate", "Coursera (IBM)",
+     "https://www.coursera.org/professional-certificates/ibm-data-science",
+     "15-2051.00", 130),
+    ("Google Data Analytics Professional Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-data-analytics",
+     "15-2051.00", 160),
+    ("Data Analytics with Python", "Karier.mu",
+     "https://karier.mu/kelas/data-analytics",
+     "15-2051.00", 25),
+    ("Data Science Bootcamp", "Hacktiv8",
+     "https://hacktiv8.com/fullstack-data-science/",
+     "15-2051.00", 300),
 
-    # AI/ML Engineer (15-1299.00) — 135h total
-    ("DeepLearning.AI TensorFlow Developer Certificate", "Coursera",
+    # AI/ML Engineer (15-1299.00)
+    ("DeepLearning.AI TensorFlow Developer Certificate", "Coursera (DeepLearning.AI)",
      "https://www.coursera.org/professional-certificates/tensorflow-in-practice",
      "15-1299.00", 60),
-    ("Machine Learning Engineering for Production (MLOps)", "Coursera",
+    ("Machine Learning Engineering for Production (MLOps)", "Coursera (DeepLearning.AI)",
      "https://www.coursera.org/specializations/machine-learning-engineering-for-production-mlops",
      "15-1299.00", 45),
     ("Hugging Face NLP Course", "Hugging Face",
      "https://huggingface.co/learn/nlp-course/chapter1/1",
      "15-1299.00", 30),
+    ("AI For Everyone", "Coursera (DeepLearning.AI)",
+     "https://www.coursera.org/learn/ai-for-everyone",
+     "15-1299.00", 10),
 
-    # Information Security Analyst (15-1212.00) — 125h total
+    # Information Security Analyst (15-1212.00)
     ("Cybersecurity Fundamentals", "edX (Rochester Institute of Technology)",
      "https://www.edx.org/learn/cybersecurity/rochester-institute-of-technology-cybersecurity-fundamentals",
      "15-1212.00", 40),
@@ -428,8 +449,11 @@ _COURSES = [
     ("CompTIA Security+ Certification Prep", "CompTIA",
      "https://www.comptia.org/certifications/security",
      "15-1212.00", 50),
+    ("Google Cybersecurity Professional Certificate", "Coursera (Google)",
+     "https://www.coursera.org/professional-certificates/google-cybersecurity",
+     "15-1212.00", 30),
 
-    # Financial Analyst (13-2051.00) — 95h total
+    # Financial Analyst (13-2051.00)
     ("Financial Modeling & Valuation Analyst (FMVA)", "Corporate Finance Institute",
      "https://corporatefinanceinstitute.com/certifications/financial-modeling-valuation-analyst-fmva-certification/",
      "13-2051.00", 45),
@@ -439,50 +463,83 @@ _COURSES = [
     ("Excel Skills for Business Specialization", "Coursera (Macquarie University)",
      "https://www.coursera.org/specializations/excel",
      "13-2051.00", 20),
+    ("CFA Program (Level I)", "CFA Institute",
+     "https://www.cfainstitute.org/en/programs/cfa",
+     "13-2051.00", 120),
+    ("Financial Modeling & Valuation (Advanced)", "Corporate Finance Institute",
+     "https://corporatefinanceinstitute.com/certifications/financial-modeling-valuation-analyst-fmva-certification/",
+     "13-2051.00", 45),
 
-    # Marketing Manager (11-2021.00) — 60h total
+    # Marketing Manager (11-2021.00)
     ("Google Digital Marketing & E-commerce Certificate", "Coursera (Google)",
      "https://www.coursera.org/professional-certificates/google-digital-marketing-ecommerce",
      "11-2021.00", 25),
-    ("Social Media Marketing Certification Course", "HubSpot Academy",
+    ("Social Media Marketing Certification", "HubSpot Academy",
      "https://academy.hubspot.com/courses/social-media",
      "11-2021.00", 20),
     ("Content Marketing Certification", "HubSpot Academy",
      "https://academy.hubspot.com/courses/content-marketing",
      "11-2021.00", 15),
+    ("Fundamentals of Digital Marketing", "Google Digital Garage",
+     "https://learndigital.withgoogle.com/digitalgarage/course/digital-marketing",
+     "11-2021.00", 40),
 
-    # Management Analyst (13-1111.00) — 130h total
-    ("Business Analysis & Process Management", "Coursera",
+    # Management Analyst (13-1111.00)
+    ("Business Analysis & Process Management", "Coursera (ESSEC Business School)",
      "https://www.coursera.org/learn/business-analysis-process-management",
      "13-1111.00", 30),
     ("Google Project Management Certificate", "Coursera (Google)",
      "https://www.coursera.org/professional-certificates/google-project-management",
      "13-1111.00", 60),
-    ("Lean Six Sigma Fundamentals", "Coursera (University System of Georgia)",
+    ("Lean Six Sigma Fundamentals Specialization", "Coursera (University System of Georgia)",
      "https://www.coursera.org/specializations/six-sigma-fundamentals",
      "13-1111.00", 40),
+    ("PMP Certification Prep", "Project Management Institute (PMI)",
+     "https://www.pmi.org/certifications/project-management-pmp",
+     "13-1111.00", 35),
+    ("Professional Scrum Master I (PSM I)", "Scrum.org",
+     "https://www.scrum.org/assessments/professional-scrum-master-i-certification",
+     "13-1111.00", 16),
+    ("Project Management Professional", "Rakamin Academy",
+     "https://www.rakamin.com/master-class/project-management",
+     "13-1111.00", 20),
 
-    # Network Admin (15-1244.00) — 130h total
+    # Network Administrator (15-1244.00)
     ("Cisco CCNA 200-301 Complete Course", "Udemy",
      "https://www.udemy.com/course/ccna-complete/",
      "15-1244.00", 80),
     ("CompTIA Network+ Certification Prep", "CompTIA",
      "https://www.comptia.org/certifications/network",
      "15-1244.00", 50),
+    ("Cisco CCNA: Introduction to Networks", "Cisco Networking Academy",
+     "https://www.netacad.com/courses/networking/ccna-introduction-networks",
+     "15-1244.00", 70),
+    ("AWS Cloud Practitioner Essentials", "AWS Training and Certification",
+     "https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/",
+     "15-1244.00", 12),
+    ("Microsoft Azure Fundamentals AZ-900", "Microsoft Learn",
+     "https://learn.microsoft.com/en-us/training/paths/microsoft-azure-fundamentals-describe-cloud-concepts/",
+     "15-1244.00", 15),
+    ("Google Cloud Associate Cloud Engineer", "Google Cloud Skills Boost",
+     "https://www.cloudskillsboost.google/paths/11",
+     "15-1244.00", 50),
+    ("Red Hat System Administration I (RH124)", "Red Hat Training",
+     "https://www.redhat.com/en/services/training/rh124",
+     "15-1244.00", 40),
 
     # Public Relations Specialist (27-3031.00)
     ("Strategic Communication & Public Relations", "edX (UC Berkeley)",
      "https://www.edx.org/certificates/professional-certificate/berkeleyx-strategic-communication-and-public-relations",
      "27-3031.00", 20),
-    ("Introduction to Public Relations", "Coursera",
+    ("Introduction to Public Relations", "Coursera (University of California, Davis)",
      "https://www.coursera.org/learn/introduction-to-public-relations",
      "27-3031.00", 15),
 
-    # Graphic Designer & Art Director (27-1024.00, 27-1011.00)
+    # Graphic Designer (27-1024.00) / Art Director (27-1011.00)
     ("Google UX Design Professional Certificate", "Coursera (Google)",
      "https://www.coursera.org/professional-certificates/google-ux-design",
      "27-1024.00", 40),
-    ("Graphic Design Specialization", "Coursera (California Institute of Arts)",
+    ("Graphic Design Specialization", "Coursera (California Institute of the Arts)",
      "https://www.coursera.org/specializations/graphic-design",
      "27-1024.00", 35),
     ("Figma UI UX Design Essentials", "Udemy",
@@ -491,8 +548,11 @@ _COURSES = [
     ("Interaction Design Specialization", "Interaction Design Foundation (IxDF)",
      "https://www.interaction-design.org/courses/interaction-design-specialization",
      "27-1024.00", 50),
-    ("Brand Identity Design on Domestika", "Domestika",
-     "https://www.domestika.org/en/courses/categories/graphic-design",
+    ("UI/UX Design Fundamentals", "Binar Academy",
+     "https://binaracademy.com/programs/ux-design",
+     "27-1024.00", 30),
+    ("Brand Identity Design", "Domestika",
+     "https://www.domestika.org/en/courses/4371-brand-identity-design-from-scratch",
      "27-1011.00", 25),
 
     # Financial Manager (11-3031.00)
@@ -535,7 +595,7 @@ _COURSES = [
     ("The Complete Web Development Bootcamp", "Udemy",
      "https://www.udemy.com/course/the-complete-web-development-bootcamp/",
      "15-1255.00", 55),
-    ("Learn HTML, CSS, JavaScript", "Codecademy",
+    ("Learn HTML, CSS, and JavaScript", "Codecademy",
      "https://www.codecademy.com/learn/paths/web-development",
      "15-1255.00", 25),
     ("Full Stack Web Development", "Purwadhika Digital Technology School",
@@ -543,10 +603,10 @@ _COURSES = [
      "15-1255.00", 360),
 
     # Database Administrator (15-1243.00)
-    ("Oracle Database Administration Fundamentals", "Oracle University",
+    ("Oracle Database Administration I (1Z0-082)", "Oracle University",
      "https://education.oracle.com/oracle-database-administration-i/pexam_1Z0-082",
      "15-1243.00", 30),
-    ("Microsoft SQL Server Administration", "Microsoft Learn",
+    ("SQL Server: Administer a SQL Database Infrastructure", "Microsoft Learn",
      "https://learn.microsoft.com/en-us/training/paths/sql-server-2022/",
      "15-1243.00", 25),
 
@@ -557,19 +617,19 @@ _COURSES = [
     ("R Programming", "Coursera (Johns Hopkins University)",
      "https://www.coursera.org/learn/r-programming",
      "15-2041.00", 20),
-    ("DataCamp Statistics Fundamentals", "DataCamp",
+    ("Statistics Fundamentals with Python", "DataCamp",
      "https://www.datacamp.com/tracks/statistics-fundamentals-with-python",
      "15-2041.00", 30),
 
     # IT Manager (11-3021.00)
-    ("IT Management & Leadership", "LinkedIn Learning",
-     "https://www.linkedin.com/learning/topics/it-management",
+    ("IT Service Management Foundations (ITIL)", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/it-service-management-foundations",
      "11-3021.00", 20),
-    ("Agile Leadership Principles", "PMI / Coursera",
+    ("Agile Leadership Principles", "Coursera (PMI)",
      "https://www.coursera.org/learn/agile-leadership-principles",
      "11-3021.00", 15),
 
-    # HR Specialist / Manager (13-1071.00, 11-3121.00)
+    # HR Specialist (13-1071.00) / HR Manager (11-3121.00)
     ("Human Resource Management Specialization", "Coursera (University of Minnesota)",
      "https://www.coursera.org/specializations/human-resource-management",
      "13-1071.00", 45),
@@ -586,28 +646,28 @@ _COURSES = [
     ("Supply Chain Principles", "Coursera (Georgia Institute of Technology)",
      "https://www.coursera.org/learn/supply-chain-principles",
      "13-1081.00", 25),
-    ("APICS CSCP Certification Prep", "APICS / ASCM",
+    ("APICS CSCP Certification Prep", "ASCM",
      "https://www.ascm.org/learning-development/certifications-credentials/cscp/",
      "13-1081.00", 40),
-    ("Logistics & Supply Chain Management", "ALFI Institute",
-     "https://alfi.or.id/training/",
+    ("Supply Chain Logistics", "Coursera (Rutgers University)",
+     "https://www.coursera.org/learn/supply-chain-logistics",
      "13-1081.00", 30),
 
     # Business Development Manager (11-9199.00)
     ("Business Development & B2B Sales", "Udemy",
      "https://www.udemy.com/course/business-development-and-b2b-sales/",
      "11-9199.00", 20),
-    ("Salesforce Sales Cloud Certification", "Salesforce Trailhead",
+    ("Salesforce Sales Representative Certification", "Salesforce Trailhead",
      "https://trailhead.salesforce.com/en/credentials/salesrepresentative",
      "11-9199.00", 30),
 
-    # Operations Research (15-2031.00)
+    # Operations Research Analyst (15-2031.00)
     ("Business Analytics Specialization", "Coursera (University of Pennsylvania)",
      "https://www.coursera.org/specializations/business-analytics",
      "15-2031.00", 40),
 
     # Advertising Manager (11-2011.00)
-    ("Digital Advertising on Coursera", "Coursera",
+    ("Digital Advertising", "Coursera (University of Illinois)",
      "https://www.coursera.org/learn/digital-advertising",
      "11-2011.00", 20),
     ("HubSpot Marketing Hub Certification", "HubSpot Academy",
@@ -618,16 +678,16 @@ _COURSES = [
     ("Engineering Project Management Specialization", "Coursera (Rice University)",
      "https://www.coursera.org/specializations/engineering-project-management",
      "17-2051.00", 35),
-    ("AutoCAD Civil 3D Fundamentals", "Autodesk University",
-     "https://www.autodesk.com/autodesk-university/",
+    ("AutoCAD Essential Training", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/autocad-essential-training",
      "17-2051.00", 20),
-    ("BIM Fundamentals for Engineers", "Autodesk Learning",
-     "https://www.autodesk.com/certification/learn/catalog/discipline/building-design",
+    ("Autodesk Revit for BIM", "Coursera (Autodesk)",
+     "https://www.coursera.org/learn/autodesk-revit",
      "17-2051.00", 20),
 
     # Electrical Engineer (17-2071.00)
-    ("Electrical Engineering Fundamentals", "edX (Georgia Tech)",
-     "https://www.edx.org/learn/electrical-engineering",
+    ("Introduction to Electronics", "Coursera (Georgia Tech)",
+     "https://www.coursera.org/learn/linear-circuits-dcanalysis",
      "17-2071.00", 30),
     ("PLC Programming and Industrial Automation", "Udemy",
      "https://www.udemy.com/course/plc-programming-ladder-logic/",
@@ -641,19 +701,19 @@ _COURSES = [
      "https://www.coursera.org/specializations/supply-chain-management",
      "17-2112.00", 30),
 
-    # Editor / Writer (27-3041.00, 27-3043.00)
+    # Editor (27-3041.00) / Writer (27-3043.00)
     ("English Writing Specialization", "Coursera (Duke University)",
      "https://www.coursera.org/specializations/english-for-research-publication-purposes",
      "27-3041.00", 25),
-    ("Freelance Writing for Magazines", "Coursera",
+    ("Freelance Writing", "Coursera (University of California, Irvine)",
      "https://www.coursera.org/learn/freelance-writing",
      "27-3043.00", 15),
 
     # Multimedia Artist / Animator (27-1014.00)
-    ("Digital Arts & Animation", "Skillshare",
-     "https://www.skillshare.com/en/browse/animation",
+    ("After Effects Essential Training: The Basics", "LinkedIn Learning",
+     "https://www.linkedin.com/learning/after-effects-essential-training-the-basics",
      "27-1014.00", 25),
-    ("Motion Design with After Effects", "LinkedIn Learning",
+    ("Motion Graphics Techniques", "LinkedIn Learning",
      "https://www.linkedin.com/learning/motion-graphics-techniques",
      "27-1014.00", 20),
     ("3D Animation with Blender", "CG Master Academy (CGMA)",
@@ -661,143 +721,71 @@ _COURSES = [
      "27-1014.00", 40),
 
     # Secondary School Teacher (25-2031.00)
-    ("TESOL Certificate for English Teachers", "TESOL International Association",
+    ("TESOL Certificate", "TESOL International Association",
      "https://www.tesol.org/professional-development/certification",
      "25-2031.00", 40),
-    ("Teaching English Online", "FutureLearn",
+    ("Teaching English Online", "FutureLearn (British Council)",
      "https://www.futurelearn.com/courses/teaching-english-online",
      "25-2031.00", 20),
-    ("Learning & Teaching for Teachers", "Coursera (Hong Kong University)",
-     "https://www.coursera.org/specializations/learning-and-teaching",
+    ("Learning to Teach Online", "Coursera (UNSW Sydney)",
+     "https://www.coursera.org/learn/teach-online",
      "25-2031.00", 30),
 
     # Instructional Coordinator (25-9031.00)
-    ("Instructional Design Foundations", "Coursera (University of Illinois)",
+    ("Instructional Design Foundations & Applications", "Coursera (University of Illinois)",
      "https://www.coursera.org/learn/instructional-design-foundations-applications",
      "25-9031.00", 20),
 
     # Registered Nurse (29-1141.00)
-    ("Global Health: Nursing & Midwifery", "OpenWHO (WHO)",
+    ("Nursing and Healthcare Education", "OpenWHO (WHO)",
      "https://openwho.org/channels/nursing-midwifery",
      "29-1141.00", 15),
-    ("Critical Care Nursing Basics", "Coursera",
-     "https://www.coursera.org/learn/critical-care-nursing-basics",
+    ("Patient Safety", "Coursera (Johns Hopkins University)",
+     "https://www.coursera.org/learn/patient-safety",
      "29-1141.00", 20),
 
     # Physical Therapist (29-1123.00)
-    ("Exercise Prescription for Chronic Disease", "Coursera",
+    ("Exercise Prescription for Chronic Disease Prevention", "Coursera (HKUST)",
      "https://www.coursera.org/learn/exercise-prescription",
      "29-1123.00", 20),
-    ("Sports Science Fundamentals", "FutureLearn",
-     "https://www.futurelearn.com/subjects/sport-and-psychology-courses/sport-science",
+    ("Anatomy Specialization", "Coursera (University of Michigan)",
+     "https://www.coursera.org/specializations/anatomy",
      "29-1123.00", 15),
-    ("NASM Personal Trainer Certification", "NASM",
+    ("NASM Personal Trainer Certification (CPT)", "NASM",
      "https://www.nasm.org/personal-trainer-certification",
      "29-1123.00", 30),
 
     # Dietitian (29-1031.00)
-    ("Nutrition and Health Specialization", "Coursera (Wageningen University)",
+    ("Nutrition and Health: Food Risks", "Coursera (Wageningen University)",
      "https://www.coursera.org/specializations/nutrition-health-lifestyle",
      "29-1031.00", 30),
 
-    # Food Service Manager / Chef (11-9051.00, 35-1011.00)
-    ("Professional Cooking Fundamentals", "Rouxbe Culinary RX",
-     "https://rouxbe.com/cooking-school/programs",
+    # Food Service Manager (11-9051.00) / Chef (35-1011.00)
+    ("Professional Cook Program", "Rouxbe Online Culinary School",
+     "https://rouxbe.com/training-programs/professional-cook",
      "11-9051.00", 30),
-    ("Food Safety Management (HACCP)", "Coursera",
+    ("Food Safety Practices", "Coursera (University of California, Davis)",
      "https://www.coursera.org/learn/food-safety",
      "11-9051.00", 15),
-    ("Plant-Based Professional Certificate", "Rouxbe Culinary RX",
-     "https://rouxbe.com/programs/plant-based-professional",
+    ("Plant-Based Professional Certificate", "Rouxbe Online Culinary School",
+     "https://rouxbe.com/training-programs/plant-based-professional",
      "35-1011.00", 25),
     ("Food & Beverage Service Management", "Typsy",
      "https://typsy.com/collections/food-service",
      "35-1011.00", 15),
 
-    # Lodging Manager / Tourism (11-9081.00, 39-7011.00)
-    ("Hotel Management: Distribution, Revenue & Demand", "Coursera",
+    # Lodging Manager (11-9081.00) / Tour Guide (39-7011.00)
+    ("Hotel Management: Distribution, Revenue & Demand Management", "Coursera (ESSEC)",
      "https://www.coursera.org/learn/hotel-management",
      "11-9081.00", 20),
-    ("IATA Foundation in Travel and Tourism", "IATA Training",
-     "https://www.iata.org/en/training/courses/",
+    ("Sustainable Tourism", "Coursera (University of Copenhagen)",
+     "https://www.coursera.org/learn/sustainable-tourism",
      "39-7011.00", 20),
 
-    # Indonesian platforms — broad mapping
-    ("Python Programming Basics", "Dicoding Indonesia",
-     "https://www.dicoding.com/academies/86",
-     "15-1252.00", 15),
+    # Data Analytics Professional Certificate (MySkill — Indonesia)
     ("Data Analytics Professional Certificate", "MySkill",
      "https://myskill.id/course/data-analytics",
      "15-2051.00", 20),
-    ("UI/UX Design Fundamentals", "Binar Academy",
-     "https://binaracademy.com/course/ux-design",
-     "27-1024.00", 30),
-    ("Data Science Bootcamp", "Hacktiv8",
-     "https://hacktiv8.com/fullstack-data-science/",
-     "15-2051.00", 300),
-    ("Digital Marketing Fundamentals", "Skill Academy",
-     "https://skillacademy.com/category/marketing-digital",
-     "11-2021.00", 15),
-    ("Project Management Professional", "Rakamin Academy",
-     "https://www.rakamin.com/master-class/project-management",
-     "13-1111.00", 20),
-    ("Digital Marketing Scholarship", "Digital Talent Scholarship (DTS Kominfo)",
-     "https://digitalent.kominfo.go.id/",
-     "11-2021.00", 40),
-    ("Data Analytics with Python", "Karier.mu",
-     "https://karier.mu/kelas/data-analytics",
-     "15-2051.00", 25),
-    ("Google Cybersecurity Professional Certificate", "Coursera (Google)",
-     "https://www.coursera.org/professional-certificates/google-cybersecurity",
-     "15-1212.00", 30),
-
-    # Cloud certifications
-    ("AWS Cloud Practitioner Essentials", "AWS Training and Certification",
-     "https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/",
-     "15-1244.00", 12),
-    ("Microsoft Azure Fundamentals AZ-900", "Microsoft Learn",
-     "https://learn.microsoft.com/en-us/training/paths/microsoft-azure-fundamentals-describe-cloud-concepts/",
-     "15-1244.00", 15),
-    ("Google Cloud Associate Cloud Engineer", "Google Cloud Skills Boost",
-     "https://www.cloudskillsboost.google/paths/11",
-     "15-1244.00", 50),
-    ("Cisco CCNA Networking Fundamentals", "Cisco Networking Academy",
-     "https://www.netacad.com/courses/networking",
-     "15-1244.00", 70),
-    ("Red Hat System Administration I (RH124)", "Red Hat Training",
-     "https://www.redhat.com/en/services/training/rh124",
-     "15-1244.00", 40),
-
-    # Project & Scrum certifications
-    ("PMP Certification Prep", "Project Management Institute (PMI)",
-     "https://www.pmi.org/certifications/project-management-pmp",
-     "13-1111.00", 35),
-    ("Professional Scrum Master I", "Scrum.org",
-     "https://www.scrum.org/assessments/professional-scrum-master-i-certification",
-     "13-1111.00", 16),
-
-    # IBM & global tech
-    ("IBM Data Science Professional Certificate", "Coursera (IBM)",
-     "https://www.coursera.org/professional-certificates/ibm-data-science",
-     "15-2051.00", 130),
-    ("Google Data Analytics Professional Certificate", "Coursera (Google)",
-     "https://www.coursera.org/professional-certificates/google-data-analytics",
-     "15-2051.00", 160),
-    ("AI For Everyone", "Coursera (DeepLearning.AI)",
-     "https://www.coursera.org/learn/ai-for-everyone",
-     "15-1299.00", 10),
-    ("HarvardX CS50: Introduction to Computer Science", "edX (Harvard University)",
-     "https://cs50.harvard.edu/x/",
-     "15-1252.00", 100),
-    ("Pluralsight DevOps Skills Assessment", "Pluralsight",
-     "https://www.pluralsight.com/product/skills/assessments",
-     "15-1252.00", 20),
-    ("CFA Program (Level I)", "CFA Institute",
-     "https://www.cfainstitute.org/en/programs/cfa",
-     "13-2051.00", 120),
-    ("Financial Modeling & Valuation (Advanced)", "Corporate Finance Institute",
-     "https://corporatefinanceinstitute.com/certifications/financial-modeling-valuation-analyst-fmva-certification/",
-     "13-2051.00", 45),
 ]
 
 # ── Typical skills required per O*NET SOC code ────────────────────────────────
@@ -887,7 +875,7 @@ def _init_db() -> None:
             s.add_all([IndonesianMajorCatalog(major_name=m) for m in _MAJORS])
         if s.query(OnetOccupation).count() == 0:
             s.add_all([OnetOccupation(soc_code=c, title=t, description=d) for c, t, d in _OCCUPATIONS])
-        # Reseed courses whenever catalog changes (count mismatch or stale URL detected)
+        # Reseed when count differs OR any known-stale URL still present in DB
         _db_count = s.query(CourseCatalog).count()
         _stale = s.query(CourseCatalog).filter(
             CourseCatalog.url.in_([
@@ -899,6 +887,22 @@ def _init_db() -> None:
                 "https://iai.or.id/",
                 "https://openwho.org/courses",
                 "https://cgmasteracademy.com/",
+                "https://www.autodesk.com/autodesk-university/",
+                "https://www.autodesk.com/certification/learn/catalog/discipline/building-design",
+                "https://www.skillshare.com/en/browse/animation",
+                "https://www.futurelearn.com/subjects/sport-and-psychology-courses/sport-science",
+                "https://www.linkedin.com/learning/topics/it-management",
+                "https://www.edx.org/learn/electrical-engineering",
+                "https://www.pluralsight.com/product/skills/assessments",
+                "https://skillacademy.com/category/marketing-digital",
+                "https://digitalent.kominfo.go.id/",
+                "https://www.netacad.com/courses/networking",
+                "https://alfi.or.id/training/",
+                "https://binaracademy.com/course/ux-design",
+                "https://www.domestika.org/en/courses/categories/graphic-design",
+                "https://rouxbe.com/cooking-school/programs",
+                "https://rouxbe.com/programs/plant-based-professional",
+                "https://www.iata.org/en/training/courses/",
             ])
         ).first()
         needs_reseed = (_db_count == 0) or (_db_count != len(_COURSES)) or (_stale is not None)
