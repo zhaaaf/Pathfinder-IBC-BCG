@@ -2816,26 +2816,23 @@ def _render_roadmap():
                         'Certificate submitted</div>'
                         if verified else ""
                     )
-                    st.markdown(f"""
-                    <div class="roadmap-card">
-                      <div style="display:flex;align-items:flex-start;gap:0.85rem;">
-                        <div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
-                                    background:{dot_bg};color:{dot_color};display:flex;
-                                    align-items:center;justify-content:center;
-                                    font-size:0.75rem;font-weight:700;">{check_mark}</div>
-                        <div style="flex:1;">
-                          <div style="font-weight:700;font-size:0.95rem;color:var(--charcoal);
-                                      margin-bottom:0.2rem;">{title}</div>
-                          <span class="provider-badge">{course.get('provider','')}</span>
-                          <div style="font-size:0.78rem;color:var(--charcoal-soft);margin-top:0.3rem;">
-                            {int(hrs)}h &nbsp;&middot;&nbsp; ~{days_n} day(s)
-                            &nbsp;&middot;&nbsp; starts day {cumday + 1}
-                          </div>
-                          {cert_line}
-                        </div>
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Flat 2-level HTML — avoids Streamlit sanitizer stripping
+                    # nested opening tags and leaving orphan </div> as text
+                    st.markdown(
+                        f'<div class="roadmap-card" style="display:flex;align-items:flex-start;gap:0.85rem;">'
+                        f'<div style="min-width:28px;height:28px;border-radius:50%;flex-shrink:0;'
+                        f'background:{dot_bg};color:{dot_color};display:flex;align-items:center;'
+                        f'justify-content:center;font-size:0.72rem;font-weight:700;">{check_mark}</div>'
+                        f'<div style="flex:1;min-width:0;">'
+                        f'<div style="font-weight:700;font-size:0.95rem;color:var(--charcoal);margin-bottom:0.15rem;">{title}</div>'
+                        f'<span class="provider-badge">{course.get("provider","")}</span>'
+                        f'<div style="font-size:0.78rem;color:var(--charcoal-soft);margin-top:0.25rem;">'
+                        f'{int(hrs)}h &middot; ~{days_n} day(s) &middot; starts day {cumday + 1}</div>'
+                        f'{cert_line}'
+                        f'</div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
 
                 with col_action:
                     st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
