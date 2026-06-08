@@ -2054,7 +2054,7 @@ def _render_results():
 
     def _fmt_duration(total_hrs: float) -> str:
         if not total_hrs:
-            return "N/A"
+            return "0 wk(s)"
         wks = math.ceil(total_hrs / _REF_HPW)
         if wks == 0:
             days = math.ceil(total_hrs / 2)
@@ -2109,7 +2109,7 @@ def _render_results():
 
             st.metric(
                 "Total Study Hours",
-                f"{int(total_hrs)}h" if total_hrs else "N/A",
+                f"{int(total_hrs)}h" if total_hrs else "0h",
                 _fmt_duration(total_hrs)
             )
 
@@ -2134,11 +2134,12 @@ def _render_results():
             unsafe_allow_html=True
         )
         st.markdown("""
-        <div class="pf-card pf-card-dashed pf-result-card"
-             style="text-align:center;padding:1.5rem 1rem;justify-content:center;align-items:center;">
-          <div style="font-size:1.8rem;color:var(--copper);">+</div>
-          <div style="font-weight:600;color:var(--charcoal);font-size:0.95rem;">Add Profession</div>
-          <div style="font-size:0.75rem;color:var(--copper-muted);margin-top:0.2rem;">Browse all O*NET roles</div>
+        <div class="pf-card pf-card-dashed"
+             style="padding:1rem;min-height:72px;display:flex;flex-direction:column;
+                    justify-content:center;align-items:center;text-align:center;gap:0.2rem;">
+          <div style="font-size:1.4rem;color:var(--copper);line-height:1;">+</div>
+          <div style="font-weight:700;color:var(--charcoal);font-size:1.05rem;">Add Profession</div>
+          <div style="font-size:0.72rem;color:var(--charcoal-soft);font-family:'Inter',sans-serif;">Browse all O*NET roles</div>
         </div>
         """, unsafe_allow_html=True)
         all_onet = get_all_onet_titles()
@@ -2285,17 +2286,23 @@ def _render_skill_gap():
     # Determine how many courses exist for this role
     _role_courses   = match.get("courses") or get_courses_for_onet(soc)
     _course_count   = len(_role_courses)
-    _only_regular   = _course_count <= 1          # restrict if ≤ 1 course
+    _no_courses     = _course_count == 0          # no courses → all plans locked
+    _only_regular   = _course_count == 1          # 1 course  → only Regular
 
-    if _only_regular:
+    if _no_courses:
+        st.warning(
+            "⚠️ No courses are available for this role in our database. "
+            "**No study packages can be selected.** You may still explore other career matches."
+        )
+    elif _only_regular:
         st.info(
-            f"⚠️ Only {'1 course' if _course_count == 1 else 'no courses'} available "
-            f"for this role. **Only the Regular plan is applicable.**"
+            "⚠️ Only 1 course is available for this role. "
+            "**Only the Regular plan is applicable.**"
         )
 
     def _duration_label(hrs, days_per_wk, hpd):
         if not hrs or not days_per_wk or not hpd:
-            return "N/A"
+            return "0 wk(s)"
         total_days = math.ceil(hrs / hpd)
         wks = math.ceil(hrs / (hpd * days_per_wk))
         if wks == 0:
@@ -2313,8 +2320,8 @@ def _render_skill_gap():
         sel      = st.session_state.get("pf_selected_plan") == plan["id"]
         card_cls = "pf-card pf-plan-selected" if sel else "pf-card"
 
-        # A plan is available if courses > 1, or it IS the Regular plan
-        plan_available = not _only_regular or plan["id"] == "balanced"
+        # 0 courses → all disabled; 1 course → only Regular; else all available
+        plan_available = (not _no_courses) and (not _only_regular or plan["id"] == "balanced")
 
         with col:
             opacity = "1" if plan_available else "0.45"
