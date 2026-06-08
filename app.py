@@ -1855,26 +1855,15 @@ def _render_manual_form():
     all_majors = ["-- Select Major --"] + get_all_majors()
     all_titles = ["-- Select Role --"] + get_all_onet_titles() + ["Other"]
 
-    # ── field label helper ────────────────────────────────────────────────────
-    def _lbl(text: str, required: bool = False) -> None:
-        req = '<span class="pf-req">*</span>' if required else ""
-        st.markdown(
-            f'<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;'
-            f'letter-spacing:.08em;color:var(--charcoal-mid);">{text}</span>{req}',
-            unsafe_allow_html=True,
-        )
-
     col_edu, col_work, col_skills = st.columns([1, 1.2, 1], gap="large")
 
-    # ── Col 1: Education (all except Graduation Year) ─────────────────────────
+    # ── Col 1: Education ──────────────────────────────────────────────────────
     with col_edu:
         st.markdown('<div class="pf-section-header">Education</div>', unsafe_allow_html=True)
-        _lbl("Full Name", required=True)
         full_name = st.text_input(
-            "Full Name", placeholder="e.g. John Smith",
-            key="pf_manual_name", label_visibility="collapsed",
+            "Full Name *", placeholder="e.g. John Smith",
+            key="pf_manual_name",
         )
-        _lbl("Education Level", required=True)
         edu_options = [
             "Junior High School", "Senior High School / Vocational",
             "Diploma (D1/D2)", "Associate Degree (D3)",
@@ -1883,19 +1872,17 @@ def _render_manual_form():
             "Non-Degree / Other",
         ]
         edu_level = st.selectbox(
-            "Education Level", edu_options,
-            key="pf_manual_edu", label_visibility="collapsed",
+            "Education Level *", edu_options,
+            key="pf_manual_edu",
         )
-        _lbl("Major / Field of Study", required=True)
         major_choice = st.selectbox(
-            "Major", all_majors,
-            key="pf_manual_major_sel", label_visibility="collapsed",
+            "Major / Field of Study *", all_majors,
+            key="pf_manual_major_sel",
         )
         major = "" if major_choice == "-- Select Major --" else major_choice
-        _lbl("Institution / University")
         institution = st.text_input(
             "Institution / University", placeholder="e.g. University of Indonesia",
-            key="pf_manual_inst", label_visibility="collapsed",
+            key="pf_manual_inst",
         )
         grad_year = st.selectbox(
             "Graduation Year",
@@ -1952,31 +1939,24 @@ def _render_manual_form():
         st.markdown('<div class="pf-section-header">Skills & Certifications</div>',
                     unsafe_allow_html=True)
 
-        # Technical Skills
-        _lbl("Technical Skills", required=True)
         selected_tech = st.multiselect(
-            "Technical Skills",
+            "Technical Skills *",
             options=_TECHNICAL_SKILLS,
             default=st.session_state.get("pf_manual_tech_sel", []),
             key="pf_manual_tech_sel",
             placeholder="Type to search technical skills...",
-            label_visibility="collapsed",
         )
 
-        # Soft Skills
-        _lbl("Soft Skills")
         selected_soft = st.multiselect(
             "Soft Skills",
             options=_SOFT_SKILLS,
             default=st.session_state.get("pf_manual_soft_sel", []),
             key="pf_manual_soft_sel",
             placeholder="Type to search soft skills...",
-            label_visibility="collapsed",
         )
 
-        # Unlisted skills
         extra_skills = st.text_input(
-            "Add unlisted skills (comma-separated)",
+            "Add Unlisted Skills (comma-separated)",
             placeholder="e.g. QGIS, Revit, Arena...",
             key="pf_extra_skills",
         )
@@ -1990,9 +1970,8 @@ def _render_manual_form():
             st.caption(f"{len(all_user_skills)} skill(s) selected")
 
         st.markdown("---")
-        _lbl("Certifications / Licenses")
         cert_files = st.file_uploader(
-            "Certificates (PDF / PNG / JPG)",
+            "Certifications / Licenses (PDF / PNG / JPG)",
             type=["pdf", "png", "jpg", "jpeg"],
             accept_multiple_files=True,
             label_visibility="visible",
